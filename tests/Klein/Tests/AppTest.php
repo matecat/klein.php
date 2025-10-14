@@ -11,7 +11,10 @@
 
 namespace Klein\Tests;
 
+use BadMethodCallException;
 use Klein\App;
+use Klein\Exceptions\DuplicateServiceException;
+use Klein\Exceptions\UnknownServiceException;
 
 /**
  * AppTest
@@ -71,11 +74,12 @@ class AppTest extends AbstractKleinTest
     }
 
     /**
-     * @expectedException Klein\Exceptions\UnknownServiceException
+     * @return void
      */
     public function testGetBadMethod()
     {
         $app = new App();
+        $this->expectException(UnknownServiceException::class);
         $app->random_thing_that_doesnt_exist;
     }
 
@@ -93,21 +97,20 @@ class AppTest extends AbstractKleinTest
         $this->assertSame(self::TEST_CALLBACK_MESSAGE, $returned);
     }
 
-    /**
-     * @expectedException BadMethodCallException
-     */
     public function testCallBadMethod()
     {
+        $this->expectException( BadMethodCallException::class );
         $app = new App();
         $app->random_thing_that_doesnt_exist();
     }
 
     /**
      * @depends testRegisterFiller
-     * @expectedException Klein\Exceptions\DuplicateServiceException
+     *
      */
     public function testRegisterDuplicateMethod(array $args)
     {
+        $this->expectException( DuplicateServiceException::class );
         // Get our vars from our args
         extract($args);
 
