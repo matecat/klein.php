@@ -21,7 +21,7 @@ use Klein\Validator;
 /**
  * ValidationsTest
  */
-class ValidationsTest extends AbstractKleinTest
+class ValidationsTest extends AbstractKleinTestCase
 {
 
     public function setUp(): void

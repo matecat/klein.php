@@ -14,9 +14,9 @@ namespace Klein\Tests;
 use Klein\HttpStatus;
 
 /**
- * HttpStatusTests
+ * HttpStatusTest
  */
-class HttpStatusTests extends AbstractKleinTest
+class HttpStatusTest extends AbstractKleinTestCase
 {
 
     public function testStaticMessageFromCode()

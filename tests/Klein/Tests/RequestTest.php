@@ -17,7 +17,7 @@ use Klein\Tests\Mocks\MockRequestFactory;
 /**
  * RequestTest
  */
-class RequestTest extends AbstractKleinTest
+class RequestTest extends AbstractKleinTestCase
 {
 
     public function testConstructorAndGetters()

@@ -17,11 +17,11 @@ use Klein\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
- * AbstractKleinTest
+ * AbstractKleinTestCase
  *
  * Base test class for PHP Unit testing
  */
-abstract class AbstractKleinTest extends TestCase
+abstract class AbstractKleinTestCase extends TestCase
 {
 
     /**

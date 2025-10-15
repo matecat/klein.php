@@ -12,12 +12,13 @@
 namespace Klein\Tests\DataCollection;
 
 use Klein\DataCollection\ServerDataCollection;
-use Klein\Tests\AbstractKleinTest;
+use Klein\Tests\AbstractKleinTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * ServerDataCollectionTest
  */
-class ServerDataCollectionTest extends AbstractKleinTest
+class ServerDataCollectionTest extends AbstractKleinTestCase
 {
 
     /*
@@ -29,7 +30,7 @@ class ServerDataCollectionTest extends AbstractKleinTest
      *
      * @return array
      */
-    public function sampleDataProvider()
+    public static function sampleDataProvider()
     {
         // Populate our sample data
         $sample_data = array(
@@ -83,10 +84,8 @@ class ServerDataCollectionTest extends AbstractKleinTest
         $this->assertFalse(ServerDataCollection::hasPrefix('_dog_wierd', 'dog'));
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testGetHeaders($sample_data, $data_collection)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testGetHeaders( $sample_data, $data_collection)
     {
         $http_headers = $data_collection->getHeaders();
 

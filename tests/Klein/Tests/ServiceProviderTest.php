@@ -24,7 +24,7 @@ use ReflectionProperty;
 /**
  * ServiceProviderTest
  */
-class ServiceProviderTest extends AbstractKleinTest
+class ServiceProviderTest extends AbstractKleinTestCase
 {
 
     protected function getBasicServiceProvider()
@@ -115,8 +115,8 @@ class ServiceProviderTest extends AbstractKleinTest
         $old_error_val = error_reporting();
         error_reporting(E_ALL ^ E_NOTICE ^ E_WARNING);
 
-        session_start();
         session_id('');
+        session_start();
 
         $service = new ServiceProvider();
 

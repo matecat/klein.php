@@ -15,11 +15,12 @@ use BadMethodCallException;
 use Klein\App;
 use Klein\Exceptions\DuplicateServiceException;
 use Klein\Exceptions\UnknownServiceException;
+use PHPUnit\Framework\Attributes\Depends;
 
 /**
  * AppTest
  */
-class AppTest extends AbstractKleinTest
+class AppTest extends AbstractKleinTestCase
 {
 
     /**
@@ -59,10 +60,8 @@ class AppTest extends AbstractKleinTest
         );
     }
 
-    /**
-     * @depends testRegisterFiller
-     */
-    public function testGet(array $args)
+    #[Depends( 'testRegisterFiller' )]
+    public function testGet( array $args)
     {
         // Get our vars from our args
         extract($args);
@@ -83,10 +82,8 @@ class AppTest extends AbstractKleinTest
         $app->random_thing_that_doesnt_exist;
     }
 
-    /**
-     * @depends testRegisterFiller
-     */
-    public function testCall(array $args)
+    #[Depends( 'testRegisterFiller' )]
+    public function testCall( array $args)
     {
         // Get our vars from our args
         extract($args);
@@ -104,11 +101,8 @@ class AppTest extends AbstractKleinTest
         $app->random_thing_that_doesnt_exist();
     }
 
-    /**
-     * @depends testRegisterFiller
-     *
-     */
-    public function testRegisterDuplicateMethod(array $args)
+    #[Depends( 'testRegisterFiller' )]
+    public function testRegisterDuplicateMethod( array $args)
     {
         $this->expectException( DuplicateServiceException::class );
         // Get our vars from our args

@@ -26,11 +26,12 @@ use Klein\ServiceProvider;
 use Klein\Tests\Mocks\HeadersEcho;
 use Klein\Tests\Mocks\HeadersSave;
 use Klein\Tests\Mocks\MockRequestFactory;
+use Throwable;
 
 /**
  * RoutingTest
  */
-class RoutingTest extends AbstractKleinTest {
+class RoutingTest extends AbstractKleinTestCase {
 
     public function testBasic() {
         $this->expectOutputString( 'x' );
@@ -110,10 +111,10 @@ class RoutingTest extends AbstractKleinTest {
 
         // create a new app with a defined property state to avoid the php 8 warning: "Creation of dynamic property Klein\App::$state is deprecated"
         $klein_app_one = new class extends App {
-          public string $state = '';
+            public string $state = '';
         };
 
-        $klein         = new Klein( null, $klein_app_one );
+        $klein = new Klein( null, $klein_app_one );
         $klein->respond(
                 '/',
                 function ( $request, $response, $service, $app ) {
@@ -809,8 +810,7 @@ class RoutingTest extends AbstractKleinTest {
                     echo 'one';
                 }
         );
-        $this->klein_app->respond(
-                '404',
+        $this->klein_app->onHttpError(
                 function () {
                     echo '404 Code';
                 }
@@ -1234,7 +1234,7 @@ class RoutingTest extends AbstractKleinTest {
     public function test405Routes() {
         $result_array = [];
 
-        $this->expectOutputString( '_' );
+        $this->expectOutputString( '_,onHttpError:405' );
 
         $this->klein_app->respond(
                 function () {
@@ -1255,10 +1255,11 @@ class RoutingTest extends AbstractKleinTest {
                     echo 'fail';
                 }
         );
-        $this->klein_app->respond(
-                405,
-                function ( $a, $b, $c, $d, $e, $f, $methods ) use ( &$result_array ) {
-                    $result_array = $methods;
+
+        $this->klein_app->onHttpError(
+                function ( int $exception_code, Klein $klein, RouteCollection $routes_matched, array $methods_matched, Throwable $e ) use ( &$result_array ) {
+                    $result_array = $methods_matched;
+                    echo ',onHttpError:' . $exception_code;
                 }
         );
 

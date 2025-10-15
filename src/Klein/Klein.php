@@ -340,7 +340,7 @@ class Klein
      * @param callable $callback        Callable callback method to execute on route match
      * @return Route
      */
-    public function respond($method, $path = '*', $callback = null)
+    public function respond($method, $path = '*', $callback = null) //XXX Remove this loose argument order method
     {
         // Get the arguments in a very loose format
         extract(
@@ -504,20 +504,22 @@ class Klein
                 if ($path === '*') {
                     $match = true;
 
-                } elseif (($path === '404' && $matched->isEmpty() && count($methods_matched) <= 0)
-                       || ($path === '405' && $matched->isEmpty() && count($methods_matched) > 0)) {
-
-                    // Warn user of deprecation
-                    trigger_error(
-                        'Use of 404/405 "routes" is deprecated. Use $klein->onHttpError() instead.',
-                        E_USER_DEPRECATED
-                    );
-                    // TODO: Possibly remove in future, here for backwards compatibility
-                    $this->onHttpError($route);
-
-                    continue;
-
-                } elseif (isset($path[$i]) && $path[$i] === '@') {
+                }
+//                elseif (($path === '404' && $matched->isEmpty() && count($methods_matched) <= 0)
+//                       || ($path === '405' && $matched->isEmpty() && count($methods_matched) > 0)) {
+//
+//                    // Warn user of deprecation
+//                    trigger_error(
+//                        'Use of 404/405 "routes" is deprecated. Use $klein->onHttpError() instead.',
+//                        E_USER_DEPRECATED
+//                    );
+//                    // TODO: Possibly remove in future, here for backwards compatibility
+//                    $this->onHttpError($route);
+//
+//                    continue;
+//
+//                }
+                elseif (isset($path[$i]) && $path[$i] === '@') {
                     // @ is used to specify custom regex
 
                     $match = preg_match('`' . substr($path, $i + 1) . '`', $uri, $params);

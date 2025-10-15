@@ -361,9 +361,9 @@ abstract class AbstractResponse
             setcookie(
                 $cookie->getName(),
                 $cookie->getValue(),
-                $cookie->getExpire(),
-                $cookie->getPath(),
-                $cookie->getDomain(),
+                $cookie->getExpire() ?? 0,
+                $cookie->getPath() ?? '',
+                $cookie->getDomain() ?? '',
                 $cookie->getSecure(),
                 $cookie->getHttpOnly()
             );

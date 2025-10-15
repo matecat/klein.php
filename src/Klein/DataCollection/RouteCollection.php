@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\DataCollection;
@@ -18,8 +18,7 @@ use Klein\Route;
  *
  * A DataCollection for Routes
  */
-class RouteCollection extends DataCollection
-{
+class RouteCollection extends DataCollection {
 
     /**
      * Methods
@@ -31,10 +30,10 @@ class RouteCollection extends DataCollection
      * @override (doesn't call our parent)
      * @param array $routes The routes of this collection
      */
-    public function __construct(array $routes = array())
-    {
-        foreach ($routes as $value) {
-            $this->add($value);
+    public function __construct( array $routes = [] ) {
+        parent::__construct();
+        foreach ( $routes as $value ) {
+            $this->add( $value );
         }
     }
 
@@ -51,18 +50,18 @@ class RouteCollection extends DataCollection
      * by passing the name of the route as the "$key" and an
      * instance of a Route as the "$value"
      *
-     * @see DataCollection::set()
-     * @param string $key                   The name of the route to set
-     * @param Route|callable $value         The value of the route to set
+     * @param string $key   The name of the route to set
+     * @param mixed  $value The value of the route to set
+     *
      * @return RouteCollection
+     * @see DataCollection::set()
      */
-    public function set($key, $value)
-    {
-        if (!$value instanceof Route) {
-            $value = new Route($value);
+    public function set( string $key, mixed $value ): static {
+        if ( !$value instanceof Route ) {
+            $value = new Route( $value );
         }
 
-        return parent::set($key, $value);
+        return parent::set( $key, $value );
     }
 
     /**
@@ -71,18 +70,18 @@ class RouteCollection extends DataCollection
      * This will auto-generate a name
      *
      * @param Route $route
+     *
      * @return RouteCollection
      */
-    public function addRoute(Route $route)
-    {
+    public function addRoute( Route $route ): RouteCollection|static {
         /**
          * Auto-generate a name from the object's hash
          * This makes it so that we can autogenerate names
          * that ensure duplicate route instances are overridden
          */
-        $name = spl_object_hash($route);
+        $name = spl_object_hash( $route );
 
-        return $this->set($name, $route);
+        return $this->set( $name, $route );
     }
 
     /**
@@ -92,48 +91,46 @@ class RouteCollection extends DataCollection
      * will take a Route instance, string callable
      * or any other Route class compatible callback
      *
-     * @param Route|callable $route
+     * @param callable|Route $route
+     *
      * @return RouteCollection
      */
-    public function add($route)
-    {
-        if (!$route instanceof Route) {
-            $route = new Route($route);
+    public function add( callable|Route $route ): RouteCollection|static {
+        if ( !$route instanceof Route ) {
+            $route = new Route( $route );
         }
 
-        return $this->addRoute($route);
+        return $this->addRoute( $route );
     }
 
     /**
      * Prepare the named routes in the collection
      *
      * This loops through every route to set the collection's
-     * key name for that route to equal the routes name, if
-     * its changed
+     * key name for that route to equal the route name if it's changed
      *
-     * Thankfully, because routes are all objects, this doesn't
-     * take much memory as its simply moving references around
+     * Thankfully, because routes are all objects, this
+     * takes little memory as it's simply moving references around
      *
      * @return RouteCollection
      */
-    public function prepareNamed()
-    {
+    public function prepareNamed(): static {
         // Create a new collection so we can keep our order
         $prepared = new static();
 
-        foreach ($this as $key => $route) {
+        foreach ( $this as $key => $route ) {
             $route_name = $route->getName();
 
-            if (null !== $route_name) {
+            if ( null !== $route_name ) {
                 // Add the route to the new set with the new name
-                $prepared->set($route_name, $route);
+                $prepared->set( $route_name, $route );
             } else {
-                $prepared->add($route);
+                $prepared->add( $route );
             }
         }
 
         // Replace our collection's items with our newly prepared collection's items
-        $this->replace($prepared->all());
+        $this->replace( $prepared->all() );
 
         return $this;
     }

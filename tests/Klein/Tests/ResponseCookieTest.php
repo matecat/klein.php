@@ -12,11 +12,12 @@
 namespace Klein\Tests;
 
 use Klein\ResponseCookie;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * ResponseCookieTest
  */
-class ResponseCookieTest extends AbstractKleinTest
+class ResponseCookieTest extends AbstractKleinTestCase
 {
 
     /*
@@ -28,42 +29,41 @@ class ResponseCookieTest extends AbstractKleinTest
      *
      * @return array
      */
-    public function sampleDataProvider()
-    {
+    public static function sampleDataProvider() {
         // Populate our sample data
-        $default_sample_data = array(
-            'name' => '',
-            'value' => '',
-            'expire' => 0,
-            'path' => '',
-            'domain' => '',
-            'secure' => false,
-            'http_only' => false,
-        );
+        $default_sample_data = [
+                'name'      => '',
+                'value'     => '',
+                'expire'    => 0,
+                'path'      => '',
+                'domain'    => '',
+                'secure'    => false,
+                'http_only' => false,
+        ];
 
-        $sample_data = array(
-            'name' => 'Trevor',
-            'value' => 'is a programmer',
-            'expire' => 3600,
-            'path' => '/',
-            'domain' => 'example.com',
-            'secure' => false,
-            'http_only' => false,
-        );
+        $sample_data = [
+                'name'      => 'Trevor',
+                'value'     => 'is a programmer',
+                'expire'    => 3600,
+                'path'      => '/',
+                'domain'    => 'example.com',
+                'secure'    => false,
+                'http_only' => false,
+        ];
 
-        $sample_data_other = array(
-            'name' => 'Chris',
-            'value' => 'is a boss',
-            'expire' => 60,
-            'path' => '/app/',
-            'domain' => 'github.com',
-            'secure' => true,
-            'http_only' => true,
-        );
+        $sample_data_other = [
+                'name'      => 'Chris',
+                'value'     => 'is a boss',
+                'expire'    => 60,
+                'path'      => '/app/',
+                'domain'    => 'github.com',
+                'secure'    => true,
+                'http_only' => true,
+        ];
 
-        return array(
-            array($default_sample_data, $sample_data, $sample_data_other),
-        );
+        return [
+                [ $default_sample_data, $sample_data, $sample_data_other ],
+        ];
     }
 
 
@@ -71,10 +71,8 @@ class ResponseCookieTest extends AbstractKleinTest
      * Tests
      */
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testNameGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testNameGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie($sample_data['name']);
 
@@ -87,10 +85,8 @@ class ResponseCookieTest extends AbstractKleinTest
         $this->assertIsString($response_cookie->getName());
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testValueGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testValueGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie($defaults['name'], $sample_data['value']);
 
@@ -103,10 +99,8 @@ class ResponseCookieTest extends AbstractKleinTest
         $this->assertIsString($response_cookie->getValue());
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testExpireGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testExpireGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie(
             $defaults['name'],
@@ -123,10 +117,8 @@ class ResponseCookieTest extends AbstractKleinTest
         $this->assertIsInt($response_cookie->getExpire());
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testPathGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testPathGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie(
             $defaults['name'],
@@ -144,10 +136,8 @@ class ResponseCookieTest extends AbstractKleinTest
         $this->assertIsString($response_cookie->getPath());
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testDomainGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testDomainGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie(
             $defaults['name'],
@@ -166,10 +156,8 @@ class ResponseCookieTest extends AbstractKleinTest
         $this->assertIsString($response_cookie->getDomain());
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testSecureGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testSecureGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie(
             $defaults['name'],
@@ -189,10 +177,8 @@ class ResponseCookieTest extends AbstractKleinTest
         $this->assertIsBool($response_cookie->getSecure());
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testHttpOnlyGetSet($defaults, $sample_data, $sample_data_other)
+    #[DataProvider( 'sampleDataProvider' )]
+    public function testHttpOnlyGetSet( $defaults, $sample_data, $sample_data_other)
     {
         $response_cookie = new ResponseCookie(
             $defaults['name'],
