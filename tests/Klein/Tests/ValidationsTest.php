@@ -2,19 +2,21 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\Tests;
 
 use BadMethodCallException;
+use Klein\Exceptions\ValidationException;
 use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
+use Klein\ServiceProvider;
 use Klein\Tests\Mocks\MockRequestFactory;
 use Klein\Validator;
 
@@ -32,12 +34,12 @@ class ValidationsTest extends AbstractKleinTestCase
         $this->klein_app->service()->bind(new Request(), new Response());
 
         // Setup our error handler
-        $this->klein_app->onError(array($this, 'errorHandler'), false);
+        $this->klein_app->onError([$this, 'errorHandler']);
     }
 
     public function errorHandler($response, $message, $type, $exception)
     {
-        if (!is_null($message) && !empty($message)) {
+        if (!empty($message) && $message != 'Validation failed') {
             echo $message;
         } else {
             echo 'fail';
@@ -54,8 +56,8 @@ class ValidationsTest extends AbstractKleinTestCase
         $custom_message = 'This is a custom error message...';
 
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) use ($custom_message) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) use ($custom_message) {
                 $service->validateParam('test_param', $custom_message)
                     ->notNull()
                     ->isLen(0);
@@ -76,8 +78,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testStringLengthExact()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isLen(2);
@@ -93,6 +95,7 @@ class ValidationsTest extends AbstractKleinTestCase
                 MockRequestFactory::create('/ab')
             )
         );
+
         $this->assertSame(
             'fail',
             $this->dispatchAndReturnOutput(
@@ -104,8 +107,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testStringLengthRange()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isLen(3, 5);
@@ -162,8 +165,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testInt()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isInt();
@@ -220,8 +223,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testFloat()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isFloat();
@@ -284,8 +287,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testEmail()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isEmail();
@@ -396,8 +399,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testAlpha()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isAlpha();
@@ -454,8 +457,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testAlnum()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isAlnum();
@@ -512,8 +515,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testContains()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->contains('dog');
@@ -564,8 +567,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testChars()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isChars('c-f');
@@ -610,8 +613,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testRegex()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isRegex('/cat-[dog|bear|thing]/');
@@ -668,8 +671,8 @@ class ValidationsTest extends AbstractKleinTestCase
     public function testNotRegex()
     {
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->notRegex('/cat-[dog|bear|thing]/');
@@ -736,8 +739,8 @@ class ValidationsTest extends AbstractKleinTestCase
         );
 
         $this->klein_app->respond(
-            '/[:test_param]',
-            function ($request, $response, $service) {
+            path: '/[:test_param]',
+            callback: function ($request, $response, $service) {
                 $service->validateParam('test_param')
                     ->notNull()
                     ->isDonkey('brown');
@@ -793,19 +796,27 @@ class ValidationsTest extends AbstractKleinTestCase
 
     public function testCustomValidatorWithManyArgs()
     {
+        $request = MockRequestFactory::create('/', 'GET', [
+            'tRUe' => 1,
+            'false' => 'foobar'
+        ]);
+
+        $sp = new ServiceProvider();
+        $sp->bind($request);
+        $klein = new Klein($sp);
+
         // Add our custom validator
-        $this->klein_app->service()->addValidator(
+        $klein->service()->addValidator(
             'booleanEqual',
-            function ($string, $args) {
+            function (...$args) {
                 // Get the args
-                $args = func_get_args();
                 array_shift($args);
 
                 $previous = null;
 
                 foreach ($args as $arg) {
                     if (null !== $previous) {
-                        if ((bool) $arg !== (bool) $previous) {
+                        if ((bool)$arg !== (bool)$previous) {
                             return false;
                         }
                     } else {
@@ -817,25 +828,29 @@ class ValidationsTest extends AbstractKleinTestCase
             }
         );
 
-        $this->klein_app->service()->validateParam('tRUe')
-            ->isBooleanEqual(1, true, 'true');
-
-        $this->klein_app->service()->validateParam('false')
-            ->isBooleanEqual(0, null, '', array(), '0', false);
+        $klein->service()->validateParam('tRUe')->isBooleanEqual(1, true, 'true');
+        $klein->service()->validateParam('false')->isBooleanEqual(0, null, '', [], '0', false);
     }
 
     public function testValidatorReturnsResult()
     {
-        $result = $this->klein_app->service()->validateParam('12', false)
-            ->isInt();
+        $request = MockRequestFactory::create('/', 'GET', [
+            '12' => 1
+        ]);
 
-        $this->assertNotNull($result);
-        $this->assertFalse($result);
+        $sp = new ServiceProvider();
+        $sp->bind($request);
+        $klein = new Klein($sp);
+
+        // check for exception raised when an error message is passed to the validator
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('ooops');
+        $klein->service()->validateParam('12', 'ooops')->isInt();
     }
 
     public function testValidatorThatDoesntExist()
     {
-        $this->expectException( BadMethodCallException::class );
+        $this->expectException(BadMethodCallException::class);
         $this->klein_app->service()->validateParam('12')->isALongNameOfAThingThatDoesntExist();
     }
 }

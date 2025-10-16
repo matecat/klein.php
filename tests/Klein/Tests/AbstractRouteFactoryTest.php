@@ -12,7 +12,6 @@
 namespace Klein\Tests;
 
 use Klein\AbstractRouteFactory;
-use Klein\Route;
 
 /**
  * AbstractRouteFactoryTest
@@ -52,12 +51,12 @@ class AbstractRouteFactoryTest extends AbstractKleinTestCase
         // Empty constructor
         $factory = $this->getMockBuilderForFactory()->getMock();
 
-        $this->assertNull($factory->getNamespace());
+        $this->assertEmpty($factory->getNamespace());
 
         // Set in constructor
         $factory = $this->getMockBuilderForFactory()
-                ->setConstructorArgs( [ $test_namespace, ] )
-                ->getMock();
+            ->setConstructorArgs([$test_namespace,])
+            ->getMock();
 
         $this->assertSame($test_namespace, $factory->getNamespace());
 

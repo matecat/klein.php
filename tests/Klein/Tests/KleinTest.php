@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\Tests;
@@ -15,7 +15,6 @@ use Exception;
 use Klein\App;
 use Klein\DataCollection\RouteCollection;
 use Klein\Exceptions\DispatchHaltedException;
-use Klein\Exceptions\HttpException;
 use Klein\Exceptions\HttpExceptionInterface;
 use Klein\Exceptions\UnhandledException;
 use Klein\Klein;
@@ -24,6 +23,8 @@ use Klein\Response;
 use Klein\Route;
 use Klein\ServiceProvider;
 use OutOfBoundsException;
+use Throwable;
+use TypeError;
 
 /**
  * KleinTest
@@ -108,7 +109,7 @@ class KleinTest extends AbstractKleinTestCase
 
     public function testRespond()
     {
-        $route = $this->klein_app->respond($this->getTestCallable());
+        $route = $this->klein_app->respond(callback: $this->getTestCallable());
 
         $object_id = spl_object_hash($route);
 
@@ -158,7 +159,7 @@ class KleinTest extends AbstractKleinTestCase
     {
         // Test data
         $test_namespace = '/test/namespace';
-        $test_routes_include = __DIR__ .'/routes/random.php';
+        $test_routes_include = __DIR__ . '/routes/random.php';
 
         // Test file include
         $this->assertEmpty($this->klein_app->routes()->all());
@@ -216,7 +217,7 @@ class KleinTest extends AbstractKleinTestCase
         $this->klein_app->onError('test_num_args_wrapper');
 
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 throw new Exception('testing');
             }
         );
@@ -227,12 +228,17 @@ class KleinTest extends AbstractKleinTestCase
         );
     }
 
+    public function out($a, $b, $c, $d)
+    {
+        echo $b;
+    }
+
     public function testOnErrorWithBadCallables()
     {
         $this->klein_app->onError('this_function_doesnt_exist');
 
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 throw new Exception('testing');
             }
         );
@@ -254,13 +260,13 @@ class KleinTest extends AbstractKleinTestCase
     {
         // Create expected arguments
         $num_of_args = 0;
-        $expected_arguments = array(
-            'code'            => null,
-            'klein'           => null,
-            'matched'         => null,
+        $expected_arguments = [
+            'code' => null,
+            'klein' => null,
+            'matched' => null,
             'methods_matched' => null,
-            'exception'       => null,
-        );
+            'exception' => null,
+        ];
 
         $this->klein_app->onHttpError(
             function ($code, $klein, $matched, $methods_matched, $exception) use (&$num_of_args, &$expected_arguments) {
@@ -272,7 +278,7 @@ class KleinTest extends AbstractKleinTestCase
                 $expected_arguments['methods_matched'] = $methods_matched;
                 $expected_arguments['exception'] = $exception;
 
-                $klein->response()->body($code .' error');
+                $klein->response()->body($code . ' error');
             }
         );
 
@@ -333,7 +339,7 @@ class KleinTest extends AbstractKleinTestCase
     public function testAfterDispatchWithMultipleCallbacks()
     {
         $this->klein_app->afterDispatch(
-            function ($klein) {
+            function (Klein $klein) {
                 $klein->response()->body('after callbacks!');
             }
         );
@@ -364,18 +370,19 @@ class KleinTest extends AbstractKleinTestCase
         );
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testAfterDispatchWithBadCallables()
     {
+        $this->expectException(TypeError::class);
         $this->klein_app->afterDispatch('this_function_doesnt_exist');
-
         $this->klein_app->dispatch();
-
-        $this->expectOutputString('');
     }
 
     public function testAfterDispatchWithCallableThatThrowsException()
     {
-        $this->expectException( UnhandledException::class );
+        $this->expectException(UnhandledException::class);
         $this->klein_app->afterDispatch(
             function ($klein) {
                 throw new Exception('testing');
@@ -392,9 +399,9 @@ class KleinTest extends AbstractKleinTestCase
 
     public function testErrorsWithNoCallbacks()
     {
-        $this->expectException( UnhandledException::class );
+        $this->expectException(UnhandledException::class);
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 throw new Exception('testing');
             }
         );
@@ -446,17 +453,12 @@ class KleinTest extends AbstractKleinTestCase
         $test_code = 503;
 
         $this->klein_app->respond(
-            function ($a, $b, $c, $d, $klein_app) use ($test_code) {
+            callback: function ($a, $b, $c, $d, Klein $klein_app) use ($test_code) {
                 $klein_app->abort($test_code);
             }
         );
 
-        try {
-            $this->klein_app->dispatch();
-        } catch (Exception $e) {
-            $this->assertTrue($e instanceof DispatchHaltedException);
-            $this->assertSame(DispatchHaltedException::SKIP_REMAINING, $e->getCode());
-        }
+        $this->klein_app->dispatch();
 
         $this->assertSame($test_code, $this->klein_app->response()->code());
         $this->assertTrue($this->klein_app->response()->isLocked());
@@ -464,64 +466,57 @@ class KleinTest extends AbstractKleinTestCase
 
     public function testOptions()
     {
-        $route = $this->klein_app->options($this->getTestCallable());
+        $route = $this->klein_app->options('*', $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('OPTIONS', $route->getMethod());
     }
 
     public function testHead()
     {
-        $route = $this->klein_app->head($this->getTestCallable());
+        $route = $this->klein_app->head(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('HEAD', $route->getMethod());
     }
 
     public function testGet()
     {
-        $route = $this->klein_app->get($this->getTestCallable());
+        $route = $this->klein_app->get(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('GET', $route->getMethod());
     }
 
     public function testPost()
     {
-        $route = $this->klein_app->post($this->getTestCallable());
+        $route = $this->klein_app->post(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('POST', $route->getMethod());
     }
 
     public function testPut()
     {
-        $route = $this->klein_app->put($this->getTestCallable());
+        $route = $this->klein_app->put(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('PUT', $route->getMethod());
     }
 
     public function testDelete()
     {
-        $route = $this->klein_app->delete($this->getTestCallable());
+        $route = $this->klein_app->delete(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('DELETE', $route->getMethod());
     }
 
     public function testPatch()
     {
-        $route = $this->klein_app->patch($this->getTestCallable());
+        $route = $this->klein_app->patch(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
         $this->assertSame('PATCH', $route->getMethod());
     }
 }

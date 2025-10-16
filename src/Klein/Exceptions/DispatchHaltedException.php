@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\Exceptions;
@@ -30,21 +30,21 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @type int
      */
-    const SKIP_THIS = 1;
+    const int SKIP_THIS = 1;
 
     /**
      * Skip the next match/callback
      *
      * @type int
      */
-    const SKIP_NEXT = 2;
+    const int SKIP_NEXT = 2;
 
     /**
      * Skip the rest of the matches
      *
      * @type int
      */
-    const SKIP_REMAINING = 0;
+    const int SKIP_REMAINING = 0;
 
 
     /**
@@ -56,7 +56,7 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @type int
      */
-    protected $number_of_skips = 1;
+    protected int $number_of_skips = 1;
 
 
     /**
@@ -68,7 +68,7 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @return int
      */
-    public function getNumberOfSkips()
+    public function getNumberOfSkips(): int
     {
         return $this->number_of_skips;
     }
@@ -77,11 +77,12 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      * Sets the number of matches to skip on a "next" skip
      *
      * @param int $number_of_skips
+     *
      * @return DispatchHaltedException
      */
-    public function setNumberOfSkips($number_of_skips)
+    public function setNumberOfSkips(int $number_of_skips): static
     {
-        $this->number_of_skips = (int) $number_of_skips;
+        $this->number_of_skips = $number_of_skips;
 
         return $this;
     }

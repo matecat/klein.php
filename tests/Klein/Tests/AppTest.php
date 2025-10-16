@@ -60,8 +60,8 @@ class AppTest extends AbstractKleinTestCase
         );
     }
 
-    #[Depends( 'testRegisterFiller' )]
-    public function testGet( array $args)
+    #[Depends('testRegisterFiller')]
+    public function testGet(array $args)
     {
         // Get our vars from our args
         extract($args);
@@ -82,8 +82,8 @@ class AppTest extends AbstractKleinTestCase
         $app->random_thing_that_doesnt_exist;
     }
 
-    #[Depends( 'testRegisterFiller' )]
-    public function testCall( array $args)
+    #[Depends('testRegisterFiller')]
+    public function testCall(array $args)
     {
         // Get our vars from our args
         extract($args);
@@ -96,15 +96,15 @@ class AppTest extends AbstractKleinTestCase
 
     public function testCallBadMethod()
     {
-        $this->expectException( BadMethodCallException::class );
+        $this->expectException(BadMethodCallException::class);
         $app = new App();
         $app->random_thing_that_doesnt_exist();
     }
 
-    #[Depends( 'testRegisterFiller' )]
-    public function testRegisterDuplicateMethod( array $args)
+    #[Depends('testRegisterFiller')]
+    public function testRegisterDuplicateMethod(array $args)
     {
-        $this->expectException( DuplicateServiceException::class );
+        $this->expectException(DuplicateServiceException::class);
         // Get our vars from our args
         extract($args);
 

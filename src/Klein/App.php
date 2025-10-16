@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein;
@@ -30,7 +30,7 @@ class App
      *
      * @type array
      */
-    protected $services = array();
+    protected array $services = [];
 
     /**
      * Magic "__get" method
@@ -41,14 +41,15 @@ class App
      * This checks the lazy service register and automatically calls the registered
      * service method
      *
-     * @param string $name              The name of the service
-     * @throws UnknownServiceException  If a non-registered service is attempted to fetched
+     * @param string $name The name of the service
+     *
      * @return mixed
+     * @throws UnknownServiceException  If a non-registered service is attempted to fetched
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         if (!isset($this->services[$name])) {
-            throw new UnknownServiceException('Unknown service '. $name);
+            throw new UnknownServiceException('Unknown service ' . $name);
         }
         $service = $this->services[$name];
 
@@ -61,15 +62,16 @@ class App
      * Allows the ability to arbitrarily call a property as a callable method
      * Allow callbacks to be assigned as properties and called like normal methods
      *
-     * @param callable $method          The callable method to execute
-     * @param array $args               The argument array to pass to our callback
-     * @throws BadMethodCallException   If a non-registered method is attempted to be called
+     * @param string $method The callable method to execute
+     * @param array $args The argument array to pass to our callback
+     *
      * @return void
+     * @throws BadMethodCallException   If a non-registered method is attempted to be called
      */
-    public function __call($method, $args)
+    public function __call(string $method, array $args)
     {
         if (!isset($this->services[$method]) || !is_callable($this->services[$method])) {
-            throw new BadMethodCallException('Unknown method '. $method .'()');
+            throw new BadMethodCallException('Unknown method ' . $method . '()');
         }
 
         return call_user_func_array($this->services[$method], $args);
@@ -78,21 +80,22 @@ class App
     /**
      * Register a lazy service
      *
-     * @param string $name                  The name of the service
-     * @param callable $closure             The callable function to execute when requesting our service
+     * @param string $name The name of the service
+     * @param callable $closure The callable function to execute when requesting our service
+     *
+     * @return void
      * @throws DuplicateServiceException    If an attempt is made to register two services with the same name
-     * @return mixed
      */
-    public function register($name, $closure)
+    public function register(string $name, callable $closure): void
     {
         if (isset($this->services[$name])) {
-            throw new DuplicateServiceException('A service is already registered under '. $name);
+            throw new DuplicateServiceException('A service is already registered under ' . $name);
         }
 
         $this->services[$name] = function () use ($closure) {
             static $instance;
             if (null === $instance) {
-                $instance = $closure();
+                $instance = $closure(func_get_args());
             }
 
             return $instance;

@@ -2,18 +2,17 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\Tests;
 
 use Klein\DataCollection\DataCollection;
 use Klein\Exceptions\ValidationException;
-use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
 use Klein\ServiceProvider;
@@ -122,7 +121,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         $returned = $service->startSession();
 
-        $this->assertNull($returned);
+        $this->assertFalse($returned);
 
         // Clean up
         session_destroy();
@@ -133,16 +132,16 @@ class ServiceProviderTest extends AbstractKleinTestCase
     {
         // Test data
         $test_session_key = '__flashes';
-        $test_flashes = array(
-            array(
+        $test_flashes = [
+            [
                 'message' => 'Test info message',
                 'type' => 'info',
-            ),
-            array(
+            ],
+            [
                 'message' => 'Test error message',
                 'type' => 'error',
-            ),
-        );
+            ],
+        ];
 
         $service = new ServiceProvider();
 
@@ -157,7 +156,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         // Clean up
         session_destroy();
-        $_SESSION = array();
+        $_SESSION = [];
     }
 
     public function testFlashWithMarkdown()
@@ -166,52 +165,52 @@ class ServiceProviderTest extends AbstractKleinTestCase
         $test_session_key = '__flashes';
         $test_type = 'info';
         $test_message = 'Test message by %s %s';
-        $test_params = array(
+        $test_params = [
             'Trevor',
             'Suarez',
-        );
+        ];
         $test_processed = 'Test message by ' . $test_params[0] . ' ' . $test_params[1];
 
         $service = new ServiceProvider();
 
         $this->assertEmpty($_SESSION);
 
-        $service->flash($test_message, $test_params);
+        $service->flashInfo($test_message, $test_params);
 
         $this->assertNotEmpty($_SESSION);
         $this->assertSame($test_processed, $_SESSION[$test_session_key][$test_type][0]);
 
         // Clean up
         session_destroy();
-        $_SESSION = array();
+        $_SESSION = [];
     }
 
     public function testFlashes()
     {
         // Test data
         $test_session_key = '__flashes';
-        $test_flashes = array(
-            array(
+        $test_flashes = [
+            [
                 'message' => 'Test info message',
                 'type' => 'info',
-            ),
-            array(
+            ],
+            [
                 'message' => 'Test error message',
                 'type' => 'error',
-            ),
-            array(
+            ],
+            [
                 'message' => 'Test second error message',
                 'type' => 'error',
-            ),
-            array(
+            ],
+            [
                 'message' => 'Test whatever message',
                 'type' => 'whatever',
-            ),
-        );
-        $test_error_flashes = array(
+            ],
+        ];
+        $test_error_flashes = [
             $test_flashes[1]['message'],
             $test_flashes[2]['message'],
-        );
+        ];
 
         $service = new ServiceProvider();
 
@@ -237,7 +236,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         // Clean up
         session_destroy();
-        $_SESSION = array();
+        $_SESSION = [];
     }
 
     public function testMarkdownParser()
@@ -251,19 +250,13 @@ class ServiceProviderTest extends AbstractKleinTestCase
         // Test array arguments
         $this->assertSame(
             '<strong>huh</strong> <em>12</em> <strong>CD</strong>',
-            ServiceProvider::markdown('**%s** *%d* **%X**', array('huh', '12', 205))
-        );
-
-        // Test variable number of arguments
-        $this->assertSame(
-            '<strong>huh</strong> <em>12</em> <strong>CD</strong>',
-            ServiceProvider::markdown('**%s** *%d* **%X**', 'huh', '12', 205)
+            ServiceProvider::markdown('**%s** *%d* **%X**', ['huh', '12', 205])
         );
 
         // Test second array argument overrides other arguments
         $this->assertSame(
             '<strong>huh</strong> <em>12</em> <strong>CD</strong>',
-            ServiceProvider::markdown('**%s** *%d* **%X**', array('huh', '12', 205), 'dog', 'cheese')
+            ServiceProvider::markdown('**%s** *%d* **%X**', ['huh', '12', 205], 'dog', 'cheese')
         );
     }
 
@@ -278,7 +271,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
     public function testRefresh()
     {
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 $service->refresh();
             }
         );
@@ -304,7 +297,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
         $request->server()->set('HTTP_REFERER', $url);
 
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 $service->back();
             }
         );
@@ -327,7 +320,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
         $request = new Request();
 
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 $service->back();
             }
         );
@@ -359,23 +352,23 @@ class ServiceProviderTest extends AbstractKleinTestCase
      */
     public function testRender()
     {
-        $test_data = array(
+        $test_data = [
             'name' => 'trevor suarez',
             'title' => 'about',
             'verb' => 'woot',
-        );
+        ];
 
         $this->klein_app->respond(
-            function ($request, $response, $service) use ($test_data) {
+            callback: function ($request, $response, $service) use ($test_data) {
                 // Set some data manually
                 $service->sharedData()->set('name', 'should be overwritten');
 
                 // Set our layout
-                $service->layout(__DIR__.'/views/layout.php');
+                $service->layout(__DIR__ . '/views/layout.php');
 
                 // Render our view, and pass some MORE data
                 $service->render(
-                    __DIR__.'/views/test.php',
+                    __DIR__ . '/views/test.php',
                     $test_data
                 );
             }
@@ -385,34 +378,34 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         $this->expectOutputString(
             '<h1>About</h1>' . PHP_EOL
-            .'My name is Trevor Suarez.' . PHP_EOL
-            .'WOOT!' . PHP_EOL
-            .'<div>footer</div>' . PHP_EOL
+            . 'My name is Trevor Suarez.' . PHP_EOL
+            . 'WOOT!' . PHP_EOL
+            . '<div>footer</div>' . PHP_EOL
         );
     }
 
     public function testRenderChunked()
     {
-        $test_data = array(
+        $test_data = [
             'name' => 'trevor suarez',
             'title' => 'about',
             'verb' => 'woot',
-        );
+        ];
 
         $response = new Response();
         $response->chunk();
 
         $this->klein_app->respond(
-            function ($request, $response, $service) use ($test_data) {
+            callback: function ($request, $response, $service) use ($test_data) {
                 // Set some data manually
                 $service->sharedData()->set('name', 'should be overwritten');
 
                 // Set our layout
-                $service->layout(__DIR__.'/views/layout.php');
+                $service->layout(__DIR__ . '/views/layout.php');
 
                 // Render our view, and pass some MORE data
                 $service->render(
-                    __DIR__.'/views/test.php',
+                    __DIR__ . '/views/test.php',
                     $test_data
                 );
             }
@@ -422,28 +415,28 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         $this->expectOutputString(
             '<h1>About</h1>' . PHP_EOL
-            .'My name is Trevor Suarez.' . PHP_EOL
-            .'WOOT!' . PHP_EOL
-            .'<div>footer</div>' . PHP_EOL
+            . 'My name is Trevor Suarez.' . PHP_EOL
+            . 'WOOT!' . PHP_EOL
+            . '<div>footer</div>' . PHP_EOL
         );
     }
 
     public function testPartial()
     {
-        $test_data = array(
+        $test_data = [
             'name' => 'trevor suarez',
             'title' => 'about',
             'verb' => 'woot',
-        );
+        ];
 
         $this->klein_app->respond(
-            function ($request, $response, $service) use ($test_data) {
+            callback: function ($request, $response, $service) use ($test_data) {
                 // Set our layout
-                $service->layout(__DIR__.'/views/layout.php');
+                $service->layout(__DIR__ . '/views/layout.php');
 
                 // Render our view, and pass some MORE data
                 $service->partial(
-                    __DIR__.'/views/test.php',
+                    __DIR__ . '/views/test.php',
                     $test_data
                 );
             }
@@ -454,7 +447,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
         // Make sure the layout doesn't get included
         $this->expectOutputString(
             'My name is Trevor Suarez.' . PHP_EOL
-            .'WOOT!' . PHP_EOL
+            . 'WOOT!' . PHP_EOL
         );
     }
 
@@ -478,7 +471,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
     public function testValidate()
     {
-        $this->expectException( ValidationException::class );
+        $this->expectException(ValidationException::class);
         $this->klein_app->onError(
             function ($a, $b, $c, $exception) {
                 throw $exception;
@@ -486,7 +479,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
         );
 
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, ServiceProvider $service) {
                 $service->validate('thing')->isLen(3);
             }
         );
@@ -496,7 +489,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
     public function testValidateParam()
     {
-        $this->expectException( ValidationException::class );
+        $this->expectException(ValidationException::class);
         $this->klein_app->onError(
             function ($a, $b, $c, $exception) {
                 throw $exception;
@@ -504,7 +497,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
         );
 
         $this->klein_app->respond(
-            function ($request, $response, $service) {
+            callback: function ($request, $response, $service) {
                 // Set a test param
                 $request->paramsNamed()->set('name', 'trevor');
 
@@ -518,9 +511,9 @@ class ServiceProviderTest extends AbstractKleinTestCase
     // Test ALL of the magic setter, getter, exists, and removal methods
     public function testMagicGetSetExistsRemove()
     {
-        $test_data = array(
+        $test_data = [
             'name' => 'huh?',
-        );
+        ];
 
         $service = new ServiceProvider();
 

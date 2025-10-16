@@ -29,10 +29,10 @@ class Response extends AbstractResponse
      *
      * @link https://github.com/klein/klein.php/wiki/Response-Chunking
      * @link http://bit.ly/hg3gHb
-     * @param string $str   An optional string to send as a response "chunk"
+     * @param string|null $str An optional string to send as a response "chunk"
      * @return Response
      */
-    public function chunk($str = null)
+    public function chunk(string $str = null): static
     {
         parent::chunk();
 
@@ -48,16 +48,16 @@ class Response extends AbstractResponse
     /**
      * Dump a variable
      *
-     * @param mixed $obj    The variable to dump
+     * @param mixed $obj The variable to dump
      * @return Response
      */
-    public function dump($obj)
+    public function dump(mixed $obj): static
     {
         if (is_array($obj) || is_object($obj)) {
             $obj = print_r($obj, true);
         }
 
-        $this->append('<pre>' .  htmlentities($obj, ENT_QUOTES) . "</pre><br />\n");
+        $this->append('<pre>' . htmlentities($obj, ENT_QUOTES) . "</pre><br />\n");
 
         return $this;
     }
@@ -74,13 +74,13 @@ class Response extends AbstractResponse
      * currently in the response body and replaces it with
      * the file's data
      *
-     * @param string $path      The path of the file to send
-     * @param string $filename  The file's name
-     * @param string $mimetype  The MIME type of the file
-     * @throws RuntimeException Thrown if the file could not be read
+     * @param string $path The path of the file to send
+     * @param string|null $filename The file's name
+     * @param string|null $mimetype The MIME type of the file
      * @return Response
+     * @throws RuntimeException Thrown if the file could not be read
      */
-    public function file($path, $filename = null, $mimetype = null)
+    public function file(string $path, string $filename = null, string $mimetype = null): static
     {
         if ($this->sent) {
             throw new ResponseAlreadySentException('Response has already been sent');
@@ -97,7 +97,7 @@ class Response extends AbstractResponse
         }
 
         $this->header('Content-type', $mimetype);
-        $this->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+        $this->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         // If the response is to be chunked, then the content length must not be sent
         // see: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4
@@ -131,21 +131,21 @@ class Response extends AbstractResponse
     }
 
     /**
-     * Sends an object as json or jsonp by providing the padding prefix
+     * Sends an object as JSON or jsonp by providing the padding prefix
      *
      * It should be noted that this method disables caching
-     * of the response by default, as json responses are usually
+     * of the response by default, as JSON responses are usually
      * dynamic and rarely make sense to be HTTP cached
      *
-     * Also, this method removes any data/content that is
+     * Also, this method removes any data/content
      * currently in the response body and replaces it with
-     * the passed json encoded object
+     * the passed JSON encoded object
      *
-     * @param mixed $object         The data to encode as JSON
-     * @param string $jsonp_prefix  The name of the JSON-P function prefix
+     * @param mixed $object The data to encode as JSON
+     * @param string|null $jsonp_prefix The name of the JSON-P function prefix
      * @return Response
      */
-    public function json($object, $jsonp_prefix = null)
+    public function json(mixed $object, string $jsonp_prefix = null): static
     {
         $this->body('');
         $this->noCache();

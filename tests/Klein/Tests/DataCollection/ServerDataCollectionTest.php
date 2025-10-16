@@ -50,7 +50,7 @@ class ServerDataCollectionTest extends AbstractKleinTestCase
             'HTTP_CONNECTION' => 'keep-alive',
             'HTTP_CONTENT_LENGTH' => '137',
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.31'
-                .' (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31',
+                . ' (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31',
             'HTTP_CACHE_CONTROL' => 'no-cache',
             'HTTP_ORIGIN' => 'chrome-extension://fdmmgilgnpjigdojojpjoooidkmcomcm',
             'HTTP_AUTHORIZATION' => 'Basic MTIzOjQ1Ng==',
@@ -84,8 +84,8 @@ class ServerDataCollectionTest extends AbstractKleinTestCase
         $this->assertFalse(ServerDataCollection::hasPrefix('_dog_wierd', 'dog'));
     }
 
-    #[DataProvider( 'sampleDataProvider' )]
-    public function testGetHeaders( $sample_data, $data_collection)
+    #[DataProvider('sampleDataProvider')]
+    public function testGetHeaders($sample_data, $data_collection)
     {
         $http_headers = $data_collection->getHeaders();
 

@@ -63,8 +63,8 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
      * Tests
      */
 
-    #[DataProvider( 'sampleDataProvider' )]
-    public function testSet( $sample_cookie, $sample_other_cookie)
+    #[DataProvider('sampleDataProvider')]
+    public function testSet($sample_cookie, $sample_other_cookie)
     {
         // Create our collection with NO data
         $data_collection = new ResponseCookieDataCollection();
@@ -88,8 +88,8 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
         $this->assertTrue($data_collection->get('first') instanceof ResponseCookie);
     }
 
-    #[DataProvider( 'sampleDataProvider' )]
-    public function testConstructorRoutesThroughSet( $sample_cookie, $sample_other_cookie)
+    #[DataProvider('sampleDataProvider')]
+    public function testConstructorRoutesThroughSet($sample_cookie, $sample_other_cookie)
     {
         $array_of_cookie_instances = array(
             $sample_cookie,

@@ -18,7 +18,8 @@ use Klein\Route;
  *
  * A DataCollection for Routes
  */
-class RouteCollection extends DataCollection {
+class RouteCollection extends DataCollection
+{
 
     /**
      * Methods
@@ -30,10 +31,11 @@ class RouteCollection extends DataCollection {
      * @override (doesn't call our parent)
      * @param array $routes The routes of this collection
      */
-    public function __construct( array $routes = [] ) {
+    public function __construct(array $routes = [])
+    {
         parent::__construct();
-        foreach ( $routes as $value ) {
-            $this->add( $value );
+        foreach ($routes as $value) {
+            $this->add($value);
         }
     }
 
@@ -50,18 +52,19 @@ class RouteCollection extends DataCollection {
      * by passing the name of the route as the "$key" and an
      * instance of a Route as the "$value"
      *
-     * @param string $key   The name of the route to set
-     * @param mixed  $value The value of the route to set
+     * @param string $key The name of the route to set
+     * @param mixed $value The value of the route to set
      *
      * @return RouteCollection
      * @see DataCollection::set()
      */
-    public function set( string $key, mixed $value ): static {
-        if ( !$value instanceof Route ) {
-            $value = new Route( $value );
+    public function set(string $key, mixed $value): static
+    {
+        if (!$value instanceof Route && is_callable($value)) {
+            $value = new Route($value);
         }
 
-        return parent::set( $key, $value );
+        return parent::set($key, $value);
     }
 
     /**
@@ -73,15 +76,16 @@ class RouteCollection extends DataCollection {
      *
      * @return RouteCollection
      */
-    public function addRoute( Route $route ): RouteCollection|static {
+    public function addRoute(Route $route): RouteCollection|static
+    {
         /**
          * Auto-generate a name from the object's hash
          * This makes it so that we can autogenerate names
          * that ensure duplicate route instances are overridden
          */
-        $name = spl_object_hash( $route );
+        $name = spl_object_hash($route);
 
-        return $this->set( $name, $route );
+        return $this->set($name, $route);
     }
 
     /**
@@ -95,12 +99,13 @@ class RouteCollection extends DataCollection {
      *
      * @return RouteCollection
      */
-    public function add( callable|Route $route ): RouteCollection|static {
-        if ( !$route instanceof Route ) {
-            $route = new Route( $route );
+    public function add(callable|Route $route): RouteCollection|static
+    {
+        if (!$route instanceof Route) {
+            $route = new Route($route);
         }
 
-        return $this->addRoute( $route );
+        return $this->addRoute($route);
     }
 
     /**
@@ -114,23 +119,24 @@ class RouteCollection extends DataCollection {
      *
      * @return RouteCollection
      */
-    public function prepareNamed(): static {
+    public function prepareNamed(): static
+    {
         // Create a new collection so we can keep our order
         $prepared = new static();
 
-        foreach ( $this as $key => $route ) {
+        foreach ($this as $route) {
             $route_name = $route->getName();
 
-            if ( null !== $route_name ) {
+            if (null !== $route_name) {
                 // Add the route to the new set with the new name
-                $prepared->set( $route_name, $route );
+                $prepared->set($route_name, $route);
             } else {
-                $prepared->add( $route );
+                $prepared->add($route);
             }
         }
 
         // Replace our collection's items with our newly prepared collection's items
-        $this->replace( $prepared->all() );
+        $this->replace($prepared->all());
 
         return $this;
     }

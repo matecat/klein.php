@@ -16,7 +16,8 @@ namespace Klein\DataCollection;
  *
  * A DataCollection for HTTP headers
  */
-class HeaderDataCollection extends DataCollection {
+class HeaderDataCollection extends DataCollection
+{
 
     /**
      * Constants
@@ -98,15 +99,16 @@ class HeaderDataCollection extends DataCollection {
      * Constructor
      *
      * @override (doesn't call our parent)
-     * @param array $headers       The headers of this collection
-     * @param int   $normalization The header key normalization technique/style to use
+     * @param array $headers The headers of this collection
+     * @param int $normalization The header key normalization technique/style to use
      */
-    public function __construct( array $headers = [], int $normalization = self::NORMALIZE_ALL ) {
+    public function __construct(array $headers = [], int $normalization = self::NORMALIZE_ALL)
+    {
         parent::__construct();
         $this->normalization = $normalization;
 
-        foreach ( $headers as $key => $value ) {
-            $this->set( $key, $value );
+        foreach ($headers as $key => $value) {
+            $this->set($key, $value);
         }
     }
 
@@ -115,7 +117,8 @@ class HeaderDataCollection extends DataCollection {
      *
      * @return int
      */
-    public function getNormalization(): int {
+    public function getNormalization(): int
+    {
         return $this->normalization;
     }
 
@@ -126,7 +129,8 @@ class HeaderDataCollection extends DataCollection {
      *
      * @return HeaderDataCollection
      */
-    public function setNormalization( int $normalization ): static {
+    public function setNormalization(int $normalization): static
+    {
         $this->normalization = $normalization;
 
         return $this;
@@ -137,16 +141,17 @@ class HeaderDataCollection extends DataCollection {
      *
      * {@inheritdoc}
      *
-     * @param string     $key         The key of the header to return
+     * @param string $key The key of the header to return
      * @param mixed|null $default_val The default value of the header if it contains no value
      *
-     * @return mixed
+     * @return string
      * @see DataCollection::get()
      */
-    public function get( string $key, mixed $default_val = null ): mixed {
-        $key = $this->normalizeKey( $key );
+    public function get(string $key, mixed $default_val = null): mixed
+    {
+        $key = $this->normalizeKey($key);
 
-        return parent::get( $key, $default_val );
+        return parent::get($key, $default_val);
     }
 
     /**
@@ -154,16 +159,17 @@ class HeaderDataCollection extends DataCollection {
      *
      * {@inheritdoc}
      *
-     * @param string $key   The key of the header to set
-     * @param mixed  $value The value of the header to set
+     * @param string $key The key of the header to set
+     * @param mixed $value The value of the header to set
      *
      * @return HeaderDataCollection
      * @see DataCollection::set()
      */
-    public function set( string $key, mixed $value ): static {
-        $key = $this->normalizeKey( $key );
+    public function set(string $key, mixed $value): static
+    {
+        $key = $this->normalizeKey($key);
 
-        return parent::set( $key, $value );
+        return parent::set($key, $value);
     }
 
     /**
@@ -176,10 +182,11 @@ class HeaderDataCollection extends DataCollection {
      * @return boolean
      * @see DataCollection::exists()
      */
-    public function exists( string $key ): bool {
-        $key = $this->normalizeKey( $key );
+    public function exists(string $key): bool
+    {
+        $key = $this->normalizeKey($key);
 
-        return parent::exists( $key );
+        return parent::exists($key);
     }
 
     /**
@@ -192,10 +199,11 @@ class HeaderDataCollection extends DataCollection {
      * @return void
      * @see DataCollection::remove()
      */
-    public function remove( string $key ): void {
-        $key = $this->normalizeKey( $key );
+    public function remove(string $key): void
+    {
+        $key = $this->normalizeKey($key);
 
-        parent::remove( $key );
+        parent::remove($key);
     }
 
     /**
@@ -205,21 +213,22 @@ class HeaderDataCollection extends DataCollection {
      *
      * @return string
      */
-    protected function normalizeKey( string $key ): string {
-        if ( $this->normalization & static::NORMALIZE_TRIM ) {
-            $key = trim( $key );
+    protected function normalizeKey(string $key): string
+    {
+        if ($this->normalization & static::NORMALIZE_TRIM) {
+            $key = trim($key);
         }
 
-        if ( $this->normalization & static::NORMALIZE_DELIMITERS ) {
-            $key = static::normalizeKeyDelimiters( $key );
+        if ($this->normalization & static::NORMALIZE_DELIMITERS) {
+            $key = static::normalizeKeyDelimiters($key);
         }
 
-        if ( $this->normalization & static::NORMALIZE_CASE ) {
-            $key = strtolower( $key );
+        if ($this->normalization & static::NORMALIZE_CASE) {
+            $key = strtolower($key);
         }
 
-        if ( $this->normalization & static::NORMALIZE_CANONICAL ) {
-            $key = static::canonicalizeKey( $key );
+        if ($this->normalization & static::NORMALIZE_CANONICAL) {
+            $key = static::canonicalizeKey($key);
         }
 
         return $key;
@@ -235,8 +244,9 @@ class HeaderDataCollection extends DataCollection {
      *
      * @return string
      */
-    public static function normalizeKeyDelimiters( string $key ): string {
-        return str_replace( [ ' ', '_' ], '-', $key );
+    public static function normalizeKeyDelimiters(string $key): string
+    {
+        return str_replace([' ', '_'], '-', $key);
     }
 
     /**
@@ -251,14 +261,15 @@ class HeaderDataCollection extends DataCollection {
      *
      * @return string
      */
-    public static function canonicalizeKey( string $key ): string {
-        $words = explode( '-', strtolower( $key ) );
+    public static function canonicalizeKey(string $key): string
+    {
+        $words = explode('-', strtolower($key));
 
-        foreach ( $words as &$word ) {
-            $word = ucfirst( $word );
+        foreach ($words as &$word) {
+            $word = ucfirst($word);
         }
 
-        return implode( '-', $words );
+        return implode('-', $words);
     }
 
 }

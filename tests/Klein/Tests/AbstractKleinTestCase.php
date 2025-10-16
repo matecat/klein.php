@@ -15,6 +15,7 @@ use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 /**
  * AbstractKleinTestCase
@@ -30,7 +31,7 @@ abstract class AbstractKleinTestCase extends TestCase
      *
      * @type Klein
      */
-    protected $klein_app;
+    protected Klein $klein_app;
 
 
     /**
@@ -52,9 +53,11 @@ abstract class AbstractKleinTestCase extends TestCase
      * This is mostly useful, since the tests would otherwise have to make a bunch of calls
      * concerning the argument order and constants. DRY, bitch. ;)
      *
-     * @param Request $request      Custom Klein "Request" object
-     * @param Response $response    Custom Klein "Response" object
+     * @param Request $request Custom Klein "Request" object
+     * @param Response $response Custom Klein "Response" object
+     *
      * @return mixed The output of the dispatch call
+     * @throws Throwable
      */
     protected function dispatchAndReturnOutput($request = null, $response = null)
     {

@@ -11,9 +11,10 @@
 
 namespace Klein\Tests;
 
+use Closure;
 use InvalidArgumentException;
-use Klein\Klein;
 use Klein\Route;
+use TypeError;
 
 /**
  * RouteTest
@@ -21,7 +22,7 @@ use Klein\Route;
 class RouteTest extends AbstractKleinTestCase
 {
 
-    protected function getTestCallable()
+    protected function getTestCallable(): Closure
     {
         return function () {
             echo 'dog';
@@ -85,7 +86,7 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertNull($route->getMethod());
 
         // Set in constructor
-        $route = new Route($test_callable, null, $test_method_string);
+        $route = new Route($test_callable, '', $test_method_string);
 
         $this->assertSame($test_method_string, $route->getMethod());
 
@@ -108,7 +109,7 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertTrue($route->getCountMatch());
 
         // Set in constructor
-        $route = new Route($test_callable, null, null, $test_count_match);
+        $route = new Route($test_callable, '', null, $test_count_match);
 
         $this->assertSame($test_count_match, $route->getCountMatch());
 
@@ -131,7 +132,7 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertNull($route->getName());
 
         // Set in constructor
-        $route = new Route($test_callable, null, null, null, $test_name);
+        $route = new Route($test_callable, '', null, true, $test_name);
 
         $this->assertSame($test_name, $route->getName());
 
@@ -146,9 +147,9 @@ class RouteTest extends AbstractKleinTestCase
     {
         // Test data
         $test_callable = function ($id, $name) {
-            return array($id, $name);
+            return [$id, $name];
         };
-        $test_arguments = array(7, 'Trevor');
+        $test_arguments = [7, 'Trevor'];
 
         $route = new Route($test_callable);
 
@@ -164,7 +165,7 @@ class RouteTest extends AbstractKleinTestCase
 
     public function testCallbackSetWithIncorrectType()
     {
-        $this->expectException( InvalidArgumentException::class );
+        $this->expectException(TypeError::class);
         $route = new Route($this->getTestCallable());
 
         // Test setting with the WRONG type
@@ -173,7 +174,7 @@ class RouteTest extends AbstractKleinTestCase
 
     public function testMethodSetWithIncorrectType()
     {
-        $this->expectException( InvalidArgumentException::class );
+        $this->expectException(InvalidArgumentException::class);
         $route = new Route($this->getTestCallable());
 
         // Test setting with the WRONG type
