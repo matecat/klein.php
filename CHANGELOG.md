@@ -2,9 +2,11 @@
 
 ## 3.0.0
 
+### Features
+
 - Support for PHP >= 8.1
 - Dropped support for previous PHP versions
-- Removed the "magical" way of inputting mask in DataCollections in favor of PHP 8.3 named arguments.
+- Removed the "magical" way of inputting mask in DataCollections in favor of PHP 8 named arguments.
 - Removed use of 404/405 "routes" (deprecated in previous versions). Use `$klein->onHttpError()` instead.
 - Removed "magical" callback behavior in favor of PHP 8.3 named arguments. Now the function accepts an optional string path as the first parameter and a NOT optional callback.
 - Removed "magical" markdown behavior. Now the function accepts a string and an optional array of values.
