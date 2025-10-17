@@ -80,7 +80,7 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @return DispatchHaltedException
      */
-    public function setNumberOfSkips(int $number_of_skips): static
+    public function setNumberOfSkips(int $number_of_skips): DispatchHaltedException
     {
         $this->number_of_skips = $number_of_skips;
 

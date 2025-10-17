@@ -119,7 +119,7 @@ class RouteFactory extends AbstractRouteFactory
      *
      * @param callable $callback Callable callback method to execute on route match
      * @param string|null $path Route URI path to match
-     * @param string|array|null $method HTTP Method to match
+     * @param string|string[]|null $method HTTP Method to match
      * @param boolean $count_match Whether to count the route as a match when counting total matches
      * @param string|null $name The name of the route
      *

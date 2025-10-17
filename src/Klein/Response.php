@@ -30,7 +30,7 @@ class Response extends AbstractResponse
      * @link https://github.com/klein/klein.php/wiki/Response-Chunking
      * @link http://bit.ly/hg3gHb
      * @param string|null $str An optional string to send as a response "chunk"
-     * @return Response
+     * @return static
      */
     public function chunk(string $str = null): static
     {
@@ -49,7 +49,7 @@ class Response extends AbstractResponse
      * Dump a variable
      *
      * @param mixed $obj The variable to dump
-     * @return Response
+     * @return static
      */
     public function dump(mixed $obj): static
     {
@@ -77,7 +77,7 @@ class Response extends AbstractResponse
      * @param string $path The path of the file to send
      * @param string|null $filename The file's name
      * @param string|null $mimetype The MIME type of the file
-     * @return Response
+     * @return static
      * @throws RuntimeException Thrown if the file could not be read
      */
     public function file(string $path, string $filename = null, string $mimetype = null): static
@@ -92,23 +92,30 @@ class Response extends AbstractResponse
         if (null === $filename) {
             $filename = basename($path);
         }
-        if (null === $mimetype) {
-            $mimetype = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $path);
+
+        $fileExists = is_file($path) && is_readable($path);
+        $fileSize = $fileExists ? filesize($path) : 0;
+
+        if (null === $mimetype && $fileExists) {
+            $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($fileInfo) {
+                $mimetype = finfo_file($fileInfo, $path);
+            }
         }
 
-        $this->header('Content-type', $mimetype);
+        $this->header('Content-type', $mimetype ?? 'application/octet-stream');
         $this->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         // If the response is to be chunked, then the content length must not be sent
         // see: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4
-        if (false === $this->chunked) {
-            $this->header('Content-length', filesize($path));
+        if (!$this->chunked) {
+            $this->header('Content-length', $fileSize);
         }
 
         // Send our response data
         $this->sendHeaders();
 
-        $bytes_read = readfile($path);
+        $bytes_read = $fileExists ? readfile($path) : false;
 
         if (false === $bytes_read) {
             throw new RuntimeException('The file could not be read');
@@ -143,14 +150,14 @@ class Response extends AbstractResponse
      *
      * @param mixed $object The data to encode as JSON
      * @param string|null $jsonp_prefix The name of the JSON-P function prefix
-     * @return Response
+     * @return static
      */
     public function json(mixed $object, string $jsonp_prefix = null): static
     {
         $this->body('');
         $this->noCache();
 
-        $json = json_encode($object);
+        $json = json_encode($object) ?: '';
 
         if (null !== $jsonp_prefix) {
             // Should ideally be application/json-p once adopted

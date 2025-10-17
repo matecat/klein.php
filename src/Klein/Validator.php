@@ -27,7 +27,7 @@ class Validator
     /**
      * The available validator methods
      *
-     * @type array
+     * @var array<string, callable>
      */
     public static array $methods = [];
 
@@ -85,7 +85,6 @@ class Validator
         };
         static::$methods['len'] = function (?string $str, int $min, ?int $max = null) {
             $len = strlen($str);
-
             return null === $max ? $len === $min : $len >= $min && $len <= $max;
         };
         static::$methods['int'] = function (?string $str) {
@@ -145,11 +144,12 @@ class Validator
      * of "is" or "not" by simply calling an instance property like a callback
      *
      * @param string $method The callable method to execute
-     * @param array $args The argument array to pass to our callback
+     * @param array<mixed> $args The argument array to pass to our callback
      *
-     * @return Validator
+     * @return static
      * @throws ValidationException
      * @throws BadMethodCallException   If a non-registered method is attempted to be called
+     * @noinspection PhpPluralMixedCanBeReplacedWithArrayInspection
      */
     public function __call(string $method, array $args): static
     {

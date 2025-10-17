@@ -29,8 +29,8 @@ class ResponseCookieDataCollection extends DataCollection
     /**
      * Constructor
      *
-     * @override (doesn't call our parent)
-     * @param array $cookies The cookies of this collection
+     * @override DataCollection::__construct()
+     * @param array<string, ResponseCookie> $cookies The cookies of this collection
      */
     public function __construct(array $cookies = [])
     {
@@ -57,7 +57,7 @@ class ResponseCookieDataCollection extends DataCollection
      * @param string $key The name of the cookie to set
      * @param mixed $value The value of the cookie to set
      *
-     * @return ResponseCookieDataCollection
+     * @return static
      * @see DataCollection::set()
      */
     public function set(string $key, mixed $value): static

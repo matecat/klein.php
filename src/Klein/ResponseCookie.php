@@ -128,7 +128,7 @@ class ResponseCookie
      *
      * @param string $name
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setName(string $name): static
     {
@@ -152,7 +152,7 @@ class ResponseCookie
      *
      * @param string $value
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setValue(string $value): static
     {
@@ -179,7 +179,7 @@ class ResponseCookie
      *
      * @param int $expire
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setExpire(int $expire): static
     {
@@ -203,7 +203,7 @@ class ResponseCookie
      *
      * @param string $path
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setPath(string $path): static
     {
@@ -227,7 +227,7 @@ class ResponseCookie
      *
      * @param string $domain
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setDomain(string $domain): static
     {
@@ -251,7 +251,7 @@ class ResponseCookie
      *
      * @param boolean $secure
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setSecure(bool $secure): static
     {
@@ -275,7 +275,7 @@ class ResponseCookie
      *
      * @param boolean $http_only
      *
-     * @return ResponseCookie
+     * @return static
      */
     public function setHttpOnly(bool $http_only): static
     {

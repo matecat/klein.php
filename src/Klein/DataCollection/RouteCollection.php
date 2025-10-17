@@ -28,8 +28,8 @@ class RouteCollection extends DataCollection
     /**
      * Constructor
      *
-     * @override (doesn't call our parent)
-     * @param array $routes The routes of this collection
+     * @override DataCollection::__construct()
+     * @param array<string, Route> $routes The routes of this collection
      */
     public function __construct(array $routes = [])
     {
@@ -55,7 +55,7 @@ class RouteCollection extends DataCollection
      * @param string $key The name of the route to set
      * @param mixed $value The value of the route to set
      *
-     * @return RouteCollection
+     * @return static
      * @see DataCollection::set()
      */
     public function set(string $key, mixed $value): static
@@ -74,7 +74,7 @@ class RouteCollection extends DataCollection
      *
      * @param Route $route
      *
-     * @return RouteCollection
+     * @return static
      */
     public function addRoute(Route $route): RouteCollection|static
     {
@@ -97,9 +97,9 @@ class RouteCollection extends DataCollection
      *
      * @param callable|Route $route
      *
-     * @return RouteCollection
+     * @return static
      */
-    public function add(callable|Route $route): RouteCollection|static
+    public function add(callable|Route $route): static
     {
         if (!$route instanceof Route) {
             $route = new Route($route);
@@ -117,12 +117,12 @@ class RouteCollection extends DataCollection
      * Thankfully, because routes are all objects, this
      * takes little memory as it's simply moving references around
      *
-     * @return RouteCollection
+     * @return static
      */
     public function prepareNamed(): static
     {
         // Create a new collection so we can keep our order
-        $prepared = new static();
+        $prepared = new self();
 
         foreach ($this as $route) {
             $route_name = $route->getName();

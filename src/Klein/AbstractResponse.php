@@ -95,7 +95,7 @@ abstract class AbstractResponse
      *
      * @param ?string $body The response body's content
      * @param int $status_code The status code
-     * @param array $headers The response header "hash"
+     * @param array<string, string> $headers The response header "hash"
      */
     public function __construct(?string $body = null, int $status_code = 200, array $headers = [])
     {
@@ -216,7 +216,7 @@ abstract class AbstractResponse
      *
      * @param string $content The string to prepend
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function prepend(string $content): static
     {
@@ -233,7 +233,7 @@ abstract class AbstractResponse
      *
      * @param string $content The string to append
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function append(string $content): static
     {
@@ -262,7 +262,7 @@ abstract class AbstractResponse
      * preventing any methods from mutating the response
      * when it's locked
      *
-     * @return AbstractResponse
+     * @return static
      * @throws LockedResponseException  If the response is locked
      */
     public function requireUnlocked(): static
@@ -277,7 +277,7 @@ abstract class AbstractResponse
     /**
      * Lock the response from further modification
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function lock(): static
     {
@@ -289,7 +289,7 @@ abstract class AbstractResponse
     /**
      * Unlock the response from further modification
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function unlock(): static
     {
@@ -316,7 +316,7 @@ abstract class AbstractResponse
      * @param boolean $cookies_also Whether or not to also send the cookies after sending the normal headers
      * @param boolean $override Whether or not to override the check if headers have already been sent
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function sendHeaders(bool $cookies_also = true, bool $override = false): static
     {
@@ -344,7 +344,7 @@ abstract class AbstractResponse
      *
      * @param boolean $override Whether to override the check if headers have already been sent
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function sendCookies(bool $override = false): static
     {
@@ -373,7 +373,7 @@ abstract class AbstractResponse
     /**
      * Send our body's contents
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function sendBody(): static
     {
@@ -387,7 +387,7 @@ abstract class AbstractResponse
      *
      * @param boolean $override Whether or not to override the check if the response has already been sent
      *
-     * @return AbstractResponse
+     * @return static
      * @throws ResponseAlreadySentException If the response has already been sent
      */
     public function send(bool $override = false): static
@@ -429,7 +429,7 @@ abstract class AbstractResponse
      *
      * @link https://github.com/klein/klein.php/wiki/Response-Chunking
      * @link http://bit.ly/hg3gHb
-     * @return AbstractResponse
+     * @return static
      */
     public function chunk(): static
     {
@@ -456,7 +456,7 @@ abstract class AbstractResponse
      * @param string $key The name of the HTTP response header
      * @param mixed $value The value to set the header with
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function header(string $key, mixed $value): static
     {
@@ -476,7 +476,7 @@ abstract class AbstractResponse
      * @param boolean $secure Flag of whether the cookie should only be sent over a HTTPS connection
      * @param boolean $httponly Flag of whether the cookie should only be accessible over the HTTP protocol
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function cookie(
         string $key,
@@ -502,7 +502,7 @@ abstract class AbstractResponse
     /**
      * Tell the browser not to cache the response
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function noCache(): static
     {
@@ -518,7 +518,7 @@ abstract class AbstractResponse
      * @param string $url The URL to redirect to
      * @param int $code The HTTP status code to use for redirection
      *
-     * @return AbstractResponse
+     * @return static
      */
     public function redirect(string $url, int $code = 302): static
     {

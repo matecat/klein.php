@@ -37,7 +37,7 @@ class HttpStatus
      * HTTP 1.1 status messages based on code
      *
      * @link http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-     * @type array
+     * @var array<int, string>
      */
     protected static array $http_messages = [
         // Informational 1xx
@@ -104,7 +104,7 @@ class HttpStatus
         $this->setCode($code);
 
         if (null === $message) {
-            $message = static::getMessageFromCode($code);
+            $message = self::getMessageFromCode($code);
         }
 
         $this->message = $message ?? '';
@@ -137,7 +137,7 @@ class HttpStatus
      *
      * @return HttpStatus
      */
-    public function setCode(int $code): static
+    public function setCode(int $code): HttpStatus
     {
         $this->code = $code;
 
@@ -151,7 +151,7 @@ class HttpStatus
      *
      * @return HttpStatus
      */
-    public function setMessage(string $message): static
+    public function setMessage(string $message): HttpStatus
     {
         $this->message = $message;
 
@@ -167,11 +167,7 @@ class HttpStatus
     {
         $string = (string)$this->code;
 
-        if (null !== $this->message) {
-            $string = $string . ' ' . $this->message;
-        }
-
-        return $string;
+        return $string . ' ' . $this->message;
     }
 
     /**

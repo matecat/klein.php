@@ -58,7 +58,7 @@ class Route
      * - 'POST'
      * - array('GET', 'POST')
      *
-     * @type string|array|null
+     * @var string|string[]|null
      */
     protected string|array|null $method = null;
 
@@ -87,7 +87,7 @@ class Route
      *
      * @param callable $callback
      * @param string|null $path
-     * @param string|array|null $method
+     * @param string|string[]|null $method
      * @param boolean $count_match
      * @param null $name
      */
@@ -121,7 +121,7 @@ class Route
      *
      * @param callable $callback
      *
-     * @return Route
+     * @return static
      * @throws InvalidArgumentException If the callback isn't a callable
      */
     public function setCallback(callable $callback): static
@@ -146,7 +146,7 @@ class Route
      *
      * @param string $path
      *
-     * @return Route
+     * @return static
      */
     public function setPath(string $path): static
     {
@@ -158,7 +158,7 @@ class Route
     /**
      * Get the method
      *
-     * @return array|string|null
+     * @return string[]|string|null
      */
     public function getMethod(): array|string|null
     {
@@ -168,9 +168,9 @@ class Route
     /**
      * Set the method
      *
-     * @param string|array|null $method
+     * @param string|string[]|null $method
      *
-     * @return Route
+     * @return static
      * @throws InvalidArgumentException If a non-string or non-array type is passed
      */
     public function setMethod(string|array|null $method): static
@@ -202,7 +202,7 @@ class Route
      *
      * @param boolean $count_match
      *
-     * @return Route
+     * @return static
      */
     public function setCountMatch(bool $count_match): static
     {
@@ -226,7 +226,7 @@ class Route
      *
      * @param ?string $name
      *
-     * @return Route
+     * @return static
      */
     public function setName(?string $name = null): static
     {
@@ -256,6 +256,14 @@ class Route
         );
     }
 
+    /**
+     * Validate the given HTTP method
+     *
+     * @param string $method The HTTP method to validate
+     *
+     * @return void
+     * @throws InvalidArgumentException If the HTTP method is invalid
+     */
     protected function validateMethod(string $method): void
     {
             HttpMethod::tryFrom(strtoupper($method)) ?? throw new InvalidArgumentException(
@@ -263,6 +271,14 @@ class Route
         );
     }
 
+    /**
+     * Validate an array of methods
+     *
+     * @param string[] $methods Array of method names to validate
+     *
+     * @return void
+     * @throws InvalidArgumentException If any of the methods in the array is invalid
+     */
     protected function validateMethodsArray(array $methods): void
     {
         foreach ($methods as $method) {

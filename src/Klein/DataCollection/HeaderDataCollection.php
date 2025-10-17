@@ -98,8 +98,8 @@ class HeaderDataCollection extends DataCollection
     /**
      * Constructor
      *
-     * @override (doesn't call our parent)
-     * @param array $headers The headers of this collection
+     * @override DataCollection::__construct()
+     * @param array<string, string> $headers The headers of this collection
      * @param int $normalization The header key normalization technique/style to use
      */
     public function __construct(array $headers = [], int $normalization = self::NORMALIZE_ALL)
@@ -127,7 +127,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @param int $normalization
      *
-     * @return HeaderDataCollection
+     * @return static
      */
     public function setNormalization(int $normalization): static
     {
@@ -144,10 +144,10 @@ class HeaderDataCollection extends DataCollection
      * @param string $key The key of the header to return
      * @param mixed|null $default_val The default value of the header if it contains no value
      *
-     * @return string
+     * @return ?string
      * @see DataCollection::get()
      */
-    public function get(string $key, mixed $default_val = null): mixed
+    public function get(string $key, mixed $default_val = null): ?string
     {
         $key = $this->normalizeKey($key);
 
@@ -162,7 +162,7 @@ class HeaderDataCollection extends DataCollection
      * @param string $key The key of the header to set
      * @param mixed $value The value of the header to set
      *
-     * @return HeaderDataCollection
+     * @return static
      * @see DataCollection::set()
      */
     public function set(string $key, mixed $value): static

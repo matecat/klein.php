@@ -98,11 +98,11 @@ class Request
      *
      * Create a new Request object and define all of its request data
      *
-     * @param array $params_get
-     * @param array $params_post
-     * @param array $cookies
-     * @param array $server
-     * @param array $files
+     * @param array<string, string> $params_get
+     * @param array<string, string> $params_post
+     * @param array<string, string> $cookies
+     * @param array<string, string> $server
+     * @param array<string, array<string,string|int>> $files
      * @param string|null $body
      */
     public function __construct(
@@ -135,7 +135,7 @@ class Request
     public static function createFromGlobals(): Request
     {
         // Create and return a new instance of this
-        return new static(
+        return new self(
             $_GET,
             $_POST,
             $_COOKIE,
@@ -246,7 +246,7 @@ class Request
     {
         // Only get it once
         if (null === $this->body) {
-            $this->body = @file_get_contents('php://input');
+            $this->body = @file_get_contents('php://input') ?: '';
         }
 
         return $this->body;
@@ -258,11 +258,11 @@ class Request
      * Takes an optional mask param that contains the names of any params
      * you'd like this method to exclude in the returned array
      *
-     * @param array|null $mask The parameter mask array
+     * @param string[]|null $mask The parameter mask array
      * @param boolean $fill_with_nulls Whether to fill the returned array
      *                                    with null values to match the given mask
      *
-     * @return array
+     * @return array<string|int, mixed>
      * @see DataCollection::all
      */
     public function params(?array $mask = null, bool $fill_with_nulls = true): array

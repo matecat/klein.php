@@ -20,13 +20,14 @@ use IteratorAggregate;
 /**
  * DataCollection
  *
- * @template AttributeCollection of array<string, mixed>
- *
  * A generic collection class to contain array-like data, specifically
  * designed to work with HTTP data (request params, session data, etc.)
  *
  * Inspired by @fabpot's Symfony 2's HttpFoundation
  * @link https://github.com/symfony/HttpFoundation/blob/master/ParameterBag.php
+ *
+ * @implements IteratorAggregate<string,mixed>
+ * @implements ArrayAccess<string,mixed>
  */
 class DataCollection implements IteratorAggregate, ArrayAccess, Countable
 {
@@ -37,7 +38,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
     /**
      * Collection of data attributes
      *
-     * @type AttributeCollection
+     * @var array<string, mixed>
      */
     protected array $attributes = [];
 
@@ -49,7 +50,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
     /**
      * Constructor
      *
-     * @param array $attributes The data attributes of this collection
+     * @param array<string, mixed> $attributes The data attributes of this collection
      */
     public function __construct(array $attributes = [])
     {
@@ -62,11 +63,11 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      * If an optional mask array is passed, this only
      * returns the keys that match the mask
      *
-     * @param array|null $mask The parameter mask array
+     * @param string[]|null $mask The parameter mask array
      * @param boolean $fill_with_nulls Whether to fill the returned array with
      *                                    values to match the given mask, even if they don't exist in the collection
      *
-     * @return array
+     * @return string[]
      */
     public function keys(array $mask = null, bool $fill_with_nulls = true): array
     {
@@ -103,11 +104,11 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      * If an optional mask array is passed, this only
      * returns the keys that match the mask
      *
-     * @param array|null $mask The parameter mask array
+     * @param string[]|null $mask The parameter mask array
      * @param boolean $fill_with_nulls Whether to fill the returned array with
      *                                    values to match the given mask, even if they don't exist in the collection
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function all(array $mask = null, bool $fill_with_nulls = true): array
     {
@@ -162,7 +163,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      * @param string $key The name of the parameter to set
      * @param mixed $value The value of the parameter to set
      *
-     * @return DataCollection
+     * @return static
      */
     public function set(string $key, mixed $value): static
     {
@@ -174,9 +175,9 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
     /**
      * Replace the collection's attributes
      *
-     * @param array $attributes The attributes to replace the collection's with
+     * @param array<string, mixed> $attributes The attributes to replace the collection's with
      *
-     * @return DataCollection
+     * @return static
      */
     public function replace(array $attributes = []): static
     {
@@ -192,10 +193,10 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      * into the collection in a "hard" manner, using the "array_replace"
      * method instead of the usual "array_merge" method
      *
-     * @param array $attributes The attributes to merge into the collection
+     * @param array<string, mixed> $attributes The attributes to merge into the collection
      * @param boolean $hard Whether to make the merge "hard"
      *
-     * @return DataCollection
+     * @return static
      */
     public function merge(array $attributes = [], bool $hard = false): static
     {
@@ -248,7 +249,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      *
      * Semantic alias of a no-argument `$this->replace` call
      *
-     * @return DataCollection
+     * @return static
      */
     public function clear(): static
     {
@@ -269,9 +270,9 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      * A quick convenience method to get an empty clone of the
      * collection. Great for dependency injection. :)
      *
-     * @return DataCollection
+     * @return static
      */
-    public function cloneEmpty(): DataCollection|static
+    public function cloneEmpty(): static
     {
         $clone = clone $this;
         $clone->clear();
@@ -359,7 +360,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      *
      * IteratorAggregate interface required method
      *
-     * @return ArrayIterator<AttributeCollection>
+     * @return ArrayIterator<string,mixed>
      * @see IteratorAggregate::getIterator
      */
     public function getIterator(): ArrayIterator

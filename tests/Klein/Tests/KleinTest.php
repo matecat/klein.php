@@ -23,6 +23,7 @@ use Klein\Response;
 use Klein\Route;
 use Klein\ServiceProvider;
 use OutOfBoundsException;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Throwable;
 use TypeError;
 
@@ -153,8 +154,8 @@ class KleinTest extends AbstractKleinTestCase
      * isolated process tests, unless I run this also in an
      * isolated process
      *
-     * @runInSeparateProcess
      */
+    #[RunInSeparateProcess]
     public function testWithUsingFileInclude()
     {
         // Test data

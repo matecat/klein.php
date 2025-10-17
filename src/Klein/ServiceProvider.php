@@ -43,9 +43,9 @@ class ServiceProvider
     /**
      * The id of the current PHP session
      *
-     * @type string|boolean
+     * @type string|false
      */
-    protected string|bool $session_id = false;
+    protected string|false $session_id = false;
 
     /**
      * The view layout
@@ -94,7 +94,7 @@ class ServiceProvider
      * @param Request|null $request Object containing all HTTP request data and behaviors
      * @param AbstractResponse|null $response Object containing all HTTP response data and behaviors
      *
-     * @return ServiceProvider
+     * @return static
      */
     public function bind(Request $request = null, AbstractResponse $response = null): static
     {
@@ -122,13 +122,13 @@ class ServiceProvider
      *
      * @return string|false
      */
-    public function startSession(): bool|string
+    public function startSession(): false|string
     {
         if (session_id() === '') {
             // Attempt to start a session
             session_start();
 
-            $this->session_id = session_id() ?: false;
+            $this->session_id = session_id();
         }
 
         return $this->session_id;
@@ -139,7 +139,7 @@ class ServiceProvider
      *
      * @param string $msg The message to flash
      * @param ?string $type The flash message type
-     * @param array $params Optional params to be parsed by Markdown
+     * @param array<string|null> $params Optional params to be parsed by Markdown
      *
      * @return void
      */
@@ -159,7 +159,7 @@ class ServiceProvider
      * Flash an informational message with optional parameters
      *
      * @param string $msg The message to be flashed
-     * @param array $params Optional associative array of parameters for the message
+     * @param array<string|null> $params Optional associative array of parameters for the message
      *
      * @return void
      */
@@ -173,7 +173,7 @@ class ServiceProvider
      *
      * @param string|null $type The name of the flash message type
      *
-     * @return array
+     * @return array<string, string[]>
      */
     public function flashes(?string $type = null): array
     {
@@ -206,7 +206,7 @@ class ServiceProvider
      * ... OR this method will simply take a variable number of arguments (after the initial str arg)
      *
      * @param string $str The text strings to parse
-     * @param array $args Optional arguments to be parsed by Markdown
+     * @param array<string|null> $args Optional arguments to be parsed by Markdown
      *
      * @return string
      */
@@ -249,7 +249,7 @@ class ServiceProvider
     /**
      * Redirects the request to the current URL
      *
-     * @return ServiceProvider
+     * @return static
      */
     public function refresh(): static
     {
@@ -263,7 +263,7 @@ class ServiceProvider
     /**
      * Redirects the request back to the referrer
      *
-     * @return ServiceProvider
+     * @return static
      */
     public function back(): static
     {
@@ -286,7 +286,7 @@ class ServiceProvider
      *
      * @param ?string $layout The layout of the view
      *
-     * @return string|null|ServiceProvider
+     * @return string|null|static
      */
     public function layout(?string $layout = null): string|null|static
     {
@@ -313,7 +313,7 @@ class ServiceProvider
      * Renders a view + optional layout
      *
      * @param string $view The view to render
-     * @param array $data The data to render in the view
+     * @param array<string, mixed> $data The data to render in the view
      *
      * @return void
      */
@@ -345,7 +345,7 @@ class ServiceProvider
      * Renders a view without a layout
      *
      * @param string $view The view to render
-     * @param array $data The data to render in the view
+     * @param array<string, mixed> $data The data to render in the view
      *
      * @return void
      */

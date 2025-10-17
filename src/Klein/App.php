@@ -22,13 +22,7 @@ class App
 {
 
     /**
-     * Class properties
-     */
-
-    /**
-     * The array of app services
-     *
-     * @type array
+     * @var array<string, callable> $services The lazy service register
      */
     protected array $services = [];
 
@@ -46,7 +40,7 @@ class App
      * @return mixed
      * @throws UnknownServiceException  If a non-registered service is attempted to fetched
      */
-    public function __get(string $name)
+    public function __get(string $name): mixed
     {
         if (!isset($this->services[$name])) {
             throw new UnknownServiceException('Unknown service ' . $name);
@@ -63,14 +57,15 @@ class App
      * Allow callbacks to be assigned as properties and called like normal methods
      *
      * @param string $method The callable method to execute
-     * @param array $args The argument array to pass to our callback
+     * @param mixed[] $args The argument arrays to pass to our callback
      *
-     * @return void
+     * @return mixed
      * @throws BadMethodCallException   If a non-registered method is attempted to be called
+     * @noinspection PhpPluralMixedCanBeReplacedWithArrayInspection
      */
-    public function __call(string $method, array $args)
+    public function __call(string $method, array $args): mixed
     {
-        if (!isset($this->services[$method]) || !is_callable($this->services[$method])) {
+        if (!isset($this->services[$method])) {
             throw new BadMethodCallException('Unknown method ' . $method . '()');
         }
 

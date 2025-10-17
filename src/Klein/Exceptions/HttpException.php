@@ -34,6 +34,6 @@ class HttpException extends RuntimeException implements HttpExceptionInterface
      */
     public static function createFromCode(int $code): HttpException
     {
-        return new static('', $code);
+        return new self('', $code);
     }
 }

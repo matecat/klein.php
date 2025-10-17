@@ -12,6 +12,7 @@
          displayDetailsOnTestsThatTriggerDeprecations="true"
          displayDetailsOnTestsThatTriggerErrors="true"
          displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
          displayDetailsOnPhpunitDeprecations="true"
          failOnPhpunitDeprecation="true"
          failOnRisky="true"
@@ -32,9 +33,6 @@
             pathCoverage="true"
             ignoreDeprecatedCodeUnits="true"
             disableCodeCoverageIgnore="true">
-        <report>
-            <clover outputFile="./clover.xml"/>
-        </report>
     </coverage>
 
 </phpunit>
