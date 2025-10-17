@@ -1,8 +1,8 @@
 {
-   "name": "klein/klein",
+   "name": "matecat/klein",
    "description": "A lightning fast router for PHP",
    "keywords": ["router", "routing", "sinatra", "boilerplate"],
-   "homepage": "https://github.com/klein/klein.php",
+   "homepage": "https://github.com/matecat/klein.php",
    "license": "MIT",
    "authors": [
       {
@@ -16,7 +16,12 @@
          "email": "rican7@gmail.com",
          "homepage": "https://trevorsuarez.com/",
          "role": "Contributor/Developer"
-      }
+      },
+     {
+       "name": "Domenico Lupinetti",
+       "email": "ostico@gmail.com",
+       "role": "Contributor/Developer"
+     }
    ],
    "require": {
       "php": ">=8.3",
