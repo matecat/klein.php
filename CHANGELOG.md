@@ -1,8 +1,18 @@
 # CHANGELOG
 
+## 3.1.0
+
+### Features
+
+- Support for PHP 8.3
+- Dropped support for previous PHP versions
+- Updated PHPUnit to version 12
+
 ## 3.0.0
 
-- Support for PHP >= 8.3
+### Features
+
+- Support for PHP >= 8.1
 - Dropped support for previous PHP versions
 - Removed the "magical" way of inputting mask in DataCollections in favor of PHP 8.3 named arguments.
 - Removed use of 404/405 "routes" (deprecated in previous versions). Use `$klein->onHttpError()` instead.
@@ -10,7 +20,7 @@
 - Removed "magical" markdown behavior. Now the function accepts a string and an optional array of values.
 - Removed "magical" markdown behavior. Now the function accepts a string and an optional array of values.
 - Removed "magical" behavior of `ServiceProvider::flash()` method. Now the function accepts a string and an optional array of values.
-- Updated PHPUnit to version 12
+- Updated PHPUnit to version 10
 
 ## 2.1.2
 
