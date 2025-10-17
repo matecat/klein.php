@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein;
@@ -24,22 +24,22 @@ class HttpStatus
      *
      * @type int
      */
-    protected $code;
+    protected int $code;
 
     /**
      * The HTTP status message
      *
      * @type string
      */
-    protected $message;
+    protected string $message;
 
     /**
      * HTTP 1.1 status messages based on code
      *
      * @link http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-     * @type array
+     * @var array<int, string>
      */
-    protected static $http_messages = array(
+    protected static array $http_messages = [
         // Informational 1xx
         100 => 'Continue',
         101 => 'Switching Protocols',
@@ -90,24 +90,24 @@ class HttpStatus
         503 => 'Service Unavailable',
         504 => 'Gateway Timeout',
         505 => 'HTTP Version Not Supported',
-    );
+    ];
 
 
     /**
      * Constructor
      *
      * @param int $code The HTTP code
-     * @param string $message (optional) HTTP message for the corresponding code
+     * @param string|null $message (optional) HTTP message for the corresponding code
      */
-    public function __construct($code, $message = null)
+    public function __construct(int $code, ?string $message = null)
     {
         $this->setCode($code);
 
         if (null === $message) {
-            $message = static::getMessageFromCode($code);
+            $message = self::getMessageFromCode($code);
         }
 
-        $this->message = $message;
+        $this->message = $message ?? '';
     }
 
     /**
@@ -115,7 +115,7 @@ class HttpStatus
      *
      * @return int
      */
-    public function getCode()
+    public function getCode(): int
     {
         return $this->code;
     }
@@ -125,7 +125,7 @@ class HttpStatus
      *
      * @return string
      */
-    public function getMessage()
+    public function getMessage(): string
     {
         return $this->message;
     }
@@ -134,11 +134,13 @@ class HttpStatus
      * Set the HTTP status code
      *
      * @param int $code
+     *
      * @return HttpStatus
      */
-    public function setCode($code)
+    public function setCode(int $code): HttpStatus
     {
-        $this->code = (int) $code;
+        $this->code = $code;
+
         return $this;
     }
 
@@ -146,11 +148,13 @@ class HttpStatus
      * Set the HTTP status message
      *
      * @param string $message
+     *
      * @return HttpStatus
      */
-    public function setMessage($message)
+    public function setMessage(string $message): HttpStatus
     {
-        $this->message = (string) $message;
+        $this->message = $message;
+
         return $this;
     }
 
@@ -159,15 +163,11 @@ class HttpStatus
      *
      * @return string
      */
-    public function getFormattedString()
+    public function getFormattedString(): string
     {
-        $string = (string) $this->code;
+        $string = (string)$this->code;
 
-        if (null !== $this->message) {
-            $string = $string . ' ' . $this->message;
-        }
-
-        return $string;
+        return $string . ' ' . $this->message;
     }
 
     /**
@@ -191,14 +191,11 @@ class HttpStatus
      * found for the passed in code
      *
      * @param int $int
+     *
      * @return string|null
      */
-    public static function getMessageFromCode($int)
+    public static function getMessageFromCode(int $int): ?string
     {
-        if (isset(static::$http_messages[ $int ])) {
-            return static::$http_messages[ $int ];
-        } else {
-            return null;
-        }
+        return static::$http_messages[$int] ?? null;
     }
 }

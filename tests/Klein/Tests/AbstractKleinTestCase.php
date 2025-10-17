@@ -14,15 +14,15 @@ namespace Klein\Tests;
 use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
-use Klein\Tests\Mocks\HeadersNoOp;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
+use Throwable;
 
 /**
- * AbstractKleinTest
+ * AbstractKleinTestCase
  *
  * Base test class for PHP Unit testing
  */
-abstract class AbstractKleinTest extends PHPUnit_Framework_TestCase
+abstract class AbstractKleinTestCase extends TestCase
 {
 
     /**
@@ -31,7 +31,7 @@ abstract class AbstractKleinTest extends PHPUnit_Framework_TestCase
      *
      * @type Klein
      */
-    protected $klein_app;
+    protected Klein $klein_app;
 
 
     /**
@@ -40,7 +40,7 @@ abstract class AbstractKleinTest extends PHPUnit_Framework_TestCase
      *
      * @return void
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         // Create a new klein app,
         // since we need one pretty much everywhere
@@ -53,9 +53,11 @@ abstract class AbstractKleinTest extends PHPUnit_Framework_TestCase
      * This is mostly useful, since the tests would otherwise have to make a bunch of calls
      * concerning the argument order and constants. DRY, bitch. ;)
      *
-     * @param Request $request      Custom Klein "Request" object
-     * @param Response $response    Custom Klein "Response" object
+     * @param Request $request Custom Klein "Request" object
+     * @param Response $response Custom Klein "Response" object
+     *
      * @return mixed The output of the dispatch call
+     * @throws Throwable
      */
     protected function dispatchAndReturnOutput($request = null, $response = null)
     {
@@ -99,7 +101,7 @@ abstract class AbstractKleinTest extends PHPUnit_Framework_TestCase
      * @param Klein $app_context The application context to attach the routes to
      * @return array
      */
-    protected function loadExternalRoutes(Klein $app_context = null)
+    protected function loadExternalRoutes(?Klein $app_context = null)
     {
         // Did we not pass an instance?
         if (is_null($app_context)) {

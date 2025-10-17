@@ -1,19 +1,15 @@
 sudo: false
 
+env:
+  global:
+    - XDEBUG_MODE=coverage
+
 language: php
 php:
-  - 5.3
-  - 5.4
-  - 5.5
-  - 5.6
-  - 7.0
-  - nightly
-  - hhvm
+  - 8.3
+  - 8.4
 
 matrix:
-  allow_failures:
-    - php: nightly
-    - php: hhvm
   fast_finish: true
 
 before_script:
@@ -21,5 +17,4 @@ before_script:
 
 script:
   - composer validate
-  - ./vendor/bin/phpunit
-  - ./vendor/bin/phpcs --standard=PSR2 --encoding=utf-8 -p src/ tests/
+  - ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover

@@ -12,12 +12,11 @@
 namespace Klein\Tests;
 
 use Klein\AbstractRouteFactory;
-use Klein\Route;
 
 /**
  * AbstractRouteFactoryTest
  */
-class AbstractRouteFactoryTest extends AbstractKleinTest
+class AbstractRouteFactoryTest extends AbstractKleinTestCase
 {
 
     /**
@@ -31,17 +30,12 @@ class AbstractRouteFactoryTest extends AbstractKleinTest
         );
     }
 
-    protected function getMockForFactory()
-    {
-        return $this->getMockForAbstractClass('\Klein\AbstractRouteFactory');
-    }
-
     protected function getMockBuilderForFactory(array $methods_to_mock = null)
     {
         $methods_to_mock = $methods_to_mock ?: $this->getDefaultMethodsToMock();
 
-        return $this->getMockBuilder('\Klein\AbstractRouteFactory')
-            ->setMethods($methods_to_mock);
+        return $this->getMockBuilder(AbstractRouteFactory::class)
+            ->onlyMethods($methods_to_mock);
     }
 
 
@@ -55,23 +49,19 @@ class AbstractRouteFactoryTest extends AbstractKleinTest
         $test_namespace = '/users';
 
         // Empty constructor
-        $factory = $this->getMockForFactory();
+        $factory = $this->getMockBuilderForFactory()->getMock();
 
-        $this->assertNull($factory->getNamespace());
+        $this->assertEmpty($factory->getNamespace());
 
         // Set in constructor
         $factory = $this->getMockBuilderForFactory()
-            ->setConstructorArgs(
-                array(
-                    $test_namespace,
-                )
-            )
+            ->setConstructorArgs([$test_namespace,])
             ->getMock();
 
         $this->assertSame($test_namespace, $factory->getNamespace());
 
         // Set in method
-        $factory = $this->getMockForFactory();
+        $factory = $this->getMockBuilderForFactory()->getMock();
         $factory->setNamespace($test_namespace);
 
         $this->assertSame($test_namespace, $factory->getNamespace());
@@ -83,7 +73,7 @@ class AbstractRouteFactoryTest extends AbstractKleinTest
         $test_namespace = '/users';
         $test_namespace_append = '/names';
 
-        $factory = $this->getMockForFactory();
+        $factory = $this->getMockBuilderForFactory()->getMock();
         $factory->setNamespace($test_namespace);
         $factory->appendNamespace($test_namespace_append);
 

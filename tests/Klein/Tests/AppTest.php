@@ -11,12 +11,16 @@
 
 namespace Klein\Tests;
 
+use BadMethodCallException;
 use Klein\App;
+use Klein\Exceptions\DuplicateServiceException;
+use Klein\Exceptions\UnknownServiceException;
+use PHPUnit\Framework\Attributes\Depends;
 
 /**
  * AppTest
  */
-class AppTest extends AbstractKleinTest
+class AppTest extends AbstractKleinTestCase
 {
 
     /**
@@ -56,9 +60,7 @@ class AppTest extends AbstractKleinTest
         );
     }
 
-    /**
-     * @depends testRegisterFiller
-     */
+    #[Depends('testRegisterFiller')]
     public function testGet(array $args)
     {
         // Get our vars from our args
@@ -71,17 +73,16 @@ class AppTest extends AbstractKleinTest
     }
 
     /**
-     * @expectedException Klein\Exceptions\UnknownServiceException
+     * @return void
      */
     public function testGetBadMethod()
     {
         $app = new App();
+        $this->expectException(UnknownServiceException::class);
         $app->random_thing_that_doesnt_exist;
     }
 
-    /**
-     * @depends testRegisterFiller
-     */
+    #[Depends('testRegisterFiller')]
     public function testCall(array $args)
     {
         // Get our vars from our args
@@ -93,21 +94,17 @@ class AppTest extends AbstractKleinTest
         $this->assertSame(self::TEST_CALLBACK_MESSAGE, $returned);
     }
 
-    /**
-     * @expectedException BadMethodCallException
-     */
     public function testCallBadMethod()
     {
+        $this->expectException(BadMethodCallException::class);
         $app = new App();
         $app->random_thing_that_doesnt_exist();
     }
 
-    /**
-     * @depends testRegisterFiller
-     * @expectedException Klein\Exceptions\DuplicateServiceException
-     */
+    #[Depends('testRegisterFiller')]
     public function testRegisterDuplicateMethod(array $args)
     {
+        $this->expectException(DuplicateServiceException::class);
         // Get our vars from our args
         extract($args);
 

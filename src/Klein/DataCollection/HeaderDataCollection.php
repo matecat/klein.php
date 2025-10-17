@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\DataCollection;
@@ -30,7 +30,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const NORMALIZE_NONE = 0;
+    const int NORMALIZE_NONE = 0;
 
     /**
      * Normalization option
@@ -39,7 +39,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const NORMALIZE_TRIM = 1;
+    const int NORMALIZE_TRIM = 1;
 
     /**
      * Normalization option
@@ -48,7 +48,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const NORMALIZE_DELIMITERS = 2;
+    const int NORMALIZE_DELIMITERS = 2;
 
     /**
      * Normalization option
@@ -57,7 +57,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const NORMALIZE_CASE = 4;
+    const int NORMALIZE_CASE = 4;
 
     /**
      * Normalization option
@@ -66,7 +66,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const NORMALIZE_CANONICAL = 8;
+    const int NORMALIZE_CANONICAL = 8;
 
     /**
      * Normalization option
@@ -75,7 +75,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const NORMALIZE_ALL = -1;
+    const int NORMALIZE_ALL = -1;
 
 
     /**
@@ -88,7 +88,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    protected $normalization = self::NORMALIZE_ALL;
+    protected int $normalization = self::NORMALIZE_ALL;
 
 
     /**
@@ -98,13 +98,14 @@ class HeaderDataCollection extends DataCollection
     /**
      * Constructor
      *
-     * @override (doesn't call our parent)
-     * @param array $headers        The headers of this collection
-     * @param int $normalization    The header key normalization technique/style to use
+     * @override DataCollection::__construct()
+     * @param array<string, string> $headers The headers of this collection
+     * @param int $normalization The header key normalization technique/style to use
      */
-    public function __construct(array $headers = array(), $normalization = self::NORMALIZE_ALL)
+    public function __construct(array $headers = [], int $normalization = self::NORMALIZE_ALL)
     {
-        $this->normalization = (int) $normalization;
+        parent::__construct();
+        $this->normalization = $normalization;
 
         foreach ($headers as $key => $value) {
             $this->set($key, $value);
@@ -116,7 +117,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @return int
      */
-    public function getNormalization()
+    public function getNormalization(): int
     {
         return $this->normalization;
     }
@@ -125,11 +126,12 @@ class HeaderDataCollection extends DataCollection
      * Set the header key normalization technique/style to use
      *
      * @param int $normalization
-     * @return HeaderDataCollection
+     *
+     * @return static
      */
-    public function setNormalization($normalization)
+    public function setNormalization(int $normalization): static
     {
-        $this->normalization = (int) $normalization;
+        $this->normalization = $normalization;
 
         return $this;
     }
@@ -139,12 +141,13 @@ class HeaderDataCollection extends DataCollection
      *
      * {@inheritdoc}
      *
+     * @param string $key The key of the header to return
+     * @param mixed|null $default_val The default value of the header if it contains no value
+     *
+     * @return ?string
      * @see DataCollection::get()
-     * @param string $key           The key of the header to return
-     * @param mixed  $default_val   The default value of the header if it contains no value
-     * @return mixed
      */
-    public function get($key, $default_val = null)
+    public function get(string $key, mixed $default_val = null): ?string
     {
         $key = $this->normalizeKey($key);
 
@@ -156,12 +159,13 @@ class HeaderDataCollection extends DataCollection
      *
      * {@inheritdoc}
      *
+     * @param string $key The key of the header to set
+     * @param mixed $value The value of the header to set
+     *
+     * @return static
      * @see DataCollection::set()
-     * @param string $key   The key of the header to set
-     * @param mixed  $value The value of the header to set
-     * @return HeaderDataCollection
      */
-    public function set($key, $value)
+    public function set(string $key, mixed $value): static
     {
         $key = $this->normalizeKey($key);
 
@@ -173,11 +177,12 @@ class HeaderDataCollection extends DataCollection
      *
      * {@inheritdoc}
      *
-     * @see DataCollection::exists()
-     * @param string $key   The key of the header
+     * @param string $key The key of the header
+     *
      * @return boolean
+     * @see DataCollection::exists()
      */
-    public function exists($key)
+    public function exists(string $key): bool
     {
         $key = $this->normalizeKey($key);
 
@@ -189,11 +194,12 @@ class HeaderDataCollection extends DataCollection
      *
      * {@inheritdoc}
      *
-     * @see DataCollection::remove()
-     * @param string $key   The key of the header
+     * @param string $key The key of the header
+     *
      * @return void
+     * @see DataCollection::remove()
      */
-    public function remove($key)
+    public function remove(string $key): void
     {
         $key = $this->normalizeKey($key);
 
@@ -204,9 +210,10 @@ class HeaderDataCollection extends DataCollection
      * Normalize a header key based on our set normalization style
      *
      * @param string $key The ("field") key of the header
+     *
      * @return string
      */
-    protected function normalizeKey($key)
+    protected function normalizeKey(string $key): string
     {
         if ($this->normalization & static::NORMALIZE_TRIM) {
             $key = trim($key);
@@ -234,11 +241,12 @@ class HeaderDataCollection extends DataCollection
      * to a more standard hyphen (-) character
      *
      * @param string $key The ("field") key of the header
+     *
      * @return string
      */
-    public static function normalizeKeyDelimiters($key)
+    public static function normalizeKeyDelimiters(string $key): string
     {
-        return str_replace(array(' ', '_'), '-', $key);
+        return str_replace([' ', '_'], '-', $key);
     }
 
     /**
@@ -248,10 +256,12 @@ class HeaderDataCollection extends DataCollection
      * the first letter of "words" separated by a hyphen
      *
      * @link http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+     *
      * @param string $key The ("field") key of the header
+     *
      * @return string
      */
-    public static function canonicalizeKey($key)
+    public static function canonicalizeKey(string $key): string
     {
         $words = explode('-', strtolower($key));
 
@@ -262,40 +272,4 @@ class HeaderDataCollection extends DataCollection
         return implode('-', $words);
     }
 
-    /**
-     * Normalize a header name by formatting it in a standard way
-     *
-     * This is useful since PHP automatically capitalizes and underscore
-     * separates the words of headers
-     *
-     * @todo Possibly remove in future, here for backwards compatibility
-     * @link http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-     * @param string $name              The name ("field") of the header
-     * @param boolean $make_lowercase   Whether or not to lowercase the name
-     * @deprecated Use the normalization options and the other normalization methods instead
-     * @return string
-     */
-    public static function normalizeName($name, $make_lowercase = true)
-    {
-        // Warn user of deprecation
-        trigger_error(
-            'Use the normalization options and the other normalization methods instead.',
-            E_USER_DEPRECATED
-        );
-
-        /**
-         * Lowercasing header names allows for a more uniform appearance,
-         * however header names are case-insensitive by specification
-         */
-        if ($make_lowercase) {
-            $name = strtolower($name);
-        }
-
-        // Do some formatting and return
-        return str_replace(
-            array(' ', '_'),
-            '-',
-            trim($name)
-        );
-    }
 }

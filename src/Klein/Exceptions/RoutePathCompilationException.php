@@ -11,7 +11,6 @@
 
 namespace Klein\Exceptions;
 
-use Exception;
 use Klein\Route;
 use RuntimeException;
 use Throwable;
@@ -33,14 +32,14 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      *
      * @type string
      */
-    const MESSAGE_FORMAT = 'Route failed to compile with path "%s".';
+    const string MESSAGE_FORMAT = 'Route failed to compile with path "%s".';
 
     /**
      * The extra failure message format
      *
      * @type string
      */
-    const FAILURE_MESSAGE_TITLE_FORMAT = 'Failed with message: "%s"';
+    const string FAILURE_MESSAGE_TITLE_FORMAT = 'Failed with message: "%s"';
 
 
     /**
@@ -52,7 +51,7 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      *
      * @type Route
      */
-    protected $route;
+    protected Route $route;
 
 
     /**
@@ -63,22 +62,19 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      * Create a RoutePathCompilationException from a route
      * and an optional previous exception
      *
-     * TODO: Change the `$previous` parameter to type-hint against `Throwable`
-     * once PHP 5.x support is no longer necessary.
-     *
-     * @param Route $route          The route that failed to compile
-     * @param Exception|Throwable $previous   The previous exception
+     * @param Route $route The route that failed to compile
+     * @param Throwable|null $previous The previous exception
      * @return RoutePathCompilationException
      */
-    public static function createFromRoute(Route $route, $previous = null)
+    public static function createFromRoute(Route $route, ?Throwable $previous = null): RoutePathCompilationException
     {
         $error = (null !== $previous) ? $previous->getMessage() : null;
-        $code  = (null !== $previous) ? $previous->getCode() : null;
+        $code = (null !== $previous) ? $previous->getCode() : 0;
 
-        $message = sprintf(static::MESSAGE_FORMAT, $route->getPath());
-        $message .= ' '. sprintf(static::FAILURE_MESSAGE_TITLE_FORMAT, $error);
+        $message = sprintf(self::MESSAGE_FORMAT, $route->getPath());
+        $message .= ' ' . sprintf(self::FAILURE_MESSAGE_TITLE_FORMAT, $error);
 
-        $exception = new static($message, $code, $previous);
+        $exception = new self($message, $code, $previous);
         $exception->setRoute($route);
 
         return $exception;
@@ -90,19 +86,19 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      * @sccess public
      * @return Route
      */
-    public function getRoute()
+    public function getRoute(): Route
     {
         return $this->route;
     }
 
     /**
-     * Sets the value of route
+     * Sets the value of the route
      *
-     * @param Route The route that failed to compile
-     * @sccess protected
+     * @param Route $route
      * @return RoutePathCompilationException
+     * @sccess protected
      */
-    protected function setRoute(Route $route)
+    protected function setRoute(Route $route): RoutePathCompilationException
     {
         $this->route = $route;
 

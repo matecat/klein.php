@@ -2,23 +2,24 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\Tests\DataCollection;
 
 use Klein\DataCollection\RouteCollection;
 use Klein\Route;
-use Klein\Tests\AbstractKleinTest;
+use Klein\Tests\AbstractKleinTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * RouteCollectionTest
  */
-class RouteCollectionTest extends AbstractKleinTest
+class RouteCollectionTest extends AbstractKleinTestCase
 {
 
     /*
@@ -30,7 +31,7 @@ class RouteCollectionTest extends AbstractKleinTest
      *
      * @return array
      */
-    public function sampleDataProvider()
+    public static function sampleDataProvider()
     {
         $sample_route = new Route(
             function () {
@@ -61,9 +62,7 @@ class RouteCollectionTest extends AbstractKleinTest
         );
 
 
-        return array(
-            array($sample_route, $sample_other_route, $sample_named_route),
-        );
+        return [[$sample_route, $sample_other_route, $sample_named_route]];
     }
 
 
@@ -71,10 +70,8 @@ class RouteCollectionTest extends AbstractKleinTest
      * Tests
      */
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testSet($sample_route, $sample_other_route)
+    #[DataProvider('sampleDataProvider')]
+    public function testSet($sample_route, $sample_other_route, $sample_named_route)
     {
         // Create our collection with NO data
         $routes = new RouteCollection();
@@ -102,19 +99,17 @@ class RouteCollectionTest extends AbstractKleinTest
         $this->assertTrue($routes->get('first') instanceof Route);
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testConstructorRoutesThroughAdd($sample_route, $sample_other_route)
+    #[DataProvider('sampleDataProvider')]
+    public function testConstructorRoutesThroughAdd($sample_route, $sample_other_route, $sample_named_route)
     {
-        $array_of_route_instances = array(
+        $array_of_route_instances = [
             $sample_route,
             $sample_other_route,
             new Route(
                 function () {
                 }
             ),
-        );
+        ];
 
         // Create our collection
         $routes = new RouteCollection($array_of_route_instances);
@@ -126,15 +121,13 @@ class RouteCollectionTest extends AbstractKleinTest
         }
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testAddRoute($sample_route, $sample_other_route)
+    #[DataProvider('sampleDataProvider')]
+    public function testAddRoute($sample_route, $sample_other_route, $sample_named_route)
     {
-        $array_of_routes = array(
+        $array_of_routes = [
             $sample_route,
             $sample_other_route,
-        );
+        ];
 
         // Create our collection
         $routes = new RouteCollection();
@@ -161,16 +154,14 @@ class RouteCollectionTest extends AbstractKleinTest
         $this->assertTrue(current($routes->all()) instanceof Route);
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
+    #[DataProvider('sampleDataProvider')]
     public function testPrepareNamed($sample_route, $sample_other_route, $sample_named_route)
     {
-        $array_of_routes = array(
+        $array_of_routes = [
             $sample_route,
             $sample_other_route,
             $sample_named_route,
-        );
+        ];
 
         $route_name = $sample_named_route->getName();
 
@@ -187,10 +178,8 @@ class RouteCollectionTest extends AbstractKleinTest
         $this->assertSame($sample_named_route, $routes->get($route_name));
     }
 
-    /**
-     * @dataProvider sampleDataProvider
-     */
-    public function testRouteOrderDoesntChangeAfterPreparing()
+    #[DataProvider('sampleDataProvider')]
+    public function testRouteOrderDoesntChangeAfterPreparing($sample_route, $sample_other_route, $sample_named_route)
     {
         // Get the provided data dynamically
         $array_of_routes = func_get_args();

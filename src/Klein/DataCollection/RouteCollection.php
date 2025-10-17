@@ -2,11 +2,11 @@
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
- * @author      Chris O'Hara <cohara87@gmail.com>
- * @author      Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Chris O'Hara <cohara87@gmail.com>
+ * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
  * @copyright   (c) Chris O'Hara
- * @link        https://github.com/klein/klein.php
- * @license     MIT
+ * @link            https://github.com/klein/klein.php
+ * @license         MIT
  */
 
 namespace Klein\DataCollection;
@@ -28,11 +28,12 @@ class RouteCollection extends DataCollection
     /**
      * Constructor
      *
-     * @override (doesn't call our parent)
-     * @param array $routes The routes of this collection
+     * @override DataCollection::__construct()
+     * @param array<string, Route> $routes The routes of this collection
      */
-    public function __construct(array $routes = array())
+    public function __construct(array $routes = [])
     {
+        parent::__construct();
         foreach ($routes as $value) {
             $this->add($value);
         }
@@ -51,14 +52,15 @@ class RouteCollection extends DataCollection
      * by passing the name of the route as the "$key" and an
      * instance of a Route as the "$value"
      *
+     * @param string $key The name of the route to set
+     * @param mixed $value The value of the route to set
+     *
+     * @return static
      * @see DataCollection::set()
-     * @param string $key                   The name of the route to set
-     * @param Route|callable $value         The value of the route to set
-     * @return RouteCollection
      */
-    public function set($key, $value)
+    public function set(string $key, mixed $value): static
     {
-        if (!$value instanceof Route) {
+        if (!$value instanceof Route && is_callable($value)) {
             $value = new Route($value);
         }
 
@@ -71,9 +73,10 @@ class RouteCollection extends DataCollection
      * This will auto-generate a name
      *
      * @param Route $route
-     * @return RouteCollection
+     *
+     * @return static
      */
-    public function addRoute(Route $route)
+    public function addRoute(Route $route): RouteCollection|static
     {
         /**
          * Auto-generate a name from the object's hash
@@ -92,10 +95,11 @@ class RouteCollection extends DataCollection
      * will take a Route instance, string callable
      * or any other Route class compatible callback
      *
-     * @param Route|callable $route
-     * @return RouteCollection
+     * @param callable|Route $route
+     *
+     * @return static
      */
-    public function add($route)
+    public function add(callable|Route $route): static
     {
         if (!$route instanceof Route) {
             $route = new Route($route);
@@ -108,20 +112,19 @@ class RouteCollection extends DataCollection
      * Prepare the named routes in the collection
      *
      * This loops through every route to set the collection's
-     * key name for that route to equal the routes name, if
-     * its changed
+     * key name for that route to equal the route name if it's changed
      *
-     * Thankfully, because routes are all objects, this doesn't
-     * take much memory as its simply moving references around
+     * Thankfully, because routes are all objects, this
+     * takes little memory as it's simply moving references around
      *
-     * @return RouteCollection
+     * @return static
      */
-    public function prepareNamed()
+    public function prepareNamed(): static
     {
         // Create a new collection so we can keep our order
-        $prepared = new static();
+        $prepared = new self();
 
-        foreach ($this as $key => $route) {
+        foreach ($this as $route) {
             $route_name = $route->getName();
 
             if (null !== $route_name) {
