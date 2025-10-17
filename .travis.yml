@@ -1,5 +1,9 @@
 sudo: false
 
+env:
+  global:
+    - XDEBUG_MODE=coverage
+
 language: php
 php:
   - 8.3
