@@ -69,7 +69,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return string[]
      */
-    public function keys(array $mask = null, bool $fill_with_nulls = true): array
+    public function keys(?array $mask = null, bool $fill_with_nulls = true): array
     {
         if (null !== $mask) {
             /*
@@ -110,7 +110,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      *
      * @return array<string, mixed>
      */
-    public function all(array $mask = null, bool $fill_with_nulls = true): array
+    public function all(?array $mask = null, bool $fill_with_nulls = true): array
     {
         if (null !== $mask) {
             /*
