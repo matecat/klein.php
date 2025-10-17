@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/klein/klein.php.png?branch=master)](https://travis-ci.org/klein/klein.php)
 
-**klein.php** is a fast & flexible router for PHP 5.3+
+**klein.php** is a fast & flexible router for PHP
 
 * Flexible regular expression routing (inspired by [Sinatra](http://www.sinatrarb.com/))
 * A set of [boilerplate methods](#api) for rapidly building web apps
@@ -424,6 +424,7 @@ See the [wiki](https://github.com/klein/klein.php/wiki) for more information
 
 ## Contributors
 
+- [Domenico Lupinetti](https://github.com/Ostico)
 - [Trevor N. Suarez](https://github.com/Rican7)
 
 ## License
