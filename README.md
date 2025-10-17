@@ -1,12 +1,18 @@
 # Klein.php
 
-[![Build Status](https://travis-ci.org/klein/klein.php.png?branch=master)](https://travis-ci.org/klein/klein.php)
+[![Build Status](https://app.travis-ci.com/matecat/klein.php.svg?token=qBazxkHwP18h3EWnHjjF&branch=master)](https://app.travis-ci.com/matecat/klein.php)
 
 **klein.php** is a fast & flexible router for PHP
 
 * Flexible regular expression routing (inspired by [Sinatra](http://www.sinatrarb.com/))
 * A set of [boilerplate methods](#api) for rapidly building web apps
 * Almost no overhead => [2500+ requests/second](https://gist.github.com/878833)
+
+## Overview
+
+This repository is a fork of the original project, created to restore active maintenance and modernize the codebase.
+We use this library in production and have committed to keeping it up to date and compatible with current PHP versions.
+The primary goal of this fork is to enable and support PHP 8.3 while preserving the original project's spirit and API where possible.
 
 ## Getting started
 
@@ -41,7 +47,7 @@ $klein->dispatch();
 *Example 1* - Respond to all requests
 
 ```php
-$klein->respond(function () {
+$klein->respond(callback: function () {
     return 'All the things';
 });
 ```
@@ -49,7 +55,7 @@ $klein->respond(function () {
 *Example 2* - Named parameters
 
 ```php
-$klein->respond('/[:name]', function ($request) {
+$klein->respond(path: '/[:name]', callback: function ($request) {
     return 'Hello ' . $request->name;
 });
 ```
@@ -57,7 +63,7 @@ $klein->respond('/[:name]', function ($request) {
 *Example 3* - [So RESTful](http://bit.ly/g93B1s)
 
 ```php
-$klein->respond('GET', '/posts', $callback);
+$klein->respond(method: 'GET', path: '/posts', callback: $callback);
 $klein->respond('POST', '/posts', $callback);
 $klein->respond('PUT', '/posts/[i:id]', $callback);
 $klein->respond('DELETE', '/posts/[i:id]', $callback);
@@ -67,7 +73,7 @@ $klein->respond('OPTIONS', null, $callback);
 $klein->respond(array('POST','GET'), $route, $callback);
 
 // Or you might want to handle the requests in the same place
-$klein->respond('/posts/[create|edit:action]?/[i:id]?', function ($request, $response) {
+$klein->respond(path: '/posts/[create|edit:action]?/[i:id]?', callback: function ($request, $response) {
     switch ($request->action) {
         //
     }
@@ -77,7 +83,7 @@ $klein->respond('/posts/[create|edit:action]?/[i:id]?', function ($request, $res
 *Example 4* - Sending objects / files
 
 ```php
-$klein->respond(function ($request, $response, $service) {
+$klein->respond(callback: function ($request, $response, $service) {
     $service->xml = function ($object) {
         // Custom xml output function
     }
@@ -86,7 +92,7 @@ $klein->respond(function ($request, $response, $service) {
     }
 });
 
-$klein->respond('/report.[xml|csv|json:format]?', function ($request, $response, $service) {
+$klein->respond(path: '/report.[xml|csv|json:format]?', callback: function ($request, $response, $service) {
     // Get the format or fallback to JSON as the default
     $send = $request->param('format', 'json');
     $response->$send($report);
@@ -100,7 +106,7 @@ $klein->respond('/report/latest', function ($request, $response, $service) {
 *Example 5* - All together
 
 ```php
-$klein->respond(function ($request, $response, $service, $app) use ($klein) {
+$klein->respond(callback: function ($request, $response, $service, $app) use ($klein) {
     // Handle exceptions => flash the message and redirect to the referrer
     $klein->onError(function ($klein, $err_msg) {
         $klein->service()->flash($err_msg);
@@ -251,9 +257,9 @@ authentication or view layouts. e.g. as a basic example, the following
 code will wrap other routes with a header and footer
 
 ```php
-$klein->respond('*', function ($request, $response, $service) { $service->render('header.phtml'); });
+$klein->respond(path: '*', callback: function ($request, $response, $service) { $service->render('header.phtml'); });
 //other routes
-$klein->respond('*', function ($request, $response, $service) { $service->render('footer.phtml'); });
+$klein->respond(path: '*', callback: function ($request, $response, $service) { $service->render('footer.phtml'); });
 ```
 
 Routes automatically match the entire request URI. If you need to match
@@ -262,10 +268,10 @@ negate a route, use the `!` operator
 
 ```php
 // Match all requests that end with '.json' or '.csv'
-$klein->respond('@\.(json|csv)$', ...
+$klein->respond(path: '@\.(json|csv)$', ...
 
 // Match all requests that _don't_ start with /admin
-$klein->respond('!@^/admin/', ...
+$klein->respond(path: '!@^/admin/', ...
 ```
 
 ## Views
