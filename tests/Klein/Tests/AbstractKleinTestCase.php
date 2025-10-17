@@ -101,7 +101,7 @@ abstract class AbstractKleinTestCase extends TestCase
      * @param Klein $app_context The application context to attach the routes to
      * @return array
      */
-    protected function loadExternalRoutes(Klein $app_context = null)
+    protected function loadExternalRoutes(?Klein $app_context = null)
     {
         // Did we not pass an instance?
         if (is_null($app_context)) {
