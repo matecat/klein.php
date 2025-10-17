@@ -376,12 +376,13 @@ class ValidationsTest extends AbstractKleinTestCase
         // Is
         $this->validator('2001:0db5:86a3:0000:0000:8a2e:0370:7335')->isRemoteIp();
         $this->validator('ff02:0:0:0:0:1:ff00::')->isRemoteIp();
-//        $this->validator('2001:db8::ff00:42:8329')->isRemoteIp(); // this ip is in the reserved ip range. Test will fail
-        $this->validator('::ffff:192.0.2.128')->isRemoteIp();
         $this->validator('74.125.226.192')->isRemoteIp();
         $this->validator('204.232.175.90')->isRemoteIp();
         $this->validator('98.139.183.24')->isRemoteIp();
         $this->validator('205.186.173.52')->isRemoteIp();
+
+        // PHP BUG
+        $this->validator('2001:db8::ff00:42:8329')->isRemoteIp(); // this ip gives a false positive in PHP 8. This is an ip in the reserved range `2001:db8::/32` - IPv6 prefix for documentation purpose
 
         // Not
         $this->validator('192.168.1.1')->notRemoteIp();
@@ -394,6 +395,8 @@ class ValidationsTest extends AbstractKleinTestCase
         $this->validator('10')->notRemoteIp();
         $this->validator('10,000')->notRemoteIp();
         $this->validator('string')->notRemoteIp();
+        $this->validator('::ffff:192.0.2.128')->notRemoteIp(); // This is an ip in the reserved range `::ffff:0:0/96` - IPv4-mapped addresses, and the IPv4 is a private reserved address
+        $this->validator('::ffff:74.125.226.192')->notRemoteIp(); // this ip gives a false positive in PHP 8. This is an ip in the reserved range `::ffff:0:0/96` - IPv4-mapped addresses and the IPv4 is a public address
     }
 
     public function testAlpha()
