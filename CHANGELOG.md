@@ -10,7 +10,7 @@
 - Removed "magical" markdown behavior. Now the function accepts a string and an optional array of values.
 - Removed "magical" markdown behavior. Now the function accepts a string and an optional array of values.
 - Removed "magical" behavior of `ServiceProvider::flash()` method. Now the function accepts a string and an optional array of values.
-- Updated PHPUnit to version 12
+- Updated PHPUnit to version 10
 
 ## 2.1.2
 
