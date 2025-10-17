@@ -17,6 +17,7 @@ use Klein\Request;
 use Klein\Response;
 use Klein\ServiceProvider;
 use Klein\Validator;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use ReflectionException;
 use ReflectionProperty;
 
@@ -451,6 +452,11 @@ class ServiceProviderTest extends AbstractKleinTestCase
         );
     }
 
+    /**
+     * @return void
+     * @runInSeparateProcess
+     */
+    #[RunInSeparateProcess]
     public function testAddValidator()
     {
         $service = new ServiceProvider();
