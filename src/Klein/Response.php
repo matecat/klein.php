@@ -32,7 +32,7 @@ class Response extends AbstractResponse
      * @param string|null $str An optional string to send as a response "chunk"
      * @return static
      */
-    public function chunk(string $str = null): static
+    public function chunk(?string $str = null): static
     {
         parent::chunk();
 
@@ -80,7 +80,7 @@ class Response extends AbstractResponse
      * @return static
      * @throws RuntimeException Thrown if the file could not be read
      */
-    public function file(string $path, string $filename = null, string $mimetype = null): static
+    public function file(string $path, ?string $filename = null, ?string $mimetype = null): static
     {
         if ($this->sent) {
             throw new ResponseAlreadySentException('Response has already been sent');
@@ -152,7 +152,7 @@ class Response extends AbstractResponse
      * @param string|null $jsonp_prefix The name of the JSON-P function prefix
      * @return static
      */
-    public function json(mixed $object, string $jsonp_prefix = null): static
+    public function json(mixed $object, ?string $jsonp_prefix = null): static
     {
         $this->body('');
         $this->noCache();

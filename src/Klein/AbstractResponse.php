@@ -118,7 +118,7 @@ abstract class AbstractResponse
      *
      * @return string|AbstractResponse
      */
-    public function protocolVersion(string $protocol_version = null): AbstractResponse|string|static
+    public function protocolVersion(?string $protocol_version = null): AbstractResponse|string|static
     {
         if (null !== $protocol_version) {
             // Require that the response be unlocked before changing it
@@ -142,7 +142,7 @@ abstract class AbstractResponse
      *
      * @return string|AbstractResponse
      */
-    public function body(string $body = null): AbstractResponse|string|static
+    public function body(?string $body = null): AbstractResponse|string|static
     {
         if (null !== $body) {
             // Require that the response be unlocked before changing it
@@ -197,7 +197,7 @@ abstract class AbstractResponse
      *
      * @return int|AbstractResponse
      */
-    public function code(int $code = null): AbstractResponse|int|static
+    public function code(?int $code = null): AbstractResponse|int|static
     {
         if (null !== $code) {
             // Require that the response be unlocked before changing it

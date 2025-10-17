@@ -111,7 +111,7 @@ class Request
         array $cookies = [],
         array $server = [],
         array $files = [],
-        string $body = null
+        ?string $body = null
     ) {
         // Assignment city...
         $this->params_get = new DataCollection($params_get);

@@ -216,10 +216,10 @@ class Klein
      * @param AbstractRouteFactory|null $route_factory A factory class responsible for creating Route instances
      */
     public function __construct(
-        ServiceProvider $service = null,
-        App $app = null,
-        RouteCollection $routes = null,
-        AbstractRouteFactory $route_factory = null
+        ?ServiceProvider $service = null,
+        ?App $app = null,
+        ?RouteCollection $routes = null,
+        ?AbstractRouteFactory $route_factory = null
     ) {
         // Instantiate and fall back to defaults
         $this->service = $service ?: new ServiceProvider();
@@ -312,7 +312,7 @@ class Klein
      *
      * @return Route
      */
-    public function respond(string|array $method = null, ?string $path = '*', callable $callback = null): Route
+    public function respond(string|array|null $method = null, ?string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -381,8 +381,8 @@ class Klein
      * @throws Throwable
      */
     public function dispatch(
-        Request $request = null,
-        AbstractResponse $response = null,
+        ?Request $request = null,
+        ?AbstractResponse $response = null,
         bool $send_response = true,
         int $capture = self::DISPATCH_NO_CAPTURE
     ) {
@@ -1263,7 +1263,7 @@ class Klein
      * @return void
      * @throws DispatchHaltedException To halt/skip the current dispatch loop
      */
-    public function abort(int $code = null): void
+    public function abort(?int $code = null): void
     {
         if (null !== $code) {
             throw HttpException::createFromCode($code);
@@ -1281,7 +1281,7 @@ class Klein
      * @return Route
      * @see Klein::respond()
      */
-    public function options(string $path = '*', callable $callback = null): Route
+    public function options(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -1299,7 +1299,7 @@ class Klein
      * @return Route
      * @see Klein::respond()
      */
-    public function head(string $path = '*', callable $callback = null): Route
+    public function head(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -1317,7 +1317,7 @@ class Klein
      * @return Route
      * @see Klein::respond()
      */
-    public function get(string $path = '*', callable $callback = null): Route
+    public function get(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -1335,7 +1335,7 @@ class Klein
      * @return Route
      * @see Klein::respond()
      */
-    public function post(string $path = '*', callable $callback = null): Route
+    public function post(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -1353,7 +1353,7 @@ class Klein
      * @return Route
      * @see Klein::respond()
      */
-    public function put(string $path = '*', callable $callback = null): Route
+    public function put(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -1371,7 +1371,7 @@ class Klein
      * @return Route
      * @see Klein::respond()
      */
-    public function delete(string $path = '*', callable $callback = null): Route
+    public function delete(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
@@ -1393,7 +1393,7 @@ class Klein
      *
      * @return Route
      */
-    public function patch(string $path = '*', callable $callback = null): Route
+    public function patch(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
             throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
