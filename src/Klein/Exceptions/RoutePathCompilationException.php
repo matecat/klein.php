@@ -66,7 +66,7 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      * @param Throwable|null $previous The previous exception
      * @return RoutePathCompilationException
      */
-    public static function createFromRoute(Route $route, Throwable $previous = null): RoutePathCompilationException
+    public static function createFromRoute(Route $route, ?Throwable $previous = null): RoutePathCompilationException
     {
         $error = (null !== $previous) ? $previous->getMessage() : null;
         $code = (null !== $previous) ? $previous->getCode() : 0;
