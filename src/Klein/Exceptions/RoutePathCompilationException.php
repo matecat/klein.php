@@ -62,9 +62,6 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      * Create a RoutePathCompilationException from a route
      * and an optional previous exception
      *
-     * TODO: Change the `$previous` parameter to type-hint against `Throwable`
-     * once PHP 5.x support is no longer necessary.
-     *
      * @param Route $route The route that failed to compile
      * @param Throwable|null $previous The previous exception
      * @return RoutePathCompilationException
