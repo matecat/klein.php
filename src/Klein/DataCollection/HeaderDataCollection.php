@@ -30,7 +30,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const int NORMALIZE_NONE = 0;
+    const NORMALIZE_NONE = 0;
 
     /**
      * Normalization option
@@ -39,7 +39,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const int NORMALIZE_TRIM = 1;
+    const NORMALIZE_TRIM = 1;
 
     /**
      * Normalization option
@@ -48,7 +48,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const int NORMALIZE_DELIMITERS = 2;
+    const NORMALIZE_DELIMITERS = 2;
 
     /**
      * Normalization option
@@ -57,7 +57,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const int NORMALIZE_CASE = 4;
+    const NORMALIZE_CASE = 4;
 
     /**
      * Normalization option
@@ -66,7 +66,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const int NORMALIZE_CANONICAL = 8;
+    const NORMALIZE_CANONICAL = 8;
 
     /**
      * Normalization option
@@ -75,7 +75,7 @@ class HeaderDataCollection extends DataCollection
      *
      * @type int
      */
-    const int NORMALIZE_ALL = -1;
+    const NORMALIZE_ALL = -1;
 
 
     /**

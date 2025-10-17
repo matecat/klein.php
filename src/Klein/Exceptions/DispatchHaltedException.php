@@ -30,21 +30,21 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @type int
      */
-    const int SKIP_THIS = 1;
+    const SKIP_THIS = 1;
 
     /**
      * Skip the next match/callback
      *
      * @type int
      */
-    const int SKIP_NEXT = 2;
+    const SKIP_NEXT = 2;
 
     /**
      * Skip the rest of the matches
      *
      * @type int
      */
-    const int SKIP_REMAINING = 0;
+    const SKIP_REMAINING = 0;
 
 
     /**

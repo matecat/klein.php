@@ -28,7 +28,7 @@ class RouteFactory extends AbstractRouteFactory
      *
      * @type string
      */
-    const string NULL_PATH_VALUE = '*';
+    const NULL_PATH_VALUE = '*';
 
 
     /**

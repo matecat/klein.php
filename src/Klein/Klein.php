@@ -42,14 +42,14 @@ class Klein
      *
      * @type string
      */
-    const string ROUTE_COMPILE_REGEX = '`(\\\?(?:/|\.|))\[([^:\]]*)(?::([^:\]]*))?](\?|)`';
+    const ROUTE_COMPILE_REGEX = '`(\\\?(?:/|\.|))\[([^:\]]*)(?::([^:\]]*))?](\?|)`';
 
     /**
      * The regular expression used to escape the non-named param section of a route URL
      *
      * @type string
      */
-    const string ROUTE_ESCAPE_REGEX = '`(?<=^|])[^]\[?]+?(?=\[|$)`';
+    const ROUTE_ESCAPE_REGEX = '`(?<=^|])[^]\[?]+?(?=\[|$)`';
 
     /**
      * Dispatch route output handling
@@ -58,7 +58,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_NO_CAPTURE = 0;
+    const DISPATCH_NO_CAPTURE = 0;
 
     /**
      * Dispatch route output handling
@@ -67,7 +67,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_RETURN = 1;
+    const DISPATCH_CAPTURE_AND_RETURN = 1;
 
     /**
      * Dispatch route output handling
@@ -76,7 +76,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_REPLACE = 2;
+    const DISPATCH_CAPTURE_AND_REPLACE = 2;
 
     /**
      * Dispatch route output handling
@@ -85,7 +85,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_PREPEND = 3;
+    const DISPATCH_CAPTURE_AND_PREPEND = 3;
 
     /**
      * Dispatch route output handling
@@ -94,7 +94,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_APPEND = 4;
+    const DISPATCH_CAPTURE_AND_APPEND = 4;
 
 
     /**
