@@ -24,7 +24,7 @@ class RouteFactory extends AbstractRouteFactory
      */
 
     /**
-     * The value given to path's when they are entered as null values
+     * The value given to paths when they are entered as null values
      *
      * @type string
      */
@@ -64,7 +64,7 @@ class RouteFactory extends AbstractRouteFactory
     /**
      * Pre-process a path string
      *
-     * This method wraps the path string in a regular expression syntax baesd
+     * This method wraps the path string in a regular expression syntax based
      * on whether the string is a catch-all or custom regular expression.
      * It also adds the namespace in a specific part, based on the style of expression
      *

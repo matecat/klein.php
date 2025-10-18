@@ -1,47 +1,52 @@
 {
-   "name": "matecat/klein",
-   "description": "A lightning fast router for PHP",
-   "keywords": ["router", "routing", "sinatra", "boilerplate"],
-   "homepage": "https://github.com/matecat/klein.php",
-   "license": "MIT",
-   "authors": [
-      {
-         "name": "Chris O'Hara",
-         "email": "cohara87@gmail.com",
-         "homepage": "http://chris6f.com/",
-         "role": "Creator/Developer"
-      },
-      {
-         "name": "Trevor Suarez",
-         "email": "rican7@gmail.com",
-         "homepage": "https://trevorsuarez.com/",
-         "role": "Contributor/Developer"
-      },
-     {
-       "name": "Domenico Lupinetti",
-       "email": "ostico@gmail.com",
-       "role": "Contributor/Developer"
-     }
-   ],
-   "require": {
-      "php": ">=8.3",
-     "ext-ctype": "*",
-     "ext-fileinfo": "*"
-   },
-   "require-dev": {
-      "phpunit/phpunit": "^12",
-      "phpunit/php-code-coverage": "^12",
-      "squizlabs/php_codesniffer": "^4",
-      "phpstan/phpstan": "@stable"
-   },
-   "autoload": {
-      "psr-4": {
-         "Klein\\": "src/Klein/"
-      }
-   },
-   "autoload-dev": {
-      "psr-4": {
-         "Klein\\Tests\\": "tests/Klein/Tests"
-      }
-   }
+  "name": "matecat/klein",
+  "description": "A lightning fast router for PHP",
+  "keywords": [
+    "router",
+    "routing",
+    "sinatra",
+    "boilerplate"
+  ],
+  "homepage": "https://github.com/matecat/klein.php",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Chris O'Hara",
+      "email": "cohara87@gmail.com",
+      "homepage": "http://chris6f.com/",
+      "role": "Creator/Developer"
+    },
+    {
+      "name": "Trevor Suarez",
+      "email": "rican7@gmail.com",
+      "homepage": "https://trevorsuarez.com/",
+      "role": "Contributor/Developer"
+    },
+    {
+      "name": "Domenico Lupinetti",
+      "email": "ostico@gmail.com",
+      "role": "Contributor/Developer"
+    }
+  ],
+  "require": {
+    "php": ">=8.3",
+    "ext-ctype": "*",
+    "ext-fileinfo": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12",
+    "phpunit/php-code-coverage": "^12",
+    "squizlabs/php_codesniffer": "^4",
+    "phpstan/phpstan": "@stable"
+  },
+  "autoload": {
+    "psr-4": {
+      "Klein\\": "src/Klein/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Klein\\Tests\\": "tests/Klein/Tests"
+    }
+  }
 }

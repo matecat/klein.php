@@ -124,6 +124,11 @@ class Klein
     ];
 
     /**
+     * @var array<string, string>
+     */
+    protected array $compiled_regexp = [];
+
+    /**
      * Collection of the routes to match on dispatch
      *
      * @type RouteCollection
@@ -390,6 +395,11 @@ class Klein
         $this->request = $request ?: Request::createFromGlobals();
         $this->response = $response ?: new Response();
 
+        // Access the current Request object, get its "named parameters" collection,
+        // and replace its internal attributes with an empty array (i.e., clear/reset them).
+        // paramsNamed() returns a DataCollection; replace([]) sets its attributes to [] and returns the same collection.
+        $this->request->paramsNamed()->replace();
+
         // Bind our objects to our service
         $this->service->bind($this->request, $this->response);
 
@@ -439,7 +449,7 @@ class Klein
                     // Try to match the current route's path against the incoming URI.
                     // Returns:
                     // - matched: whether the regex/pattern matched
-                    // - negate: whether the route was negated (path starts with '!')
+                    // - negate: whether the route was negated (the path starts with '!')
                     // - params: any captured named params from the path
                     $pathMatchResult = $this->matchPath($routePath, $uri, $apcAvailable);
                     $isPathMatch = $pathMatchResult['matched'];
@@ -453,8 +463,15 @@ class Klein
                             // If the pattern captured params, decode per RFC 3986 and merge into request.
                             if (!empty($namedParams)) {
                                 // RFC 3986: decode percent-encoded octets without converting '+' to space.
-                                $decoded = array_map('rawurldecode', $namedParams);
-                                $this->request->paramsNamed()->merge($decoded);
+                                $paramsNamed = $this->request->paramsNamed()->all();
+                                foreach ($namedParams as $key => $value) {
+                                    if (is_numeric($key)) {
+                                        $paramsNamed[] = rawurldecode($value);
+                                    } else {
+                                        $paramsNamed[$key] = rawurldecode($value);
+                                    }
+                                }
+                                $this->request->paramsNamed()->replace($paramsNamed);
                             }
 
                             try {
@@ -503,7 +520,7 @@ class Klein
                 // Add our methods to our allowed headers
                 $this->response->header('Allow', implode(', ', $matchedMethods));
 
-                if (strcasecmp($requestMethod, 'OPTIONS') !== 0) {
+                if ($requestMethod != HttpMethod::OPTIONS->name) {
                     throw HttpException::createFromCode(405);
                 }
             } elseif ($matched->isEmpty()) {
@@ -547,7 +564,7 @@ class Klein
             }
 
             // Special handling for HEAD requests: send headers only, no body content
-            if (strcasecmp($requestMethod, HttpMethod::HEAD->name) === 0) {
+            if ($requestMethod == HttpMethod::HEAD->name) {
                 $this->response->body(''); // Ensure an empty body for HEAD
                 // Discard any buffered output so nothing is sent
                 $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
@@ -691,18 +708,12 @@ class Klein
         if (is_array($routeMethod)) {
             foreach ($routeMethod as $candidate) {
                 // Exact, case-insensitive match (e.g., GET === get)
-                if (strcasecmp($requestMethod, $candidate) === 0) {
+                if ($candidate === $requestMethod) {
                     return true;
                 }
                 // Special-case: HTTP/1.1 allows servers to treat HEAD like GET without a body.
                 // Consider HEAD matching routes that declare HEAD or GET.
-                if (
-                    strcasecmp($requestMethod, 'HEAD') === 0
-                    && (
-                        strcasecmp($candidate, 'HEAD') === 0
-                        || strcasecmp($candidate, 'GET') === 0
-                    )
-                ) {
+                if ($requestMethod == HttpMethod::HEAD->name && ($candidate == HttpMethod::HEAD->name || $candidate == HttpMethod::GET->name)) {
                     return true;
                 }
             }
@@ -716,18 +727,12 @@ class Klein
         }
 
         // Single method declared: exact, case-insensitive match
-        if (strcasecmp($requestMethod, $routeMethod) === 0) {
+        if ($requestMethod == $routeMethod) {
             return true;
         }
 
         // Allow HEAD requests to match routes that declare HEAD or GET
-        if (
-            strcasecmp($requestMethod, 'HEAD') === 0
-            && (
-                strcasecmp($routeMethod, 'HEAD') === 0
-                || strcasecmp($routeMethod, 'GET') === 0
-            )
-        ) {
+        if ($requestMethod == HttpMethod::HEAD->name && ($routeMethod == HttpMethod::HEAD->name || $routeMethod == HttpMethod::GET->name)) {
             return true;
         }
 
@@ -780,46 +785,19 @@ class Klein
             return ['matched' => $matched, 'negate' => $isNegated, 'params' => $params];
         }
 
-        // Optimistic prefix scan:
-        // - Consume literal characters while they match the URI (inexpensive check).
-        // - Stop scanning when we detect regex constructs ([], (), ., ?, +, *, {).
-        // - Accumulate scanned characters into $patternExpression to be compiled later.
-        $patternExpression = '';
-        $inRegexPhase = false; // flips to true once we encounter a regex-significant token
-        $uriIndex = 0;         // current index into $uri for literal comparisons
-        $nextChar = $path[$pathIndex] ?? null;
+        $cleanedPath = !$isNegated ? $path : ltrim($path, '!');
 
-        while (true) {
-            // Reached the end of a route pattern
-            if (!isset($path[$pathIndex])) {
-                break;
-            }
+        // Split the route pattern at the first occurrence of a regex-significant token
+        // ([, (, ., ?, +, *, {). The first piece ($x[0]) is the literal prefix.
+        $literalPrefixParts = preg_split('`[\[(.?+*{]`', ltrim($cleanedPath, '/'), 2);
 
-            if ($inRegexPhase === false) {
-                $currentChar = $nextChar;
-
-                // Enter the regex phase on common regex markers
-                $inRegexPhase = $currentChar === '[' || $currentChar === '(' || $currentChar === '.';
-
-                // If still not in the regex phase, peek ahead to detect quantifiers that start regex semantics
-                if ($inRegexPhase === false && isset($path[$pathIndex + 1])) {
-                    $nextChar = $path[$pathIndex + 1];
-                    $inRegexPhase = $nextChar === '?' || $nextChar === '+' || $nextChar === '*' || $nextChar === '{';
-                }
-
-                // While in literal phase, ensure current route char matches the URI (except '/': defer to regex)
-                // If it doesn't match, we can fail early without compiling.
-                if ($inRegexPhase === false && $currentChar !== '/' && (!isset($uri[$uriIndex]) || $currentChar !== $uri[$uriIndex])) {
-                    return ['matched' => false, 'negate' => $isNegated, 'params' => []];
-                }
-
-                // Advance the URI pointer after a successful literal check
-                $uriIndex++;
-            }
-
-            // Accumulate route characters into the expression to later compile to a regex
-            $patternExpression .= $path[$pathIndex++];
+        // Fast prefix check: if the URI (without a leading slash) doesn't start with the
+        // literal route prefix (also trimmed), we can fail early without compiling regex.
+        if (!str_starts_with(ltrim($uri, '/'), rtrim($literalPrefixParts[0], '/'))) {
+            return ['matched' => false, 'negate' => $isNegated, 'params' => []];
         }
+
+        $patternExpression = $cleanedPath;
 
         // Compile and cache the route regex:
         // - Use a simple APC cache if available to avoid recompiling hot routes.
@@ -840,33 +818,33 @@ class Klein
     }
 
     /**
-     * Fetches a regular expression from the cache.
+     * Fetches a regex pattern from the cache.
      *
-     * This method attempts to retrieve a cached regular expression
-     * using a specified key. If APC is available and enabled, it
-     * will use the APC cache to fetch the stored value. If APC is
-     * unavailable, the method will return false.
+     * Attempts to retrieve a pre-compiled regex pattern either from APCu cache or an internal array.
      *
-     * @param string $key The key to identify the cached regex.
-     * @param bool $apcAvailable A boolean indicating whether APC cache is available.
+     * @param string $key The cache key for the regex pattern.
+     * @param bool $apcAvailable Indicates whether APCu cache is available for use.
      *
-     * @return string|false The cached regular expression string if found, or false if not available.
+     * @return string|false The cached regex pattern if found, or false if not available.
      */
     private function fetchRegexFromCache(string $key, bool $apcAvailable): string|false
     {
-        return $apcAvailable ? apc_fetch($key) : false;
+        if ($apcAvailable) {
+            return apc_fetch($key);
+        }
+
+        return $this->compiled_regexp[$key] ?? false;  //TODO: add PSR-6 support for cache (filesystem, redis)
     }
 
     /**
-     * Stores a regular expression in the cache.
+     * Stores a compiled regex pattern in the cache.
      *
-     * This method stores the provided regular expression in the cache
-     * using a specified key. If APC cache is available, it utilizes
-     * the `apc_store` function to store the regex.
+     * Saves the given regex pattern with the specified key, either using APCu if available,
+     * or falling back to an internal storage mechanism.
      *
-     * @param string $key The key under which the regex is stored in the cache
-     * @param string $regex The regular expression to be stored
-     * @param bool $apcAvailable Indicates whether APC cache is available
+     * @param string $key The unique identifier used to store the regex in cache.
+     * @param string $regex The compiled regex pattern to be stored.
+     * @param bool $apcAvailable Indicates whether APCu is available for caching.
      *
      * @return void
      */
@@ -874,6 +852,8 @@ class Klein
     {
         if ($apcAvailable) {
             apc_store($key, $regex);
+        } else {
+            $this->compiled_regexp[$key] = $regex;
         }
     }
 
@@ -1020,7 +1000,7 @@ class Klein
 
         // If the path and reversed_path are the same, the regex must have not matched/replaced
         if ($path === $reversed_path && $flatten_regex && str_starts_with($path, '@')) {
-            // If the path is a custom regular expression and we're "flattening", just return a slash
+            // If the path is a custom regular expression, and we're "flattening", just return a slash
             $path = '/';
         } else {
             $path = $reversed_path;
@@ -1060,7 +1040,10 @@ class Klein
         } else {
             // Otherwise, attempt to append the returned data
             try {
-                $this->response->append((string)($returned ?? ''));
+                $buffer = (string)($returned ?? '');
+                if ($buffer !== '') {
+                    $this->response->append($buffer);
+                }
             } catch (LockedResponseException) {
                 // Do nothing, since this is an automated behavior
             }

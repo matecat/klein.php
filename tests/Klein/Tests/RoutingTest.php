@@ -23,8 +23,6 @@ use Klein\Request;
 use Klein\Response;
 use Klein\Route;
 use Klein\ServiceProvider;
-use Klein\Tests\Mocks\HeadersEcho;
-use Klein\Tests\Mocks\HeadersSave;
 use Klein\Tests\Mocks\MockRequestFactory;
 use Klein\Tests\Mocks\TestClass;
 use Throwable;
@@ -2287,4 +2285,70 @@ class RoutingTest extends AbstractKleinTestCase
 
         error_reporting($old_error_val);
     }
+
+    public function testRoutePathCompilationFailure_2()
+    {
+        $this->expectOutputString('yup');
+
+        $this->klein_app->respond(
+            path: '/vc/izxfgrvomj/fipgbrekv/xyuckgj/jilwprdq/[:one]/bktcaysrv/[:two]',
+            callback: function () {
+                echo 'yup';
+            }
+        );
+
+        $exception = null;
+
+        try {
+            $this->klein_app->dispatch(
+                MockRequestFactory::create('/vc/izxfgrvomj/fipgbrekv/xyuckgj/jilwprdq/0f2f/bktcaysrv/d865')
+            );
+        } catch (Exception $e) {
+            $exception = $e->getPrevious();
+        }
+
+        $this->assertNull($exception);
+    }
+
+    public function testHeadMethodsCaseInsensitive()
+    {
+        $test_strings = [
+            'oh, hello',
+            'yea',
+        ];
+
+        $test_result = null;
+
+        $this->klein_app->respond(
+            ['get', 'HEAD'],
+            null,
+            function ($request, $response) use ($test_strings, &$test_result) {
+                $test_result .= $test_strings[0];
+            }
+        );
+        $this->klein_app->respond(
+            'get',
+            '/',
+            function ($request, $response) use ($test_strings, &$test_result) {
+                $test_result .= $test_strings[1];
+            }
+        );
+        $this->klein_app->respond(
+            'post',
+            '/',
+            function ($request, $response) use ($test_strings, &$test_result) {
+                $test_result .= 'nope';
+            }
+        );
+
+        $this->klein_app->dispatch(
+            MockRequestFactory::create('/', 'head')
+        );
+
+        $this->assertSame(
+            implode('', $test_strings),
+            $test_result
+        );
+    }
+
 }

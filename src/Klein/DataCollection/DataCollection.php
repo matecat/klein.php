@@ -150,11 +150,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      */
     public function get(string $key, mixed $default_val = null): mixed
     {
-        if (isset($this->attributes[$key])) {
-            return $this->attributes[$key];
-        }
-
-        return $default_val;
+        return $this->attributes[$key] ?? $default_val;
     }
 
     /**
@@ -274,10 +270,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      */
     public function cloneEmpty(): static
     {
-        $clone = clone $this;
-        $clone->clear();
-
-        return $clone;
+        return new static();
     }
 
 

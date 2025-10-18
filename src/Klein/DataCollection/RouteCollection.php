@@ -22,6 +22,11 @@ class RouteCollection extends DataCollection
 {
 
     /**
+     * @var bool $is_name_prepared Whether the named routes have been prepared
+     */
+    protected bool $is_name_prepared = false;
+
+    /**
      * Methods
      */
 
@@ -78,6 +83,10 @@ class RouteCollection extends DataCollection
      */
     public function addRoute(Route $route): RouteCollection|static
     {
+        // Adding a new route invalidates any previously prepared name index/cache.
+        // Mark as not prepared so that prepareNamed() can rebuild the name mapping on next access.
+        $this->is_name_prepared = false;
+
         /**
          * Auto-generate a name from the object's hash
          * This makes it so that we can autogenerate names
@@ -121,6 +130,10 @@ class RouteCollection extends DataCollection
      */
     public function prepareNamed(): static
     {
+        if ($this->is_name_prepared) {
+            return $this;
+        }
+
         // Create a new collection so we can keep our order
         $prepared = new self();
 
@@ -137,6 +150,10 @@ class RouteCollection extends DataCollection
 
         // Replace our collection's items with our newly prepared collection's items
         $this->replace($prepared->all());
+
+        // Mark the collection as having processed/normalized named routes so we don't
+        // repeat the preparation work on further calls to prepareNamed()
+        $this->is_name_prepared = true;
 
         return $this;
     }

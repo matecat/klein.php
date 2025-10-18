@@ -176,9 +176,9 @@ class Route
     public function setMethod(string|array|null $method): static
     {
         if (is_string($method)) {
-            $this->validateMethod($method);
+            $method = $this->validateMethod($method);
         } elseif (is_array($method)) {
-            $this->validateMethodsArray($method);
+            $method = $this->validateMethodsArray($method);
         }
 
         // Allow null, otherwise expect an array or a string
@@ -261,12 +261,11 @@ class Route
      *
      * @param string $method The HTTP method to validate
      *
-     * @return void
-     * @throws InvalidArgumentException If the HTTP method is invalid
+     * @return string
      */
-    protected function validateMethod(string $method): void
+    protected function validateMethod(string $method): string
     {
-            HttpMethod::tryFrom(strtoupper($method)) ?? throw new InvalidArgumentException(
+        return HttpMethod::tryFrom(strtoupper($method))->name ?? throw new InvalidArgumentException(
             "Invalid HTTP method: $method"
         );
     }
@@ -276,14 +275,16 @@ class Route
      *
      * @param string[] $methods Array of method names to validate
      *
-     * @return void
+     * @return string[]
      * @throws InvalidArgumentException If any of the methods in the array is invalid
      */
-    protected function validateMethodsArray(array $methods): void
+    protected function validateMethodsArray(array $methods): array
     {
+        $uniformed_methods = [];
         foreach ($methods as $method) {
-            $this->validateMethod($method);
+            $uniformed_methods[] = $this->validateMethod($method);
         }
+        return $uniformed_methods;
     }
 
 }

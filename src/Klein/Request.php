@@ -150,7 +150,7 @@ class Request
      *
      * Generates one on the first call
      *
-     * @param boolean $hash Whether or not to hash the ID on creation
+     * @param boolean $hash Whether to hash the ID on creation
      *
      * @return string|null
      */
@@ -440,10 +440,10 @@ class Request
      */
     public function method(?string $is = null, bool $allow_override = true): bool|string
     {
-        $method = $this->server->get('REQUEST_METHOD', 'GET');
+        $method = $this->server->get('REQUEST_METHOD', HttpMethod::GET->name);
 
         // Override
-        if ($allow_override && $method === 'POST') {
+        if ($allow_override && $method === HttpMethod::POST->name) {
             // For legacy servers, override the HTTP method with the X-HTTP-Method-Override header or _method parameter
             if ($this->server->exists('X_HTTP_METHOD_OVERRIDE')) {
                 $method = $this->server->get('X_HTTP_METHOD_OVERRIDE', $method);
