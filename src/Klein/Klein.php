@@ -4,6 +4,7 @@
  *
  * @author          Chris O'Hara <cohara87@gmail.com>
  * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Domenico Lupinetti (Ostico <ostico@gmail.com>) (contributor and v3 refactorer)
  * @copyright   (c) Chris O'Hara
  * @link            https://github.com/klein/klein.php
  * @license         MIT
@@ -11,6 +12,7 @@
 
 namespace Klein;
 
+use Cache\Adapter\PHPArray\ArrayCachePool;
 use InvalidArgumentException;
 use Klein\DataCollection\RouteCollection;
 use Klein\Exceptions\DispatchHaltedException;
@@ -44,13 +46,6 @@ class Klein
      * @type string
      */
     const string ROUTE_COMPILE_REGEX = '`(\\\?(?:/|\.|))\[([^:\]]*)(?::([^:\]]*))?](\?|)`';
-
-    /**
-     * The regular expression used to escape the non-named param section of a route URL
-     *
-     * @type string
-     */
-    const string ROUTE_ESCAPE_REGEX = '`(?<=^|])[^]\[?]+?(?=\[|$)`';
 
     /**
      * Dispatch route output handling
@@ -101,33 +96,6 @@ class Klein
     /**
      * Class properties
      */
-
-    /**
-     * The types to detect in a defined match "block"
-     *
-     * Examples of these blocks are as follows:
-     *
-     * - integer:       '[i:id]'
-     * - alphanumeric:  '[a:username]'
-     * - hexadecimal:   '[h:color]'
-     * - slug:          '[s:article]'
-     *
-     * @var array<string, string>
-     */
-    protected array $match_types = [
-        'i' => '[0-9]++',
-        'a' => '[0-9A-Za-z]++',
-        'h' => '[0-9A-Fa-f]++',
-        's' => '[0-9A-Za-z-_]++',
-        '*' => '.+?',
-        '**' => '.++',
-        '' => '[^/]+?'
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    protected array $compiled_regexp = [];
 
     /**
      * Collection of the routes to match on dispatch
@@ -219,19 +187,19 @@ class Klein
      * @param ServiceProvider|null $service Service provider object responsible for utilitarian behaviors
      * @param App|null $app An object passed to each route callback, defaults to an App instance
      * @param RouteCollection|null $routes Collection object responsible for containing all route instances
-     * @param AbstractRouteFactory|null $route_factory A factory class responsible for creating Route instances
+     * @param AbstractRouteFactory|null $routeFactory A factory class responsible for creating Route instances
      */
     public function __construct(
         ?ServiceProvider $service = null,
         ?App $app = null,
         ?RouteCollection $routes = null,
-        ?AbstractRouteFactory $route_factory = null
+        ?AbstractRouteFactory $routeFactory = null,
     ) {
         // Instantiate and fall back to defaults
         $this->service = $service ?: new ServiceProvider();
         $this->app = $app ?: new App();
         $this->routes = $routes ?: new RouteCollection();
-        $this->route_factory = $route_factory ?: new RouteFactory();
+        $this->route_factory = $routeFactory ?: new RouteFactory('', new ArrayCachePool());
 
         $this->error_callbacks = new SplStack();
         $this->http_error_callbacks = new SplStack();
@@ -304,10 +272,10 @@ class Klein
      * $router->respond( function() {
      *     echo 'this works';
      * });
-     * $router->respond( '/endpoint', function() {
+     * $router->respond('/endpoint', function() {
      *     echo 'this also works';
      * });
-     * $router->respond( 'POST', '/endpoint', function() {
+     * $router->respond('POST', '/endpoint', function() {
      *     echo 'this also works!!!!';
      * });
      * </code>
@@ -341,10 +309,10 @@ class Klein
      * $router = new Klein();
      *
      * $router->with('/users', function($router) {
-     *     $router->respond( '/', function() {
+     *     $router->respond('/', function() {
      *         // do something interesting
      *     });
-     *     $router->respond( '/[i:id]', function() {
+     *     $router->respond('/[i:id]', function() {
      *         // do something different
      *     });
      * });
@@ -418,7 +386,6 @@ class Klein
         $skipRemaining = 0;
         $matched = $this->routes->cloneEmpty(); // Get a clone of the route's collection, as it may have been injected
         $matchedMethods = [];
-        $apcAvailable = function_exists('apc_fetch');
 
         // Start output buffering
         ob_start();
@@ -448,7 +415,7 @@ class Klein
                 // - matched: whether the regex/pattern matched
                 // - negate: whether the route was negated (the path starts with '!')
                 // - params: any captured named params from the path
-                $pathMatchResult = $this->matchRoute($route, $uri, $apcAvailable);
+                $pathMatchResult = $this->matchRoute($route, $uri);
 
                 // Apply negation: effective match if (matched XOR negate) is true.
                 if ($pathMatchResult['matched'] ^ $route->isNegated) {
@@ -764,136 +731,6 @@ class Klein
 
         // Note: caller will apply XOR with $isNegated to produce the effective match result.
         return ['matched' => $matched, 'params' => $params];
-    }
-
-    /**
-     * Fetches a regex pattern from the cache.
-     *
-     * Attempts to retrieve a pre-compiled regex pattern either from APCu cache or an internal array.
-     *
-     * @param string $key The cache key for the regex pattern.
-     * @param bool $apcAvailable Indicates whether APCu cache is available for use.
-     *
-     * @return string|false The cached regex pattern if found, or false if not available.
-     */
-    private function fetchRegexFromCache(string $key, bool $apcAvailable): string|false
-    {
-        if ($apcAvailable) {
-            return apc_fetch($key);
-        }
-
-        return $this->compiled_regexp[$key] ?? false;  //TODO: add PSR-6 support for cache (filesystem, redis)
-    }
-
-    /**
-     * Stores a compiled regex pattern in the cache.
-     *
-     * Saves the given regex pattern with the specified key, either using APCu if available,
-     * or falling back to an internal storage mechanism.
-     *
-     * @param string $key The unique identifier used to store the regex in cache.
-     * @param string $regex The compiled regex pattern to be stored.
-     * @param bool $apcAvailable Indicates whether APCu is available for caching.
-     *
-     * @return void
-     */
-    private function storeRegexInCache(string $key, string $regex, bool $apcAvailable): void
-    {
-        if ($apcAvailable) {
-            apc_store($key, $regex);
-        } else {
-            $this->compiled_regexp[$key] = $regex;
-        }
-    }
-
-    /**
-     * Compiles a route string to a regular expression
-     *
-     * @param string $route The route string to compile
-     *
-     * @return string
-     * @throws RegularExpressionCompilationException
-     */
-    protected function compileRouteRegexp(string $route): string
-    {
-        // First, escape all the non-named param (non [block]s) for regex-chars
-        $route = preg_replace_callback(
-            static::ROUTE_ESCAPE_REGEX,
-            function ($match) {
-                return preg_quote($match[0]);
-            },
-            $route
-        );
-
-        // Get a local reference of the match types to pass into our closure
-        $match_types = $this->match_types;
-
-        // Now let's actually compile the path
-        $route = preg_replace_callback(
-            static::ROUTE_COMPILE_REGEX,
-            function ($match) use ($match_types) {
-                [, $pre, $type, $param, $optional] = $match;
-
-                if (isset($match_types[$type])) {
-                    $type = $match_types[$type];
-                }
-
-                // Older versions of PCRE require the 'P' in (?P<named>)
-                return '(?:'
-                    . ($pre !== '' ? $pre : null)
-                    . '('
-                    . ($param !== '' ? "?P<$param>" : null)
-                    . $type
-                    . '))'
-                    . ($optional !== '' ? '?' : null);
-            },
-            $route
-        );
-
-        $regex = "`^$route$`";
-
-        // Check if our regular expression is valid or throw an exception
-        $this->validateRegularExpression($regex);
-
-        return $regex;
-    }
-
-    /**
-     * Validate a regular expression
-     *
-     * This simply checks if the regular expression is able to be compiled
-     * and converts any warnings or notices in the compilation to an exception
-     *
-     * @param string $regex The regular expression to validate
-     *
-     * @return void
-     * @throws RegularExpressionCompilationException
-     */
-    private function validateRegularExpression(string $regex): void
-    {
-        $error_string = null;
-
-        // Set an error handler temporarily
-        set_error_handler(
-            function (int $errno, string $errStr) use (&$error_string): bool {
-                $error_string = $errStr;
-                return true;
-            },
-            E_NOTICE | E_WARNING
-        );
-
-        if (false === preg_match($regex, '') || !empty($error_string)) {
-            // Remove our temporary error handler
-            restore_error_handler();
-
-            throw new RegularExpressionCompilationException(
-                $error_string,
-                preg_last_error()
-            );
-        }
-
-        // Remove our temporary error handler
-        restore_error_handler();
     }
 
     /**

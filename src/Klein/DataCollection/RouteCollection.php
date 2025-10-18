@@ -4,6 +4,7 @@
  *
  * @author          Chris O'Hara <cohara87@gmail.com>
  * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Domenico Lupinetti (Ostico <ostico@gmail.com>) (contributor and v3 refactorer)
  * @copyright   (c) Chris O'Hara
  * @link            https://github.com/klein/klein.php
  * @license         MIT
@@ -34,7 +35,7 @@ class RouteCollection extends DataCollection
      * Constructor
      *
      * @override DataCollection::__construct()
-     * @param array<string, \Klein\Routes\Route> $routes The routes of this collection
+     * @param array<string, Route> $routes The routes of this collection
      */
     public function __construct(array $routes = [])
     {
@@ -77,11 +78,11 @@ class RouteCollection extends DataCollection
      *
      * This will auto-generate a name
      *
-     * @param \Klein\Routes\Route $route
+     * @param Route $route
      *
      * @return static
      */
-    public function addRoute(Route $route): RouteCollection|static
+    public function addRoute(Route $route): static
     {
         // Adding a new route invalidates any previously prepared name index/cache.
         // Mark as not prepared so that prepareNamed() can rebuild the name mapping on next access.

@@ -4,6 +4,7 @@
  *
  * @author          Chris O'Hara <cohara87@gmail.com>
  * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Domenico Lupinetti (Ostico <ostico@gmail.com>) (contributor and v3 refactorer)
  * @copyright   (c) Chris O'Hara
  * @link            https://github.com/klein/klein.php
  * @license         MIT
@@ -48,6 +49,7 @@ class RouteFactory extends AbstractRouteFactory
             $method,
             $this->namespace,
             null, // count_match is ignored for Klein default route implementation
+            $this->cache,
             $name
         );
     }

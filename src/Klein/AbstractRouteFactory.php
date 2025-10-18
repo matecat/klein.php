@@ -4,6 +4,7 @@
  *
  * @author          Chris O'Hara <cohara87@gmail.com>
  * @author          Trevor Suarez (Rican7) (contributor and v2 refactorer)
+ * @author          Domenico Lupinetti (Ostico <ostico@gmail.com>) (contributor and v3 refactorer)
  * @copyright   (c) Chris O'Hara
  * @link            https://github.com/klein/klein.php
  * @license         MIT
@@ -12,6 +13,7 @@
 namespace Klein;
 
 use Klein\Routes\Route;
+use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * AbstractRouteFactory
@@ -34,6 +36,10 @@ abstract class AbstractRouteFactory
      */
     protected string $namespace = '';
 
+    /**
+     * @type CacheItemPoolInterface|null
+     */
+    protected ?CacheItemPoolInterface $cache;
 
     /**
      * Methods
@@ -44,9 +50,10 @@ abstract class AbstractRouteFactory
      *
      * @param ?string $namespace The initial namespace to set
      */
-    public function __construct(?string $namespace = '')
+    public function __construct(?string $namespace = '', ?CacheItemPoolInterface $cache = null)
     {
         $this->namespace = $namespace ?? '';
+        $this->cache = $cache;
     }
 
     /**

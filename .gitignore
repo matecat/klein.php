@@ -10,3 +10,4 @@ report/
 /.phpunit.cache/
 /.phpunit.result.cache
 /coverage.clover
+/cache/

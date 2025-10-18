@@ -30,6 +30,9 @@
   ],
   "require": {
     "php": ">=8.3",
+    "psr/cache": "^2",
+    "cache/array-adapter": "^1.2",
+    "cache/filesystem-adapter": "^1",
     "ext-ctype": "*",
     "ext-fileinfo": "*"
   },
