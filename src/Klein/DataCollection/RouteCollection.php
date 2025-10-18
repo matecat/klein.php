@@ -11,7 +11,7 @@
 
 namespace Klein\DataCollection;
 
-use Klein\Route;
+use Klein\Routes\Route;
 
 /**
  * RouteCollection
@@ -34,7 +34,7 @@ class RouteCollection extends DataCollection
      * Constructor
      *
      * @override DataCollection::__construct()
-     * @param array<string, Route> $routes The routes of this collection
+     * @param array<string, \Klein\Routes\Route> $routes The routes of this collection
      */
     public function __construct(array $routes = [])
     {
@@ -77,7 +77,7 @@ class RouteCollection extends DataCollection
      *
      * This will auto-generate a name
      *
-     * @param Route $route
+     * @param \Klein\Routes\Route $route
      *
      * @return static
      */

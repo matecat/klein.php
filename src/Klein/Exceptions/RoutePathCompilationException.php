@@ -11,7 +11,7 @@
 
 namespace Klein\Exceptions;
 
-use Klein\Route;
+use Klein\Routes\Route;
 use RuntimeException;
 use Throwable;
 
@@ -71,7 +71,7 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
         $error = (null !== $previous) ? $previous->getMessage() : null;
         $code = (null !== $previous) ? $previous->getCode() : 0;
 
-        $message = sprintf(self::MESSAGE_FORMAT, $route->getPath());
+        $message = sprintf(self::MESSAGE_FORMAT, $route->originalPath);
         $message .= ' ' . sprintf(self::FAILURE_MESSAGE_TITLE_FORMAT, $error);
 
         $exception = new self($message, $code, $previous);
@@ -81,7 +81,7 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
     }
 
     /**
-     * Gets the value of route
+     * Gets the value of the route
      *
      * @sccess public
      * @return Route

@@ -21,7 +21,7 @@ use Klein\Exceptions\UnhandledException;
 use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
-use Klein\Route;
+use Klein\Routes\Route;
 use Klein\ServiceProvider;
 use Klein\Tests\Mocks\MockRequestFactory;
 use Klein\Tests\Mocks\TestClass;
@@ -394,9 +394,9 @@ class RoutingTest extends AbstractKleinTestCase
             callback: function () {
                 return 1337;
             }
-        )->getPath();
+        )->path;
 
-        $this->assertSame($return_one->getPath(), $return_two);
+        $this->assertSame($return_one->path, $return_two);
     }
 
     public function testCatchallImplicit()
@@ -2255,25 +2255,21 @@ class RoutingTest extends AbstractKleinTestCase
 
     public function testRoutePathCompilationFailure()
     {
-        $this->klein_app->respond(
-            path: '/users/[i:id]/friends/[i:id]/',
-            callback: function () {
-                echo 'yup';
-            }
-        );
-
-        $exception = null;
 
         try {
-            $this->klein_app->dispatch(
-                MockRequestFactory::create('/users/1738197/friends/7828316')
+
+            $this->klein_app->respond(
+                path: '/users/[i:id]/friends/[i:id]/',
+                callback: function () {
+                    echo 'yup';
+                }
             );
+
         } catch (Exception $e) {
-            $exception = $e->getPrevious();
+            $this->assertTrue($e instanceof RoutePathCompilationException);
+            $this->assertTrue($e->getRoute() instanceof Route);
         }
 
-        $this->assertTrue($exception instanceof RoutePathCompilationException);
-        $this->assertTrue($exception->getRoute() instanceof Route);
     }
 
     public function testRoutePathCompilationFailureWithoutWarnings()

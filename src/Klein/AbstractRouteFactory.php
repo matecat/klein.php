@@ -11,6 +11,8 @@
 
 namespace Klein;
 
+use Klein\Routes\Route;
+
 /**
  * AbstractRouteFactory
  *

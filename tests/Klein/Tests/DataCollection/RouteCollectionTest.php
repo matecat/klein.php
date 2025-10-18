@@ -12,7 +12,7 @@
 namespace Klein\Tests\DataCollection;
 
 use Klein\DataCollection\RouteCollection;
-use Klein\Route;
+use Klein\Routes\Route;
 use Klein\Tests\AbstractKleinTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -39,6 +39,7 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/test/path',
             'PUT',
+            null,
             true
         );
 
@@ -48,6 +49,7 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/test/dafuq',
             'HEAD',
+            null,
             false
         );
 
@@ -57,6 +59,7 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/trevor/is/weird',
             'OPTIONS',
+            null,
             false,
             'trevor'
         );

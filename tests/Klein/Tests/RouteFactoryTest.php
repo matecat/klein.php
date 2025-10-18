@@ -11,8 +11,8 @@
 
 namespace Klein\Tests;
 
-use Klein\Route;
-use Klein\RouteFactory;
+use Klein\Routes\Route;
+use Klein\Routes\RouteFactory;
 
 /**
  * RouteFactoryTest
@@ -62,14 +62,14 @@ class RouteFactoryTest extends AbstractKleinTestCase
         );
 
         $this->assertTrue($route instanceof Route);
-        $this->assertNull($route->getMethod());
+        $this->assertNull($route->method);
         $this->assertNull($route->getName());
         $this->assertSame($test_callable(), $route());
 
-        $this->assertSame($should_match, $route->getCountMatch());
+        $this->assertSame($should_match, $route->countMatch);
 
         if ($test_paths_match) {
-            $this->assertSame($test_path, $route->getPath());
+            $this->assertStringContainsString($route->path, $test_path);
         }
     }
 

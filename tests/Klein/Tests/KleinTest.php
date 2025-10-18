@@ -20,7 +20,7 @@ use Klein\Exceptions\UnhandledException;
 use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
-use Klein\Route;
+use Klein\Routes\Route;
 use Klein\ServiceProvider;
 use OutOfBoundsException;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
@@ -172,7 +172,7 @@ class KleinTest extends AbstractKleinTestCase
         $test_route = $all_routes[0];
 
         $this->assertTrue($test_route instanceof Route);
-        $this->assertSame($test_namespace . '/?', $test_route->getPath());
+        $this->assertSame($test_namespace . '/?', $test_route->path);
     }
 
     public function testDispatch()
@@ -192,8 +192,7 @@ class KleinTest extends AbstractKleinTestCase
         $test_path = '/test';
         $test_name = 'Test Route Thing';
 
-        $route = new Route($this->getTestCallable());
-        $route->setPath($test_path);
+        $route = new Route($this->getTestCallable(), $test_path);
         $route->setName($test_name);
 
         $this->klein_app->routes()->addRoute($route);
@@ -470,7 +469,7 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->options('*', $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('OPTIONS', $route->getMethod());
+        $this->assertSame('OPTIONS', $route->method);
     }
 
     public function testHead()
@@ -478,7 +477,7 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->head(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('HEAD', $route->getMethod());
+        $this->assertSame('HEAD', $route->method);
     }
 
     public function testGet()
@@ -486,7 +485,7 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->get(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('GET', $route->getMethod());
+        $this->assertSame('GET', $route->method);
     }
 
     public function testPost()
@@ -494,7 +493,7 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->post(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('POST', $route->getMethod());
+        $this->assertSame('POST', $route->method);
     }
 
     public function testPut()
@@ -502,7 +501,7 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->put(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('PUT', $route->getMethod());
+        $this->assertSame('PUT', $route->method);
     }
 
     public function testDelete()
@@ -510,7 +509,7 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->delete(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('DELETE', $route->getMethod());
+        $this->assertSame('DELETE', $route->method);
     }
 
     public function testPatch()
@@ -518,6 +517,6 @@ class KleinTest extends AbstractKleinTestCase
         $route = $this->klein_app->patch(callback: $this->getTestCallable());
 
         $this->assertNotNull($route);
-        $this->assertSame('PATCH', $route->getMethod());
+        $this->assertSame('PATCH', $route->method);
     }
 }

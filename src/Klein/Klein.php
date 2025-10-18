@@ -18,8 +18,9 @@ use Klein\Exceptions\HttpException;
 use Klein\Exceptions\HttpExceptionInterface;
 use Klein\Exceptions\LockedResponseException;
 use Klein\Exceptions\RegularExpressionCompilationException;
-use Klein\Exceptions\RoutePathCompilationException;
 use Klein\Exceptions\UnhandledException;
+use Klein\Routes\Route;
+use Klein\Routes\RouteFactory;
 use OutOfBoundsException;
 use SplQueue;
 use SplStack;
@@ -432,86 +433,75 @@ class Klein
                     continue;
                 }
 
-                // Grab the properties of the route handler
-                $routeMethod = $route->getMethod();
-                $routePath = $route->getPath();
-                $countMatch = $route->getCountMatch();
-
-                // Matches HTTP method (incl. HEAD vs. GET)
-                // Keep track of whether this specific request method was matched
-                // Was a method specified? If so, check it against the current request method
-                $methodMatch = $this->matchesMethod($requestMethod, $routeMethod);
-                // If the method was matched or if it wasn't even passed (in the route definition)
-                $possibleMatch = ($methodMatch === null) || $methodMatch;
+                // Determine if the current request's HTTP method matches what the route allows.
+                // - matchesMethod(...) returns:
+                //     true  => the route explicitly allows this method (incl. HEAD treated like GET)
+                //     false => the route explicitly disallows this method
+                //     null => the route did not specify any method (i.e., it accepts any method)
+                // - Using `?? true` treats "no method specified" (null) as a match.
+                // The result is stored in $possibleMatch.
+                $possibleMatch = $this->matchesMethod($requestMethod, $route->method) ?? true;
 
                 // Matches URI against the route path
-                try {
-                    // Try to match the current route's path against the incoming URI.
-                    // Returns:
-                    // - matched: whether the regex/pattern matched
-                    // - negate: whether the route was negated (the path starts with '!')
-                    // - params: any captured named params from the path
-                    $pathMatchResult = $this->matchPath($routePath, $uri, $apcAvailable);
-                    $isPathMatch = $pathMatchResult['matched'];
-                    $negate = $pathMatchResult['negate'];
-                    $namedParams = $pathMatchResult['params'];
+                // Try to match the current route's path against the incoming URI.
+                // Returns:
+                // - matched: whether the regex/pattern matched
+                // - negate: whether the route was negated (the path starts with '!')
+                // - params: any captured named params from the path
+                $pathMatchResult = $this->matchRoute($route, $uri, $apcAvailable);
 
-                    // Apply negation: effective match if (matched XOR negate) is true.
-                    if ($isPathMatch ^ $negate) {
-                        // Route path matched; check if this route is a possible match (e.g., method too).
-                        if ($possibleMatch) {
-                            // If the pattern captured params, decode per RFC 3986 and merge into request.
-                            if (!empty($namedParams)) {
-                                // RFC 3986: decode percent-encoded octets without converting '+' to space.
-                                $paramsNamed = $this->request->paramsNamed()->all();
-                                foreach ($namedParams as $key => $value) {
-                                    if (is_numeric($key)) {
-                                        $paramsNamed[] = rawurldecode($value);
-                                    } else {
-                                        $paramsNamed[$key] = rawurldecode($value);
-                                    }
-                                }
-                                $this->request->paramsNamed()->replace($paramsNamed);
-                            }
-
-                            try {
-                                // Execute the route callback/middleware chain.
-                                $this->handleRouteCallback($route, $matched, $matchedMethods);
-                            } catch (DispatchHaltedException $e) {
-                                // Control-flow exceptions to alter dispatch:
-                                switch ($e->getCode()) {
-                                    case DispatchHaltedException::SKIP_THIS:
-                                        // Skip this route and continue with the next one.
-                                        continue 2;
-                                    case DispatchHaltedException::SKIP_NEXT:
-                                        // Skip a number of further routes.
-                                        $skipRemaining = $e->getNumberOfSkips();
-                                        break;
-                                    case DispatchHaltedException::SKIP_REMAINING:
-                                        // Stop processing any more routes.
-                                        break 2;
-                                    default:
-                                        // Unknown control code: rethrow.
-                                        throw $e;
+                // Apply negation: effective match if (matched XOR negate) is true.
+                if ($pathMatchResult['matched'] ^ $route->isNegated) {
+                    // Route path matched; check if this route is a possible match (e.g., method too).
+                    if ($possibleMatch) {
+                        // If the pattern captured params, decode per RFC 3986 and merge into request.
+                        if (!empty($pathMatchResult['params'])) {
+                            // RFC 3986: decode percent-encoded octets without converting '+' to space.
+                            $paramsNamed = $this->request->paramsNamed()->all();
+                            foreach ($pathMatchResult['params'] as $key => $value) {
+                                if (is_numeric($key)) {
+                                    $paramsNamed[] = rawurldecode($value);
+                                } else {
+                                    $paramsNamed[$key] = rawurldecode($value);
                                 }
                             }
+                            $this->request->paramsNamed()->replace($paramsNamed);
+                        }
 
-                            // Record this route as matched unless it's the catch-all '*'.
-                            if ($routePath !== '*') {
-                                $countMatch && $matched->add($route);
+                        try {
+                            // Execute the route callback/middleware chain.
+                            $this->handleRouteCallback($route, $matched, $matchedMethods);
+                        } catch (DispatchHaltedException $e) {
+                            // Control-flow exceptions to alter dispatch:
+                            switch ($e->getCode()) {
+                                case DispatchHaltedException::SKIP_THIS:
+                                    // Skip this route and continue with the next one.
+                                    continue 2;
+                                case DispatchHaltedException::SKIP_NEXT:
+                                    // Skip a number of further routes.
+                                    $skipRemaining = $e->getNumberOfSkips();
+                                    break;
+                                case DispatchHaltedException::SKIP_REMAINING:
+                                    // Stop processing any more routes.
+                                    break 2;
+                                default:
+                                    // Unknown control code: rethrow.
+                                    throw $e;
                             }
                         }
 
-                        // Accumulate HTTP methods that matched (for 405 Method Not Allowed reporting).
-                        if ($countMatch) {
-                            $matchedMethods = array_unique(
-                                array_filter(array_merge($matchedMethods, (array)$routeMethod))
-                            );
-                        }
+                        // Record this route as matched unless it's the catch-all '*'.
+                        $route->countMatch && $matched->add($route);
                     }
-                } catch (RegularExpressionCompilationException $e) {
-                    // Normalize regex compilation errors into a route-specific exception.
-                    throw RoutePathCompilationException::createFromRoute($route, $e);
+
+                    // Accumulate HTTP methods that matched (for 405 Method Not Allowed reporting).
+                    if ($route->countMatch) {
+                        $matchedMethods = array_unique(
+                            array_filter(
+                                array_merge($matchedMethods, (array)$route->method)
+                            )
+                        );
+                    }
                 }
             }
 
@@ -741,80 +731,39 @@ class Klein
     }
 
     /**
-     * Matches a given URI against a specified route path pattern.
+     * Matches a given URI against a specified route and determines if the route matches,
+     * whether it's negated, and captures any parameters from the match.
      *
-     * This method handles various types of route path patterns, including
-     * - Literal routes
-     * - Wildcard routes
-     * - Regular expression routes
-     * - Negated routes
+     * @param Route $route The route definition containing path, regex, and negation details.
+     * @param string $uri The URI to be matched against the route.
      *
-     * Routes can include custom regular expressions (denoted by `@`), literal prefixes, or regex constructs.
-     * Negated routes (paths starting with `!`) invert their match logic, making the route match anything
-     * that does not match the specified pattern. It also uses caching (via APC) to optimize route pattern compilation.
-     *
-     * @param string $path The route path pattern to match against, which may include special markers for regex or negation. Can include:
-     *                      - `!` for negation
-     *                      - `*` for wildcard matching
-     *                      - `@` for custom regular expressions
-     * @param string $uri The URI string to compare with the route path.
-     * @param bool $apcAvailable Indicates if APC caching is available for optimizing regex compilation.
-     *
-     * @return array{matched: bool, negate: bool, params: string[]} An associative array containing:
-     *               - 'matched' (bool): Whether the URI matches the route pattern.
-     *               - 'negate' (bool): Whether the match result should be negated based on the route's configuration.
-     *               - 'params' (array): Any parameters extracted from the match, if applicable.
+     * @return array An associative array with the following keys:
+     *               - 'matched' (bool): Indicates whether the route matches the URI.
+     *               - 'params' (array): Captured parameters, if any, from the URI.
      */
-    private function matchPath(string $path, string $uri, bool $apcAvailable): array
+    private function matchRoute(Route $route, string $uri): array
     {
-        // Detect "negated" routes (paths starting with '!') which invert match logic.
-        // Example: '!/admin' matches any URI that does NOT match '/admin'.
-        $isNegated = isset($path[0]) && $path[0] === '!';
-        $pathIndex = $isNegated ? 1 : 0; // Skip '!' when present
-
         // Fast path: wildcard route matches everything
-        if ($path === '*') {
-            return ['matched' => true, 'negate' => $isNegated, 'params' => []];
+        if ($route->path === '*') {
+            return ['matched' => true, 'params' => []];
         }
-
-        // If the route starts with '@', it's a raw/custom regex. We run it directly against the URI.
-        // Example: '@/^/files/\d+$/' (we wrap it with backticks below).
-        if (isset($path[$pathIndex]) && $path[$pathIndex] === '@') {
-            $patternBody = substr($path, $pathIndex + 1);
-            $matched = (bool)preg_match('`' . $patternBody . '`', $uri, $params);
-            return ['matched' => $matched, 'negate' => $isNegated, 'params' => $params];
-        }
-
-        $cleanedPath = !$isNegated ? $path : ltrim($path, '!');
 
         // Split the route pattern at the first occurrence of a regex-significant token
         // ([, (, ., ?, +, *, {). The first piece ($x[0]) is the literal prefix.
-        $literalPrefixParts = preg_split('`[\[(.?+*{]`', ltrim($cleanedPath, '/'), 2);
+        $patternBody = $route->isCustomRegex ? ltrim($route->path ?? '', '^') : $route->path;
+        $literalPrefixParts = preg_split('`[\[(.?+*{]`', ltrim($patternBody, '/'), 2);
 
         // Fast prefix check: if the URI (without a leading slash) doesn't start with the
         // literal route prefix (also trimmed), we can fail early without compiling regex.
         if (!str_starts_with(ltrim($uri, '/'), rtrim($literalPrefixParts[0], '/'))) {
-            return ['matched' => false, 'negate' => $isNegated, 'params' => []];
-        }
-
-        $patternExpression = $cleanedPath;
-
-        // Compile and cache the route regex:
-        // - Use a simple APC cache if available to avoid recompiling hot routes.
-        $cacheKey = "route:" . $patternExpression;
-        $compiledRegex = $this->fetchRegexFromCache($cacheKey, $apcAvailable);
-
-        // On cache miss, compile and store
-        if ($compiledRegex === false) {
-            $compiledRegex = $this->compileRouteRegexp($patternExpression);
-            $this->storeRegexInCache($cacheKey, $compiledRegex, $apcAvailable);
+            return ['matched' => false, 'params' => []];
         }
 
         // Matches the compiled regex against the URI and returns any named parameters.
-        $matched = (bool)preg_match($compiledRegex, $uri, $params);
+        $matched = (bool)preg_match($route->regex, $uri, $params);
 
         // Note: caller will apply XOR with $isNegated to produce the effective match result.
-        return ['matched' => $matched, 'negate' => $isNegated, 'params' => $params];
+        return ['matched' => $matched, 'params' => $params];
     }
 
     /**
@@ -972,6 +921,7 @@ class Klein
     public function getPathFor(string $route_name, ?array $params = null, bool $flatten_regex = true): string
     {
         // First, grab the route
+        /** @var Route $route */
         $route = $this->routes->get($route_name);
 
         // Make sure we are getting a valid route
@@ -979,7 +929,7 @@ class Klein
             throw new OutOfBoundsException('No such route with name: ' . $route_name);
         }
 
-        $path = $route->getPath();
+        $path = $route->originalPath;
 
         // Use our compilation regex to reverse the path's compilation from its definition
         $reversed_path = preg_replace_callback(
@@ -999,7 +949,7 @@ class Klein
         );
 
         // If the path and reversed_path are the same, the regex must have not matched/replaced
-        if ($path === $reversed_path && $flatten_regex && str_starts_with($path, '@')) {
+        if ($path === $reversed_path && $flatten_regex && ($route->isCustomRegex || $route->isNegatedCustomRegex)) {
             // If the path is a custom regular expression, and we're "flattening", just return a slash
             $path = '/';
         } else {
@@ -1025,7 +975,7 @@ class Klein
     {
         // Handle the callback
         $returned = call_user_func(
-            $route->getCallback(), // Instead of relying on the slower "invoke" magic
+            $route->callback, // Instead of relying on the slower "invoke" magic
             $this->request,
             $this->response,
             $this->service,
