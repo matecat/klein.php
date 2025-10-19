@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.2.0
+
+- Breaking changes, see [UPGRADING.md](UPGRADING.md)
+
 ## 3.1.0
 
 ### Features

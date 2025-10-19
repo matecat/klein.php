@@ -23,6 +23,7 @@ use Klein\Exceptions\UnhandledException;
 use Klein\Routes\Route;
 use Klein\Routes\RouteCompiler;
 use Klein\Routes\RouteFactory;
+use Klein\Tree\TreeHandler;
 use OutOfBoundsException;
 use SplQueue;
 use SplStack;
@@ -39,7 +40,7 @@ class Klein
     /**
      * Class constants
      */
-    
+
     /**
      * Dispatch route output handling
      *
@@ -166,6 +167,7 @@ class Klein
      */
     protected mixed $app;
 
+    protected TreeHandler $treeHandler;
 
     /**
      * Methods
@@ -197,6 +199,8 @@ class Klein
         $this->error_callbacks = new SplStack();
         $this->http_error_callbacks = new SplStack();
         $this->after_filter_callbacks = new SplQueue();
+
+        $this->treeHandler = new TreeHandler();
     }
 
     /**
@@ -288,6 +292,7 @@ class Klein
         $route = $this->route_factory->build($callback, $path, $method);
 
         $this->routes->add($route);
+        $this->treeHandler->addRoute($route);
 
         return $route;
     }
@@ -385,82 +390,65 @@ class Klein
         $this->output_buffer_level = ob_get_level();
 
         try {
+            $routes = $this->filterMatchingRoutes($uri, $requestMethod);
+
             /** @var Route $route */
-            foreach ($this->routes as $route) {
+            foreach ($routes as $route) {
                 // Are we skipping any matches?
                 if ($skipRemaining > 0) {
                     $skipRemaining--;
                     continue;
                 }
 
-                // Determine if the current request's HTTP method matches what the route allows.
-                // - matchesMethod(...) returns:
-                //     true  => the route explicitly allows this method (incl. HEAD treated like GET)
-                //     false => the route explicitly disallows this method
-                //     null => the route did not specify any method (i.e., it accepts any method)
-                // - Using `?? true` treats "no method specified" (null) as a match.
-                // The result is stored in $possibleMatch.
-                $possibleMatch = $this->matchesMethod($requestMethod, $route->method) ?? true;
-
-                // Matches URI against the route path
-                // Try to match the current route's path against the incoming URI.
-                // Returns:
-                // - matched: whether the regex/pattern matched
-                // - params: any captured named params from the path
-                $pathMatchResult = $this->matchRoute($route, $uri);
-
                 // Apply negation: effective match if (matched XOR negate) is true.
-                if ($pathMatchResult['matched'] ^ $route->isNegated) {
+                if ($route->routeMatchedAgainstUri($uri)) {
                     // Route path matched; check if this route is a possible match (e.g., method too).
-                    if ($possibleMatch) {
-                        // If the pattern captured params, decode per RFC 3986 and merge into request.
-                        if (!empty($pathMatchResult['params'])) {
-                            // RFC 3986: decode percent-encoded octets without converting '+' to space.
-                            $paramsNamed = $this->request->paramsNamed()->all();
-                            foreach ($pathMatchResult['params'] as $key => $value) {
-                                if (is_numeric($key)) {
-                                    $paramsNamed[] = rawurldecode($value);
-                                } else {
-                                    $paramsNamed[$key] = rawurldecode($value);
-                                }
-                            }
-                            $this->request->paramsNamed()->replace($paramsNamed);
-                        }
 
-                        try {
-                            // Execute the route callback/middleware chain.
-                            $this->handleRouteCallback($route, $matched, $matchedMethods);
-                        } catch (DispatchHaltedException $e) {
-                            // Control-flow exceptions to alter dispatch:
-                            switch ($e->getCode()) {
-                                case DispatchHaltedException::SKIP_THIS:
-                                    // Skip this route and continue with the next one.
-                                    continue 2;
-                                case DispatchHaltedException::SKIP_NEXT:
-                                    // Skip a number of further routes.
-                                    $skipRemaining = $e->getNumberOfSkips();
-                                    break;
-                                case DispatchHaltedException::SKIP_REMAINING:
-                                    // Stop processing any more routes.
-                                    break 2;
-                                default:
-                                    // Unknown control code: rethrow.
-                                    throw $e;
+                    // If the pattern captured params, decode per RFC 3986 and merge into request.
+                    if (!empty($route->getRegexMatchingParams($uri))) {
+                        // RFC 3986: decode percent-encoded octets without converting '+' to space.
+                        $paramsNamed = $this->request->paramsNamed()->all();
+                        foreach ($route->getRegexMatchingParams($uri) as $key => $value) {
+                            if (is_numeric($key)) {
+                                $paramsNamed[] = rawurldecode($value);
+                            } else {
+                                $paramsNamed[$key] = rawurldecode($value);
                             }
                         }
-
-                        // Record this route as matched unless it's the catch-all '*'.
-                        $route->countMatch && $matched->addRoute($route);
+                        $this->request->paramsNamed()->replace($paramsNamed);
                     }
 
-                    // Accumulate HTTP methods that matched (for 405 Method Not Allowed reporting).
-                    if ($route->countMatch) {
-                        $matchedMethods = array_unique(
-                            array_filter(
-                                array_merge($matchedMethods, (array)$route->method)
-                            )
-                        );
+                    try {
+                        // Execute the route callback/middleware chain.
+                        $this->handleRouteCallback($route, $matched, $matchedMethods);
+                    } catch (DispatchHaltedException $e) {
+                        // Control-flow exceptions to alter dispatch:
+                        switch ($e->getCode()) {
+                            case DispatchHaltedException::SKIP_THIS:
+                                // Skip this route and continue with the next one.
+                                continue 2;
+                            case DispatchHaltedException::SKIP_NEXT:
+                                // Skip a number of further routes.
+                                $skipRemaining = $e->getNumberOfSkips();
+                                break;
+                            case DispatchHaltedException::SKIP_REMAINING:
+                                // Stop processing any more routes.
+                                break 2;
+                            default:
+                                // Unknown control code: rethrow.
+                                throw $e;
+                        }
                     }
+
+                    // Record this route as matched unless it's the catch-all '*'.
+                    $route->countMatch && $matched->addRoute($route);
+                }
+
+                if ($route->countMatch ^ $route->isNegated) {
+                    // Aggregate all methods from regex-matching routes into $matchedMethods.
+                    // This is useful for reporting which methods are allowed when no exact method match is found.
+                    $merged = array_merge($matchedMethods, (array)$route->method);
+                    $matchedMethods = array_values(array_unique(array_filter($merged)));
                 }
             }
 
@@ -642,16 +630,16 @@ class Klein
      * @param mixed $routeMethod The HTTP method(s) defined by the route. Can be a string,
      *                            an array of strings, or null if the route does not restrict methods.
      *
-     * @return ?bool Returns true if the method matches, false if the method does not match,
+     * @return bool Returns true if the method matches, false if the method does not match,
      *               or null if the route does not restrict methods.
      */
-    private function matchesMethod(string $requestMethod, mixed $routeMethod): ?bool
+    private function matchesMethod(string $requestMethod, mixed $routeMethod): bool
     {
         // Determine if the incoming HTTP method matches the method(s) defined by a route.
         // Returns:
         // - true  => method matches
         // - false => method does not match
-        // - null => route did not specify any method (i.e., matches any method)
+        // - true => when the method is NULL, route did not specify any method (i.e., matches any method), treated as true
 
         // If the route defines multiple allowed methods (e.g., ['GET', 'POST'])
         if (is_array($routeMethod)) {
@@ -672,7 +660,7 @@ class Klein
 
         // Route did not specify a method: indicate "no constraint"
         if ($routeMethod === null) {
-            return null;
+            return true;
         }
 
         // Single method declared: exact, case-insensitive match
@@ -690,47 +678,108 @@ class Klein
     }
 
     /**
-     * Matches a given URI against the specified route and determines if it aligns with the route's pattern.
+     * Filters and returns the routes that match a given URI. This method combines
+     * routes derived from a radix-tree lookup and catch-all routes, applying
+     * regex matching to determine matches for the specified URI.
      *
-     * @param Route $route The route object containing path and regex information used for matching.
-     * @param string $uri The URI to be checked against the route's pattern.
-     * @return array{matched: bool, params: string[]} An associative array containing:
-     *               - 'matched' (bool): Whether the URI matches the route.
-     *               - 'params' (array): Extracted named parameters, if any.
+     * @param string $uri The URI to be matched against the routes.
+     * @param string|array $requestMethod
+     * @return array An associative array of route objects that match the given URI
      */
-    private function matchRoute(Route $route, string $uri): array
+    private function filterMatchingRoutes(string $uri, string|array $requestMethod): array
     {
-        // Fast path: wildcard route matches everything
-        if ($route->path === '*') {
-            return ['matched' => true, 'params' => []];
-        }
+        // Ask the radix-tree handler for candidate routes that share the longest common
+        // literal prefix with the incoming URI. This prunes the search space to likely matches.
+        $routesByTree = $this->treeHandler->matchRoute($uri);
 
-        // Remove a leading slash from the incoming URI so comparisons are consistent
-        $normalizedUri = ltrim($uri, '/');
+        /**
+         * Filter a set of candidate routes down to those that both:
+         *  - regex-match the incoming $uri, and
+         *  - allow the incoming $requestMethod (HTTP method).
+         *
+         * It also:
+         *  - short-circuits if a route has already been recorded as matched for this $uri,
+         *  - records regex-captured params on successful method+regex matches,
+         *  - keeps track of all methods encountered among regex-matching routes in $matchedMethods,
+         *    which can be used later to build "405 Method Not Allowed" responses.
+         */
+        $routesByTree = array_filter(
+            $routesByTree,
+            function ($route) use ($uri, $requestMethod) {
+                // If we've already marked this route as matched for this URI, keep it without re-checking.
+                if ($route->routeMatchedAgainstUri($uri)) {
+                    return true;
+                }
 
-        // If the route is static (no dynamic parameters/regex) and the normalized URI
-        // exactly equals the route's path (also normalized and null-safe), we have a match.
-        // Return early with "matched" and no params.
-        if (!$route->isDynamic && $normalizedUri == $route->path) {
-            return ['matched' => true, 'params' => []];
-        }
+                // Test the route's compiled regex against the URI and capture params if it matches.
+                $matched = (bool)preg_match($route->regex, $uri, $params);
 
-        // From the (slash-trimmed) pattern body, extract the literal prefix by splitting on the
-        // first regex-significant character: [, (, ., ?, +, *, {.
-        // Result is an array where index 0 is the plain literal prefix used for a fast prefix check.
-        $literalPrefixParts = preg_split('`[\[(.?+*{]`', $route->path, 2) ?: [];
+                // Check if the incoming HTTP method is allowed by the route.
+                // Supports arrays of methods and special HEAD/GET handling.
+                $matchedMethod = $this->matchesMethod($requestMethod, $route->method);
 
-        // Fast prefix check: if the URI (without a leading slash) doesn't start with the
-        // literal route prefix (also trimmed), we can fail early without compiling regex.
-        if (!str_starts_with($normalizedUri, rtrim($literalPrefixParts[0], '/'))) {
-            return ['matched' => false, 'params' => []];
-        }
+                // If the regex match result equals the route's negation flag, the route should not match:
+                // - When $matched is true and the route is negated (isNegated = true), reject it.
+                // - When $matched is false and the route is not negated (isNegated = false), reject it.
+                // Only the opposite combinations are considered a valid path match.
+                if ($matched === $route->isNegated) {
+                    return false;
+                }
 
-        // Matches the compiled regex against the URI and returns any named parameters.
-        $matched = (bool)preg_match($route->regex, $uri, $params);
+                // If the method matches too, record params and mark this URI as matched for the route.
+                // matchesMethod(...) returns true if $requestMethod is permitted by $route->method
+                // (supports arrays of methods and special HEAD/GET handling).
+                if ($matchedMethod) {
+                    $route->setRouteMatchedAgainstUri($params, $uri);
+                }
 
-        // Note: caller will apply XOR with $isNegated to produce the effective match result.
-        return ['matched' => $matched, 'params' => $params];
+                return true;
+            }
+        );
+
+        // Fetch catch-all routes (those without a literal prefix) as fallbacks.
+        $catchAllRoutes = $this->treeHandler->getCatchAllRoute();
+        // Filter the catch-all routes down to those that:
+        // 1) allow the incoming HTTP method, and
+        // 2) are marked as matched for this URI (recording no regex params for catch-alls).
+        $catchAllRoutes = array_filter(
+            $catchAllRoutes,
+            function ($route) use ($uri, $requestMethod) {
+                if ($route->isCustomRegex) {
+                    $matched = (bool)preg_match($route->regex, $uri, $params);
+
+                    // Check if the incoming HTTP method is allowed by the route.
+                    // Supports arrays of methods and special HEAD/GET handling.
+                    $matchedMethod = $this->matchesMethod($requestMethod, $route->method);
+
+                    // If the URI doesn't match the regex at all, reject the route.
+                    if (!$matched && !$route->isNegated) {
+                        return false;
+                    }
+
+                    // If the method matches too, record params and mark this URI as matched for the route.
+                    // matchesMethod(...) returns true if $requestMethod is permitted by $route->method
+                    // (supports arrays of methods and special HEAD/GET handling).
+                    if ($matchedMethod) {
+                        $route->setRouteMatchedAgainstUri($params, $uri);
+                    }
+
+                    return true;
+                }
+
+                // matchesMethod(...) returns true if $requestMethod is permitted by $route->method
+                // (supports arrays of methods and special HEAD/GET handling).
+                // setRouteMatchedAgainstUri([], $uri) records a match for this URI and returns $route,
+                // which is truthy; combined with && this ensures the route is kept only when method matches
+                // and also marks the URI as matched for later lookups.
+                return $this->matchesMethod($requestMethod, $route->method)
+                    && $route->setRouteMatchedAgainstUri([], $uri);
+            }
+        );
+
+        // Merge the two matched sets. Using the array union operator preserves keys from
+        // $routesByTree when there are overlaps, effectively prioritizing tree candidates.
+        return $routesByTree + $catchAllRoutes;
     }
 
     /**

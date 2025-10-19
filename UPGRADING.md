@@ -1,5 +1,10 @@
 # Klein Upgrade Guide
 
+## 3.1.0 to 3.2.0
+
+### Behavior Changes
+
+- The execution order of the route callbacks is no more guaranteed to be the same as the order in which they were registered.
 
 ## 2.1.1 to 2.1.2
 

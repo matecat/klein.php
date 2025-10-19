@@ -140,6 +140,24 @@ class Route
     public readonly bool $isDynamic;
 
     /**
+     * A regular expression pattern used for matching parameters
+     *
+     * @type array<string,string[]>
+     */
+    protected array $regexMatchingParams;
+
+    /**
+     * Indicates whether the route is matched
+     * @type array<string, bool>
+     */
+    protected array $routeMatched = [];
+
+    /**
+     * @var ?string
+     */
+    protected ?string $hash = null;
+
+    /**
      * Constructor
      *
      * @param callable $callback
@@ -241,10 +259,75 @@ class Route
     public function setName(?string $name = null): static
     {
         $this->name = $name;
-
         return $this;
     }
 
+    /**
+     * Constructs an index string based on the method and URL.
+     *
+     * Combines the method property values and the URL into a single, formatted string
+     * with a specific delimiter.
+     *
+     * @return string The constructed index string.
+     */
+    public function getHash(): string
+    {
+        if ($this->hash === null) {
+            $this->hash = hrtime(true) . '.' . spl_object_hash($this);
+        }
+        return $this->hash;
+    }
+
+    /**
+     * Constructs an index string based on the method and URL.
+     * This method is used to store the route match status against a specified URI.
+     * @param string $url The URL to be included in the index string.
+     */
+    private function getHashPerUri(string $url): string
+    {
+        return $this->getHash() . '|' . $url;
+    }
+
+    /**
+     * Sets the route match status against a specified URI and stores the captured parameters.
+     *
+     * This method attempts to record the parameters captured by the route's regex and marks the URI
+     * as matched. The `regexMatchingParams` property is readonly and can only be set once per instance.
+     * Later attempts to reset this property are silently ignored, ensuring the initial match remains.
+     *
+     * @param string[] $regexMatchingParams The parameters captured by the route's regex.
+     * @param string $uri The URI that matches the route.
+     * @return static Returns the current instance for method chaining.
+     */
+    public function setRouteMatchedAgainstUri(array $regexMatchingParams, string $uri): static
+    {
+        // Attempt to record the params captured by the route's regex and mark this URI as matched.
+        $this->regexMatchingParams[$this->getHashPerUri($uri)] = $regexMatchingParams;
+        $this->routeMatched[$this->getHashPerUri($uri)] = $this;
+
+        return $this; // allow chaining
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getRegexMatchingParams(string $uri): array
+    {
+        return $this->regexMatchingParams[$this->getHashPerUri($uri)] ?? [];
+    }
+
+    /**
+     * Retrieves the matched route information.
+     *
+     * Returns an array containing details about the matched route, typically including relevant route parameters and metadata.
+     *
+     * @param string $uri
+     * @return bool
+     */
+    public function routeMatchedAgainstUri(string $uri): bool
+    {
+        return array_key_exists($this->getHashPerUri($uri), $this->routeMatched);
+    }
 
     /**
      * Magic "__invoke" method

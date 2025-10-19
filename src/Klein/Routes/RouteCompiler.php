@@ -10,7 +10,6 @@
 namespace Klein\Routes;
 
 use Klein\Exceptions\RegularExpressionCompilationException;
-use OutOfBoundsException;
 
 class RouteCompiler
 {
@@ -170,7 +169,7 @@ class RouteCompiler
         // - Optional "^" at the start of the user-supplied pattern to avoid automatic ".*" prefixing.
         // - A special NULL_PATH_VALUE ("*") meaning "namespace root only".
         // The return value is either a regex string (starting with "@^") or a plain concatenated path.
-        if ($namespace && isset($path[0]) && ($isCustomRegex || ($isNegatedCustomRegex))) {
+        if ($namespace != '' && isset($path[0]) && ($isCustomRegex || $isNegatedCustomRegex)) {
             // Strip leading "@", or "!@" for negation.
             $path = substr($path, $isNegated ? 2 : 1);
 
@@ -187,14 +186,14 @@ class RouteCompiler
             $path = $isNegated
                 ? '^' . $namespace . '(?!' . $path . ')'
                 : '^' . $namespace . $path;
-        } elseif ($namespace && $path == Route::NULL_PATH_VALUE) {
+        } elseif ($namespace != '' && $path == Route::NULL_PATH_VALUE) {
             // Special case: "*" means match only the namespace root (exact or with trailing slash).
             // Example: namespace "api" => "^api(/|$)"
             $path = '^' . $namespace . '(/|$)';
-        } elseif($isCustomRegex) {
+        } elseif ($isCustomRegex) {
             // Special case: "@" means "use the user-supplied regex as-is".
-            $path = $namespace . substr($path, 1);
-        }else {
+            $path = $namespace . substr($path, $isNegated ? 2 : 1);
+        } else {
             // Default: plain concatenation (non-regex), e.g., "api" + "/users" => "api/users".
             $path = !$isNegated ? $namespace . $path : $namespace . ltrim($path, '!');
         }
@@ -225,7 +224,6 @@ class RouteCompiler
      */
     public static function getPathFor(Route $route, ?array $params = null, bool $flatten_regex = true): string
     {
-
         $path = $route->originalPath;
 
         // Use our compilation regex to reverse the path's compilation from its definition
