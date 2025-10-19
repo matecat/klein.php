@@ -412,7 +412,6 @@ class Klein
                 // Try to match the current route's path against the incoming URI.
                 // Returns:
                 // - matched: whether the regex/pattern matched
-                // - negate: whether the route was negated (the path starts with '!')
                 // - params: any captured named params from the path
                 $pathMatchResult = $this->matchRoute($route, $uri);
 
@@ -457,7 +456,7 @@ class Klein
                         }
 
                         // Record this route as matched unless it's the catch-all '*'.
-                        $route->countMatch && $matched->add($route);
+                        $route->countMatch && $matched->addRoute($route);
                     }
 
                     // Accumulate HTTP methods that matched (for 405 Method Not Allowed reporting).
@@ -557,7 +556,7 @@ class Klein
     private function handleCaptureStrategy(int $captureMode): ?string
     {
         // Handle different strategies for dealing with any content currently sitting in PHP's output buffers.
-        // All cases use drainBuffersToLevel($this->output_buffer_level, $callback) to consume buffered chunks up to a target level,
+        // All cases use drainBuffersToLevel($this->output_buffer_level, $callback) to consume buffered chunks up to a target level
         // and then decide what to do with each chunk (return it, replace, prepend, or append to the response).
 
         switch ($captureMode) {
@@ -587,7 +586,7 @@ class Klein
             case self::DISPATCH_CAPTURE_AND_PREPEND:
                 // Prepend drained output to the beginning of the existing response body.
                 // If multiple chunks are drained, each is prepended in the order they are drained,
-                // which can affect final ordering depending on drain sequence.
+                // which can affect final ordering depending on a drain sequence.
                 $this->drainBuffersToLevel($this->output_buffer_level, function (string $chunk): void {
                     $this->response->prepend($chunk);
                 });
@@ -658,7 +657,7 @@ class Klein
         // Returns:
         // - true  => method matches
         // - false => method does not match
-        // - null  => route did not specify any method (i.e., matches any method)
+        // - null => route did not specify any method (i.e., matches any method)
 
         // If the route defines multiple allowed methods (e.g., ['GET', 'POST'])
         if (is_array($routeMethod)) {
@@ -701,7 +700,7 @@ class Klein
      *
      * @param Route $route The route object containing path and regex information used for matching.
      * @param string $uri The URI to be checked against the route's pattern.
-     * @return array An associative array containing:
+     * @return array{matched: bool, params: string[]} An associative array containing:
      *               - 'matched' (bool): Whether the URI matches the route.
      *               - 'params' (array): Extracted named parameters, if any.
      */
@@ -718,22 +717,18 @@ class Klein
         // If the route is static (no dynamic parameters/regex) and the normalized URI
         // exactly equals the route's path (also normalized and null-safe), we have a match.
         // Return early with "matched" and no params.
-        if (!$route->isDynamic && $normalizedUri == ltrim($route->path ?? '', '/')) {
+        if (!$route->isDynamic && $normalizedUri == $route->path) {
             return ['matched' => true, 'params' => []];
         }
-
-        // If the route uses a custom regex, drop a leading start-anchor (^) from its pattern body;
-        // otherwise use the raw route path. Null-safe for $route->path.
-        $patternBody = $route->isCustomRegex ? ltrim($route->path ?? '', '^') : $route->path;
 
         // From the (slash-trimmed) pattern body, extract the literal prefix by splitting on the
         // first regex-significant character: [, (, ., ?, +, *, {.
         // Result is an array where index 0 is the plain literal prefix used for a fast prefix check.
-        $literalPrefixParts = preg_split('`[\[(.?+*{]`', ltrim($patternBody, '/'), 2);
+        $literalPrefixParts = preg_split('`[\[(.?+*{]`', $route->path, 2) ?: [];
 
         // Fast prefix check: if the URI (without a leading slash) doesn't start with the
         // literal route prefix (also trimmed), we can fail early without compiling regex.
-        if (!str_starts_with(ltrim($uri, '/'), rtrim($literalPrefixParts[0], '/'))) {
+        if (!str_starts_with($normalizedUri, rtrim($literalPrefixParts[0], '/'))) {
             return ['matched' => false, 'params' => []];
         }
 
@@ -769,7 +764,7 @@ class Klein
     public function getPathFor(string $route_name, ?array $params = null, bool $flatten_regex = true): string
     {
         // First, grab the route
-        /** @var Route $route */
+        /** @var ?Route $route */
         $route = $this->routes->get($route_name);
 
         // Make sure we are getting a valid route

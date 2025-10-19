@@ -173,7 +173,7 @@ class KleinTest extends AbstractKleinTestCase
         $test_route = $all_routes[0];
 
         $this->assertTrue($test_route instanceof Route);
-        $this->assertSame($test_namespace . '/?', $test_route->path);
+        $this->assertSame(ltrim($test_namespace, '/') . '/?', $test_route->path);
     }
 
     public function testDispatch()

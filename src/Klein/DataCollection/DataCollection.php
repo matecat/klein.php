@@ -29,6 +29,7 @@ use IteratorAggregate;
  *
  * @implements IteratorAggregate<string,mixed>
  * @implements ArrayAccess<string,mixed>
+ * @phpstan-consistent-constructor
  */
 class DataCollection implements IteratorAggregate, ArrayAccess, Countable
 {
@@ -52,6 +53,7 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
      * Constructor
      *
      * @param array<string, mixed> $attributes The data attributes of this collection
+     *
      */
     public function __construct(array $attributes = [])
     {

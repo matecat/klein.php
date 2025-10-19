@@ -63,7 +63,7 @@ class RouteCompiler
         // in plain path text are treated as literals. This prevents accidental regex behavior
         // from characters like ., +, ?, (, ), etc. We do this first to keep parameter blocks intact.
         $route = preg_replace_callback(
-            static::ROUTE_ESCAPE_REGEX,
+            self::ROUTE_ESCAPE_REGEX,
             function ($match) {
                 return preg_quote($match[0]);
             },
@@ -77,7 +77,7 @@ class RouteCompiler
         // - $param: the parameter name (maybe empty for unnamed groups)
         // - $optional: whether the whole segment is optional
         $route = preg_replace_callback(
-            static::ROUTE_COMPILE_REGEX,
+            self::ROUTE_COMPILE_REGEX,
             function ($match) {
                 [, $pre, $type, $param, $optional] = $match;
 

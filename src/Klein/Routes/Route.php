@@ -200,7 +200,7 @@ class Route
 
         // Normalize/compile the incoming path into a fully qualified path or regex,
         // based on the current namespace and special syntaxes (e.g., "@regex", "!@negated-regex", or NULL_PATH_VALUE).
-        $this->path = RouteCompiler::processPathString(
+        $path = RouteCompiler::processPathString(
             $this->namespace,
             $path ?? self::NULL_PATH_VALUE,
             $this->isNegated,
@@ -208,15 +208,17 @@ class Route
             $this->isNegatedCustomRegex
         );
 
-        if ($regexp = $this->fetchRegexFromCache()) {
+        $this->path = ltrim($path, '^/');
+
+        if ($regexp = $this->fetchRegexFromCache($path)) {
             $this->regex = $regexp;
             return;
         }
 
         // Build the regex if it wasn't cached.
-        $this->compileRegexp();
+        $this->regex = $this->compileRegexp($path);
 
-        $this->storeRegexInCache();
+        $this->storeRegexInCache($path);
     }
 
     /**
@@ -265,9 +267,9 @@ class Route
     /**
      * Validate the given HTTP method
      *
-     * @param string|array|null $method The HTTP method to validate
+     * @param string|string[]|null $method The HTTP method to validate
      *
-     * @return string|array|null
+     * @return string|string[]|null
      */
     protected function validateMethod(string|array|null $method): string|array|null
     {
@@ -298,7 +300,9 @@ class Route
     {
         $uniformed_methods = [];
         foreach ($methods as $method) {
-            $uniformed_methods[] = $this->validateMethod($method);
+            /** @var string $result */
+            $result = $this->validateMethod($method);
+            $uniformed_methods[] = $result;
         }
         return $uniformed_methods;
     }
@@ -308,9 +312,10 @@ class Route
      *
      * Attempts to retrieve a pre-compiled regex pattern either from APCu cache or an internal array.
      *
+     * @param string $path The path to fetch the regex for.
      * @return string|null The cached regex pattern if found, or false if not available.
      */
-    private function fetchRegexFromCache(): ?string
+    private function fetchRegexFromCache(string $path): ?string
     {
         if ($this->cache === null) {
             return null;
@@ -318,7 +323,7 @@ class Route
 
         try {
             // Try to read a cached compiled regex for this route, keyed by a hash of the path.
-            $cachedRegexpBucket = $this->cache->getItem(sha1($this->path));
+            $cachedRegexpBucket = $this->cache->getItem(sha1($path));
             return $cachedRegexpBucket->get();
         } catch (Throwable) {
             // Swallow any other unexpected errors (fail silently).
@@ -332,16 +337,17 @@ class Route
      * Saves the given regex pattern with the specified key, either using APCu if available,
      * or falling back to an internal storage mechanism.
      *
+     * @param string $path
      * @return void
      */
-    private function storeRegexInCache(): void
+    private function storeRegexInCache(string $path): void
     {
         if ($this->cache === null) {
             return;
         }
 
         try {
-            $cachedRegexpBucket = $this->cache->getItem(sha1($this->path));
+            $cachedRegexpBucket = $this->cache->getItem(sha1($path));
 
             // Cache the compiled/normalized regex for 1 hour to avoid recompilation.
             $cachedRegexpBucket->expiresAfter(3600);
@@ -361,27 +367,30 @@ class Route
      * validates that the resulting regex is properly formatted and can be compiled
      * by the PCRE engine. Throws an exception if the validation fails.
      *
-     * @return void
+     * @param string $path
+     * @return string
      */
-    private function compileRegexp(): void
+    private function compileRegexp(string $path): string
     {
         // Build the regex if it wasn't cached.
         // If the path is already a user-supplied regex, just wrap it with backticks as PCRE delimiters.
         if ($this->isCustomRegex) {
-            $this->regex = '`' . $this->path . '`';
+            $regex = '`' . $path . '`';
         } else {
             // Otherwise, compile a human-readable route (with parameters) into a fully anchored regex.
             // Example result: `^/users/(?P<id>\d+)$`
-            $this->regex = RouteCompiler::compileRouteRegexp($this->path);
+            $regex = RouteCompiler::compileRouteRegexp($path);
 
             try {
                 // Validate the resulting regex compiles in PCRE.
-                RouteCompiler::validateRegularExpression($this->regex);
+                RouteCompiler::validateRegularExpression($regex);
             } catch (RegularExpressionCompilationException $e) {
                 // Re-throw as a route-specific exception with context.
                 throw RoutePathCompilationException::createFromRoute($this, $e);
             }
         }
+
+        return $regex;
     }
 
 }

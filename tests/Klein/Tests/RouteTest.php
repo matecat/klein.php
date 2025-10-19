@@ -63,7 +63,7 @@ class RouteTest extends AbstractKleinTestCase
         // Set in constructor
         $route = new Route($test_callable, $test_path);
 
-        $this->assertSame($test_path, $route->path);
+        $this->assertSame(ltrim($test_path, '/'), $route->path);
     }
 
     public function testMethodGetSet()

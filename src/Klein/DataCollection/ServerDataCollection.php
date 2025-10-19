@@ -56,7 +56,7 @@ class ServerDataCollection extends DataCollection
      *
      * @return void
      */
-    public function __construct(array $serverVars)
+    public function __construct(array $serverVars = [])
     {
         parent::__construct($serverVars);
     }
