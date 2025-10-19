@@ -712,6 +712,16 @@ class Klein
             return ['matched' => true, 'params' => []];
         }
 
+        // Remove a leading slash from the incoming URI so comparisons are consistent
+        $normalizedUri = ltrim($uri, '/');
+
+        // If the route is static (no dynamic parameters/regex) and the normalized URI
+        // exactly equals the route's path (also normalized and null-safe), we have a match.
+        // Return early with "matched" and no params.
+        if (!$route->isDynamic && $normalizedUri == ltrim($route->path ?? '', '/')) {
+            return ['matched' => true, 'params' => []];
+        }
+
         // If the route uses a custom regex, drop a leading start-anchor (^) from its pattern body;
         // otherwise use the raw route path. Null-safe for $route->path.
         $patternBody = $route->isCustomRegex ? ltrim($route->path ?? '', '^') : $route->path;

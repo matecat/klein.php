@@ -132,6 +132,12 @@ class Route
      * @type mixed|null
      */
     protected ?CacheItemPoolInterface $cache = null;
+    /**
+     * Indicates whether the route is dynamic (contains parameters)
+     *
+     * @type boolean
+     */
+    public readonly bool $isDynamic;
 
     /**
      * Constructor
@@ -188,6 +194,10 @@ class Route
         // Custom regex if it starts with "@" or is a negated custom regex ("!@")
         $this->isCustomRegex = ($first === '@') || $this->isNegatedCustomRegex;
 
+        $this->isDynamic =
+            !$this->isCustomRegex &&
+            (str_contains($path ?? '', '['));
+
         // Normalize/compile the incoming path into a fully qualified path or regex,
         // based on the current namespace and special syntaxes (e.g., "@regex", "!@negated-regex", or NULL_PATH_VALUE).
         $this->path = RouteCompiler::processPathString(
@@ -207,7 +217,6 @@ class Route
         $this->compileRegexp();
 
         $this->storeRegexInCache();
-
     }
 
     /**
