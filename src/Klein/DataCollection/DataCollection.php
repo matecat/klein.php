@@ -17,6 +17,7 @@ use ArrayAccess;
 use ArrayIterator;
 use Countable;
 use IteratorAggregate;
+use OutOfBoundsException;
 
 /**
  * DataCollection
@@ -154,6 +155,17 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
     public function get(string $key, mixed $default_val = null): mixed
     {
         return $this->attributes[$key] ?? $default_val;
+    }
+
+    /**
+     * @param string $key
+     * @param string $errorMessage
+     * @return mixed
+     * @throws OutOfBoundsException
+     */
+    public function getOrThrow(string $key, string $errorMessage): mixed
+    {
+        return $this->attributes[$key] ?? throw new OutOfBoundsException($errorMessage);
     }
 
     /**

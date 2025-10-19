@@ -21,6 +21,7 @@ use Klein\Exceptions\HttpExceptionInterface;
 use Klein\Exceptions\LockedResponseException;
 use Klein\Exceptions\UnhandledException;
 use Klein\Routes\Route;
+use Klein\Routes\RouteCompiler;
 use Klein\Routes\RouteFactory;
 use OutOfBoundsException;
 use SplQueue;
@@ -38,14 +39,7 @@ class Klein
     /**
      * Class constants
      */
-
-    /**
-     * The regular expression used to compile and match URL's
-     *
-     * @type string
-     */
-    const string ROUTE_COMPILE_REGEX = '`(\\\?(?:/|\.|))\[([^:\]]*)(?::([^:\]]*))?](\?|)`';
-
+    
     /**
      * Dispatch route output handling
      *
@@ -763,43 +757,11 @@ class Klein
      */
     public function getPathFor(string $route_name, ?array $params = null, bool $flatten_regex = true): string
     {
-        // First, grab the route
-        /** @var ?Route $route */
-        $route = $this->routes->get($route_name);
-
-        // Make sure we are getting a valid route
-        if (null === $route) {
-            throw new OutOfBoundsException('No such route with name: ' . $route_name);
-        }
-
-        $path = $route->originalPath;
-
-        // Use our compilation regex to reverse the path's compilation from its definition
-        $reversed_path = preg_replace_callback(
-            static::ROUTE_COMPILE_REGEX,
-            function ($match) use ($params) {
-                [$block, $pre, , $param, $optional] = $match;
-
-                if (isset($params[$param])) {
-                    return $pre . $params[$param];
-                } elseif ($optional) {
-                    return '';
-                }
-
-                return $block;
-            },
-            $path
+        return RouteCompiler::getPathFor(
+            $this->routes->getOrThrow($route_name, 'No such route with name: ' . $route_name),
+            $params,
+            $flatten_regex
         );
-
-        // If the path and reversed_path are the same, the regex must have not matched/replaced
-        if ($path === $reversed_path && $flatten_regex && ($route->isCustomRegex || $route->isNegatedCustomRegex)) {
-            // If the path is a custom regular expression, and we're "flattening", just return a slash
-            $path = '/';
-        } else {
-            $path = $reversed_path;
-        }
-
-        return $path;
     }
 
     /**

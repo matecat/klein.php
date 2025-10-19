@@ -10,6 +10,7 @@
 namespace Klein\Routes;
 
 use Klein\Exceptions\RegularExpressionCompilationException;
+use OutOfBoundsException;
 
 class RouteCompiler
 {
@@ -196,6 +197,60 @@ class RouteCompiler
         }else {
             // Default: plain concatenation (non-regex), e.g., "api" + "/users" => "api/users".
             $path = !$isNegated ? $namespace . $path : $namespace . ltrim($path, '!');
+        }
+
+        return $path;
+    }
+
+    /**
+     * Generate a URL path for a named route.
+     *
+     * Looks up a route by name and reconstructs its path by reversing the route definition:
+     * - Named placeholders (e.g. `[i:id]`, `[a:slug]`, `[h:hex]`, `[s:name]`) are replaced using values from $params.
+     * - Optional segments are removed if a placeholder value is not provided.
+     * - If no replacement occurs and the route was defined as a custom regex (starts with `@`), the result is:
+     *   - "/" when $flatten_regex is true (default),
+     *   - the original regex string when $flatten_regex is false.
+     *
+     * Note: Values in $params should be pre-encoded as needed (this method does not URL-encode).
+     *
+     * @param Route $route
+     * @param array<string, string>|null $params Key-value map of placeholder names to substitute into the route.
+     *                                                Missing values for optional placeholders remove their segment;
+     *                                                missing values for required placeholders keep the original token.
+     * @param bool $flatten_regex When true, flattens custom-regex routes (prefixed with "@") to "/" if no substitutions occur.
+     *
+     * @return string The generated path string for the named route.
+     *
+     */
+    public static function getPathFor(Route $route, ?array $params = null, bool $flatten_regex = true): string
+    {
+
+        $path = $route->originalPath;
+
+        // Use our compilation regex to reverse the path's compilation from its definition
+        $reversed_path = preg_replace_callback(
+            static::ROUTE_COMPILE_REGEX,
+            function ($match) use ($params) {
+                [$block, $pre, , $param, $optional] = $match;
+
+                if (isset($params[$param])) {
+                    return $pre . $params[$param];
+                } elseif ($optional) {
+                    return '';
+                }
+
+                return $block;
+            },
+            $path
+        );
+
+        // If the path and reversed_path are the same, the regex must have not matched/replaced
+        if ($path === $reversed_path && $flatten_regex && ($route->isCustomRegex || $route->isNegatedCustomRegex)) {
+            // If the path is a custom regular expression, and we're "flattening", just return a slash
+            $path = '/';
+        } else {
+            $path = $reversed_path;
         }
 
         return $path;
