@@ -19,7 +19,6 @@ use Klein\Exceptions\DispatchHaltedException;
 use Klein\Exceptions\HttpException;
 use Klein\Exceptions\HttpExceptionInterface;
 use Klein\Exceptions\LockedResponseException;
-use Klein\Exceptions\RegularExpressionCompilationException;
 use Klein\Exceptions\UnhandledException;
 use Klein\Routes\Route;
 use Klein\Routes\RouteFactory;
@@ -698,15 +697,13 @@ class Klein
     }
 
     /**
-     * Matches a given URI against a specified route and determines if the route matches,
-     * whether it's negated, and captures any parameters from the match.
+     * Matches a given URI against the specified route and determines if it aligns with the route's pattern.
      *
-     * @param Route $route The route definition containing path, regex, and negation details.
-     * @param string $uri The URI to be matched against the route.
-     *
-     * @return array An associative array with the following keys:
-     *               - 'matched' (bool): Indicates whether the route matches the URI.
-     *               - 'params' (array): Captured parameters, if any, from the URI.
+     * @param Route $route The route object containing path and regex information used for matching.
+     * @param string $uri The URI to be checked against the route's pattern.
+     * @return array An associative array containing:
+     *               - 'matched' (bool): Whether the URI matches the route.
+     *               - 'params' (array): Extracted named parameters, if any.
      */
     private function matchRoute(Route $route, string $uri): array
     {
@@ -715,9 +712,13 @@ class Klein
             return ['matched' => true, 'params' => []];
         }
 
-        // Split the route pattern at the first occurrence of a regex-significant token
-        // ([, (, ., ?, +, *, {). The first piece ($x[0]) is the literal prefix.
+        // If the route uses a custom regex, drop a leading start-anchor (^) from its pattern body;
+        // otherwise use the raw route path. Null-safe for $route->path.
         $patternBody = $route->isCustomRegex ? ltrim($route->path ?? '', '^') : $route->path;
+
+        // From the (slash-trimmed) pattern body, extract the literal prefix by splitting on the
+        // first regex-significant character: [, (, ., ?, +, *, {.
+        // Result is an array where index 0 is the plain literal prefix used for a fast prefix check.
         $literalPrefixParts = preg_split('`[\[(.?+*{]`', ltrim($patternBody, '/'), 2);
 
         // Fast prefix check: if the URI (without a leading slash) doesn't start with the

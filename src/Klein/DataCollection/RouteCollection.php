@@ -66,7 +66,7 @@ class RouteCollection extends DataCollection
      */
     public function set(string $key, mixed $value): static
     {
-        if (!$value instanceof Route && is_callable($value)) {
+        if (!$value instanceof Route) {
             $value = new Route($value);
         }
 
