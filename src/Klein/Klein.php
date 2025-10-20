@@ -21,9 +21,9 @@ use Klein\Exceptions\HttpExceptionInterface;
 use Klein\Exceptions\LockedResponseException;
 use Klein\Exceptions\UnhandledException;
 use Klein\Routes\Route;
-use Klein\Routes\RouteCompiler;
 use Klein\Routes\RouteFactory;
-use Klein\Tree\TreeHandler;
+use Klein\Routes\RouteRegexCompiler;
+use Klein\Tree\RadixRouteIndex;
 use OutOfBoundsException;
 use SplQueue;
 use SplStack;
@@ -96,28 +96,28 @@ class Klein
      *
      * @type RouteCollection
      */
-    protected RouteCollection $routes;
+    private RouteCollection $routes;
 
     /**
      * The Route factory object responsible for creating Route instances
      *
      * @type AbstractRouteFactory
      */
-    protected AbstractRouteFactory $route_factory;
+    private AbstractRouteFactory $route_factory;
 
     /**
      * A stack of error callback callables
      *
      * @var SplStack<callable|string>
      */
-    protected SplStack $error_callbacks;
+    private SplStack $error_callbacks;
 
     /**
      * A stack of HTTP error callback callables
      *
      * @var SplStack<callable>
      */
-    protected SplStack $http_error_callbacks;
+    private SplStack $http_error_callbacks;
 
     /**
      * A queue of callbacks to call after processing the dispatch loop
@@ -125,7 +125,7 @@ class Klein
      *
      * @var SplQueue<callable|string>
      */
-    protected SplQueue $after_filter_callbacks;
+    private SplQueue $after_filter_callbacks;
 
     /**
      * The output buffer level used by the dispatch process
@@ -144,30 +144,30 @@ class Klein
      *
      * @type Request
      */
-    protected Request $request;
+    private Request $request;
 
     /**
      * The Response object passed to each matched route
      *
      * @type AbstractResponse
      */
-    protected AbstractResponse $response;
+    private AbstractResponse $response;
 
     /**
      * The service provider object passed to each matched route
      *
      * @type ServiceProvider
      */
-    protected ServiceProvider $service;
+    private ServiceProvider $service;
 
     /**
      * A generic variable passed to each matched route
      *
      * @type mixed
      */
-    protected mixed $app;
+    private mixed $app;
 
-    protected TreeHandler $treeHandler;
+    private RadixRouteIndex $radixRouteIndex;
 
     /**
      * Methods
@@ -189,6 +189,7 @@ class Klein
         ?App $app = null,
         ?RouteCollection $routes = null,
         ?AbstractRouteFactory $routeFactory = null,
+        ?RadixRouteIndex $radixRouteIndex = null,
     ) {
         // Instantiate and fall back to defaults
         $this->service = $service ?: new ServiceProvider();
@@ -200,7 +201,7 @@ class Klein
         $this->http_error_callbacks = new SplStack();
         $this->after_filter_callbacks = new SplQueue();
 
-        $this->treeHandler = new TreeHandler();
+        $this->radixRouteIndex = $radixRouteIndex ?: new RadixRouteIndex();
     }
 
     /**
@@ -290,9 +291,9 @@ class Klein
         }
 
         $route = $this->route_factory->build($callback, $path, $method);
-
         $this->routes->add($route);
-        $this->treeHandler->addRoute($route);
+
+        $this->radixRouteIndex->addRoute($route);
 
         return $route;
     }
@@ -392,7 +393,6 @@ class Klein
         try {
             $routes = $this->filterMatchingRoutes($uri, $requestMethod);
 
-            /** @var Route $route */
             foreach ($routes as $route) {
                 // Are we skipping any matches?
                 if ($skipRemaining > 0) {
@@ -684,13 +684,13 @@ class Klein
      *
      * @param string $uri The URI to be matched against the routes.
      * @param string|array $requestMethod
-     * @return array An associative array of route objects that match the given URI
+     * @return Route[] An associative array of route objects that match the given URI
      */
     private function filterMatchingRoutes(string $uri, string|array $requestMethod): array
     {
         // Ask the radix-tree handler for candidate routes that share the longest common
         // literal prefix with the incoming URI. This prunes the search space to likely matches.
-        $routesByTree = $this->treeHandler->matchRoute($uri);
+        $routesByTree = $this->radixRouteIndex->findPossibleRoutes($uri);
 
         /**
          * Filter a set of candidate routes down to those that both:
@@ -738,7 +738,7 @@ class Klein
         );
 
         // Fetch catch-all routes (those without a literal prefix) as fallbacks.
-        $catchAllRoutes = $this->treeHandler->getCatchAllRoute();
+        $catchAllRoutes = $this->radixRouteIndex->getCatchAllRoute();
         // Filter the catch-all routes down to those that:
         // 1) allow the incoming HTTP method, and
         // 2) are marked as matched for this URI (recording no regex params for catch-alls).
@@ -806,7 +806,7 @@ class Klein
      */
     public function getPathFor(string $route_name, ?array $params = null, bool $flatten_regex = true): string
     {
-        return RouteCompiler::getPathFor(
+        return RouteRegexCompiler::getPathFor(
             $this->routes->getOrThrow($route_name, 'No such route with name: ' . $route_name),
             $params,
             $flatten_regex
@@ -825,7 +825,7 @@ class Klein
      *
      * @return void
      */
-    protected function handleRouteCallback(Route $route, RouteCollection $matched, array $methods_matched): void
+    private function handleRouteCallback(Route $route, RouteCollection $matched, array $methods_matched): void
     {
         // Handle the callback
         $returned = call_user_func(
@@ -875,7 +875,7 @@ class Klein
      * @throws UnhandledException      If the error/exception isn't handled by an error callback
      * @throws Throwable
      */
-    protected function error(Throwable $err): void
+    private function error(Throwable $err): void
     {
         $type = get_class($err);
         $msg = $err->getMessage();
@@ -936,7 +936,7 @@ class Klein
      *
      * @return void
      */
-    protected function httpError(
+    private function httpError(
         HttpExceptionInterface $http_exception,
         RouteCollection $matched,
         array $methods_matched
@@ -987,7 +987,7 @@ class Klein
      * @return void
      * @throws Throwable
      */
-    protected function callAfterDispatchCallbacks(): void
+    private function callAfterDispatchCallbacks(): void
     {
         try {
             foreach ($this->after_filter_callbacks as $callback) {

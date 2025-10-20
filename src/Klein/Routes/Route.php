@@ -131,7 +131,7 @@ class Route
      *
      * @type mixed|null
      */
-    protected ?CacheItemPoolInterface $cache = null;
+    private ?CacheItemPoolInterface $cache;
     /**
      * Indicates whether the route is dynamic (contains parameters)
      *
@@ -144,18 +144,18 @@ class Route
      *
      * @type array<string,string[]>
      */
-    protected array $regexMatchingParams;
+    private array $regexMatchingParams;
 
     /**
      * Indicates whether the route is matched
-     * @type array<string, bool>
+     * @type array<string, Route>
      */
-    protected array $routeMatched = [];
+    private array $routeMatched = [];
 
     /**
-     * @var ?string
+     * @var string
      */
-    protected ?string $hash = null;
+    public readonly string $hash;
 
     /**
      * Constructor
@@ -177,7 +177,8 @@ class Route
         ?CacheItemPoolInterface $cache = null,
         ?string $name = null
     ) {
-        // Initialize some properties (do not use setter, for fast access use public readonly properties)
+        // Initialize some properties (do not use setter and getter, for fast access use public readonly properties)
+        $this->hash = hrtime(true) . '.' . spl_object_hash($this);
         $this->callback = $callback;
         $this->namespace = $namespace ?? '';
         $this->name = $name;
@@ -218,7 +219,7 @@ class Route
 
         // Normalize/compile the incoming path into a fully qualified path or regex,
         // based on the current namespace and special syntaxes (e.g., "@regex", "!@negated-regex", or NULL_PATH_VALUE).
-        $path = RouteCompiler::processPathString(
+        $path = RouteRegexCompiler::processPathString(
             $this->namespace,
             $path ?? self::NULL_PATH_VALUE,
             $this->isNegated,
@@ -272,20 +273,7 @@ class Route
      */
     public function getHash(): string
     {
-        if ($this->hash === null) {
-            $this->hash = hrtime(true) . '.' . spl_object_hash($this);
-        }
         return $this->hash;
-    }
-
-    /**
-     * Constructs an index string based on the method and URL.
-     * This method is used to store the route match status against a specified URI.
-     * @param string $url The URL to be included in the index string.
-     */
-    private function getHashPerUri(string $url): string
-    {
-        return $this->getHash() . '|' . $url;
     }
 
     /**
@@ -301,9 +289,14 @@ class Route
      */
     public function setRouteMatchedAgainstUri(array $regexMatchingParams, string $uri): static
     {
+
+        // Combine the hash and the URI to form a unique key for the route.
+        // We could do a method for this, but this is a faster way to do it.
+        $hashPerUri = $this->hash . '|' . $uri;
+
         // Attempt to record the params captured by the route's regex and mark this URI as matched.
-        $this->regexMatchingParams[$this->getHashPerUri($uri)] = $regexMatchingParams;
-        $this->routeMatched[$this->getHashPerUri($uri)] = $this;
+        $this->regexMatchingParams[$hashPerUri] = $regexMatchingParams;
+        $this->routeMatched[$hashPerUri] = $this;
 
         return $this; // allow chaining
     }
@@ -313,7 +306,7 @@ class Route
      */
     public function getRegexMatchingParams(string $uri): array
     {
-        return $this->regexMatchingParams[$this->getHashPerUri($uri)] ?? [];
+        return $this->regexMatchingParams[$this->hash . '|' . $uri] ?? [];
     }
 
     /**
@@ -326,7 +319,7 @@ class Route
      */
     public function routeMatchedAgainstUri(string $uri): bool
     {
-        return array_key_exists($this->getHashPerUri($uri), $this->routeMatched);
+        return (bool)($this->routeMatched[$this->hash . '|' . $uri] ?? false);
     }
 
     /**
@@ -462,11 +455,11 @@ class Route
         } else {
             // Otherwise, compile a human-readable route (with parameters) into a fully anchored regex.
             // Example result: `^/users/(?P<id>\d+)$`
-            $regex = RouteCompiler::compileRouteRegexp($path);
+            $regex = RouteRegexCompiler::compileRouteRegexp($path);
 
             try {
                 // Validate the resulting regex compiles in PCRE.
-                RouteCompiler::validateRegularExpression($regex);
+                RouteRegexCompiler::validateRegularExpression($regex);
             } catch (RegularExpressionCompilationException $e) {
                 // Re-throw as a route-specific exception with context.
                 throw RoutePathCompilationException::createFromRoute($this, $e);

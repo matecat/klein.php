@@ -1,7 +1,7 @@
 <?php
 /**
- * Created by PhpStorm.
- * @author Domenico Lupinetti (hashashiyyin) domenico@translated.net / ostico@gmail.com
+ *
+ * @author Domenico Lupinetti (Ostico) domenico@translated.net / ostico@gmail.com
  * Date: 15/10/25
  * Time: 16:03
  *

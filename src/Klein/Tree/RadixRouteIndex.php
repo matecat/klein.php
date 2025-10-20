@@ -1,14 +1,19 @@
 <?php
 /**
- * The TreeHandler class is responsible for managing a radix tree structure,
+ * The RadixRouteIndex class is responsible for managing a radix tree structure,
  * which can be used for efficient route matching and management of string paths.
+ *
+ * @author Domenico Lupinetti (Ostico) domenico@translated.net / ostico@gmail.com
+ * Date: 18/10/25
+ * Time: 13:15
+ *
  */
 
 namespace Klein\Tree;
 
 use Klein\Routes\Route;
 
-class TreeHandler
+class RadixRouteIndex implements IndexInterface
 {
 
     /**
@@ -26,11 +31,16 @@ class TreeHandler
     protected array $catchAllRoute;
 
     /**
-     * @param array<string, Route> $radixTree Initial radix tree (optional).
-     * @param array<string, Route> $catchAllRoute Initial catch-all routes (optional).
+     * Constructor for initializing route indexes.
+     *
+     * @param array $radixTree An optional array representing the radix tree structure for route storage.
+     * @param array $catchAllRoute An optional array for defining a catch-all route.
+     *
      */
-    public function __construct(array $radixTree = [], array $catchAllRoute = [])
-    {
+    public function __construct(
+        array $radixTree = [],
+        array $catchAllRoute = []
+    ) {
         // Initialize the route indexes
         $this->radixTree = $radixTree;
         $this->catchAllRoute = $catchAllRoute;
@@ -61,12 +71,12 @@ class TreeHandler
 
         // If no usable literal prefix, or the route is a custom regex, index it as a catch-all.
         if ($literalPrefixParts == '' || $route->isCustomRegex) {
-            $this->catchAllRoute[$route->getHash()] = $route;
+            $this->catchAllRoute[$route->hash] = $route;
             return;
         }
 
         // Index route under its full literal prefix, keyed by its unique hash.
-        $this->radixTree[$literalPrefixParts][$route->getHash()] = $route;
+        $this->radixTree[$literalPrefixParts][$route->hash] = $route;
 
         // Build parent-prefix links so lookups can traverse shorter prefixes quickly.
         // Example: for "/users/2024", also link "/users" and "/".
@@ -108,26 +118,6 @@ class TreeHandler
             // Move the cursor up to the parent and continue.
             $prefix = $parent;
         }
-
-//        for ($i = strlen($literalPrefixParts); $i > 0; $i--) {
-//            $prefix_prev = substr($literalPrefixParts, 0, $i - 1);
-//
-//            // Stop when we exceed the root.
-//            if ($prefix_prev == '') {
-//                break;
-//            }
-//
-//            // Create a reference from the shorter prefix to the longer one if missing.
-//            // This effectively creates a radix-like parent-child chain via array references.
-//            if (!isset($index[$prefix_prev][$prefix])) {
-//                $this->radixTree[$prefix_prev][$prefix] = &$this->radixTree[$prefix];
-//            } else {
-//                // Already linked; no need to continue walking up.
-//                break;
-//            }
-//
-//            $prefix = $prefix_prev;
-//        }
     }
 
     /**
@@ -136,35 +126,37 @@ class TreeHandler
      * @param string $uri The URI to match (normalized to start with "/").
      * @return Route[] Flat map of candidate routes keyed by route hash, aggregated across prefixes.
      */
-    public function matchRoute(string $uri): array
+    public function findPossibleRoutes(string $uri): array
     {
-        // Ensure URI starts with "/" for consistent prefixing.
-        if (stripos($uri, '/') !== 0) {
+        // Normalize: ensure the URI begins with "/" so prefix lookups are consistent.
+        if (!str_starts_with($uri, '/')) {
             $uri = '/' . $uri;
         }
 
-        // Split URI by "/" to progressively build prefixes:
-        // "/a/b/c" -> ["/a", "/a/b", "/a/b/c"]
+        // Tokenize the path to allow building decreasing prefixes.
+        // Example: "/a/b/c" -> ["", "a", "b", "c"] then searched as "/a/b/c", "/a/b", "/a", "/".
         $paths = explode('/', $uri);
 
-        $longestCommonPrefix = [];
-        for ($i = 0; $i < count($paths); $i++) { // TODO: review edge-case for root "/"
-            $prefix = implode('/', array_slice($paths, 0, $i + 1));
+        // Search from the longest path down to the root to find the first matching prefix.
+        $arraySize = count($paths);
+        for ($i = 0; $i < $arraySize; $i++) {
+            // Build the current prefix by slicing off i trailing segments.
+            $prefix = implode('/', array_slice($paths, 0, $arraySize - $i));
             if ($prefix == '') {
                 $prefix = '/';
             }
-            // Collect all routes indexed under this prefix (including descendants via references).
+
+            // Query the radix index for all routes under this prefix (deep collection).
             $tmpCommonPrefix = $this->explorePrefix($prefix);
-            $newSize = count($tmpCommonPrefix);
-            // Stop once a step yields no candidates.
-            if ($newSize == 0) {
-                break;
+
+            // If any candidates exist, this is the longest matching prefix; return them.
+            if (count($tmpCommonPrefix) !== 0) {
+                return $tmpCommonPrefix;
             }
-            // Merge candidates while preserving earlier keys (route hashes).
-            $longestCommonPrefix = $longestCommonPrefix + $tmpCommonPrefix;
         }
 
-        return $longestCommonPrefix;
+        // No matching prefix found.
+        return [];
     }
 
     /**
@@ -179,8 +171,8 @@ class TreeHandler
         // Fetch the subtree (or empty) for the given prefix.
         $indexedPrefix = $this->radixTree[$prefix] ?? [];
         // Walk the nested arrays and collect Route instances keyed by their hash.
-        array_walk_recursive($indexedPrefix, function ($route) use (&$collector) {
-            $collector[$route->getHash()] = $route;
+        array_walk_recursive($indexedPrefix, function (Route $route) use (&$collector) {
+            $collector[$route->hash] = $route;
         });
         return $collector;
     }
