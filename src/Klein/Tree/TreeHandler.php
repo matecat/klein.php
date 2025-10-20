@@ -72,25 +72,62 @@ class TreeHandler
         // Example: for "/users/2024", also link "/users" and "/".
         $prefix = $literalPrefixParts;
 
-        for ($i = strlen($literalPrefixParts); $i > 0; $i--) {
-            $prefix_prev = substr($literalPrefixParts, 0, $i - 1);
+        // Split the literal prefix into path segments by "/".
+        // Example: "/users/2024" -> ["", "users", "2024"]
+        $segments = explode('/', $literalPrefixParts);
 
-            // Stop when we exceed the root.
-            if ($prefix_prev == '') {
+        // Iterate upward through the path by popping the last segment each time,
+        // creating parent → child references in the radix tree.
+        while (array_pop($segments) !== null) {
+            // If we've removed all segments, we're at the top; stop.
+            if (empty($segments)) {
+                break;
+            }
+            // Reconstruct the parent prefix from remaining segments (ensure "/" for root).
+            $parent = implode('/', $segments);
+            if ($parent === '') {
+                $parent = '/';
+            }
+
+            // Prevents an infinite loop when climbing the prefix chain: (Exception: recursion detected)
+            // If rebuilding the "parent" prefix produced the same string as the current prefix,
+            // there's no shorter path segment to move to, so we stop the loop.
+            if ($parent == $prefix) {
                 break;
             }
 
-            // Create a reference from the shorter prefix to the longer one if missing.
-            // This effectively creates a radix-like parent-child chain via array references.
-            if (!isset($index[$prefix_prev][$prefix])) {
-                $this->radixTree[$prefix_prev][$prefix] = &$this->radixTree[$prefix];
+            // Create a reference from the parent bucket to the current child bucket if missing.
+            // This lets lookups at shorter prefixes reuse the same child routes.
+            if (!isset($this->radixTree[$parent][$prefix])) {
+                $this->radixTree[$parent][$prefix] = &$this->radixTree[$prefix];
             } else {
-                // Already linked; no need to continue walking up.
+                // Link already exists; higher parents will also be linked, so stop.
                 break;
             }
 
-            $prefix = $prefix_prev;
+            // Move the cursor up to the parent and continue.
+            $prefix = $parent;
         }
+
+//        for ($i = strlen($literalPrefixParts); $i > 0; $i--) {
+//            $prefix_prev = substr($literalPrefixParts, 0, $i - 1);
+//
+//            // Stop when we exceed the root.
+//            if ($prefix_prev == '') {
+//                break;
+//            }
+//
+//            // Create a reference from the shorter prefix to the longer one if missing.
+//            // This effectively creates a radix-like parent-child chain via array references.
+//            if (!isset($index[$prefix_prev][$prefix])) {
+//                $this->radixTree[$prefix_prev][$prefix] = &$this->radixTree[$prefix];
+//            } else {
+//                // Already linked; no need to continue walking up.
+//                break;
+//            }
+//
+//            $prefix = $prefix_prev;
+//        }
     }
 
     /**
