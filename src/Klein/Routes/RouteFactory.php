@@ -49,7 +49,6 @@ class RouteFactory extends AbstractRouteFactory
             $method,
             $this->namespace,
             null, // count_match is ignored for Klein default route implementation
-            $this->cache,
             $name
         );
     }

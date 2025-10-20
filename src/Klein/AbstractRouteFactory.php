@@ -13,7 +13,6 @@
 namespace Klein;
 
 use Klein\Routes\Route;
-use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * AbstractRouteFactory
@@ -37,11 +36,6 @@ abstract class AbstractRouteFactory
     protected string $namespace = '';
 
     /**
-     * @type CacheItemPoolInterface|null
-     */
-    protected ?CacheItemPoolInterface $cache;
-
-    /**
      * Methods
      */
 
@@ -50,10 +44,9 @@ abstract class AbstractRouteFactory
      *
      * @param ?string $namespace The initial namespace to set
      */
-    public function __construct(?string $namespace = '', ?CacheItemPoolInterface $cache = null)
+    public function __construct(?string $namespace = '')
     {
         $this->namespace = $namespace ?? '';
-        $this->cache = $cache;
     }
 
     /**

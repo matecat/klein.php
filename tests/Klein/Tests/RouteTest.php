@@ -117,7 +117,7 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertNull($route->getName());
 
         // Set in constructor
-        $route = new Route($test_callable, '', null, '', true, null, $test_name);
+        $route = new Route($test_callable, '', null, '', true, $test_name);
 
         $this->assertSame($test_name, $route->getName());
 

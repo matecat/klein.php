@@ -40,7 +40,6 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/test/path',
             'PUT',
-            null,
             true
         );
 
@@ -50,7 +49,6 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/test/dafuq',
             'HEAD',
-            null,
             false
         );
 
@@ -62,7 +60,6 @@ class RouteCollectionTest extends AbstractKleinTestCase
             'OPTIONS',
             null,
             false,
-            null,
             'trevor'
         );
 

@@ -127,12 +127,6 @@ class Route
     public readonly bool $isNegatedCustomRegex;
 
     /**
-     * Holds the cache instance if caching is implemented
-     *
-     * @type mixed|null
-     */
-    private ?CacheItemPoolInterface $cache;
-    /**
      * Indicates whether the route is dynamic (contains parameters)
      *
      * @type boolean
@@ -165,7 +159,6 @@ class Route
      * @param string|string[]|null $method
      * @param string|null $namespace
      * @param bool|null $count_match
-     * @param CacheItemPoolInterface|null $cache
      * @param string|null $name
      */
     public function __construct(
@@ -174,7 +167,6 @@ class Route
         string|array|null $method = null,
         ?string $namespace = '',
         ?bool $count_match = true,
-        ?CacheItemPoolInterface $cache = null,
         ?string $name = null
     ) {
         // Initialize some properties (do not use setter and getter, for fast access use public readonly properties)
@@ -183,7 +175,6 @@ class Route
         $this->namespace = $namespace ?? '';
         $this->name = $name;
         $this->originalPath = $path ?? '';
-        $this->cache = $cache;
 
         // Determine whether there is a "countable" match condition for this route.
         // Prefer an explicitly provided $count_match flag if set;
@@ -229,15 +220,9 @@ class Route
 
         $this->path = ltrim($path, '^/');
 
-        if ($regexp = $this->fetchRegexFromCache($path)) {
-            $this->regex = $regexp;
-            return;
-        }
-
         // Build the regex if it wasn't cached.
         $this->regex = $this->compileRegexp($path);
 
-        $this->storeRegexInCache($path);
     }
 
     /**
@@ -381,57 +366,6 @@ class Route
             $uniformed_methods[] = $result;
         }
         return $uniformed_methods;
-    }
-
-    /**
-     * Fetches a regex pattern from the cache.
-     *
-     * Attempts to retrieve a pre-compiled regex pattern either from APCu cache or an internal array.
-     *
-     * @param string $path The path to fetch the regex for.
-     * @return string|null The cached regex pattern if found, or false if not available.
-     */
-    private function fetchRegexFromCache(string $path): ?string
-    {
-        if ($this->cache === null) {
-            return null;
-        }
-
-        try {
-            // Try to read a cached compiled regex for this route, keyed by a hash of the path.
-            $cachedRegexpBucket = $this->cache->getItem(sha1($path));
-            return $cachedRegexpBucket->get();
-        } catch (Throwable) {
-            // Swallow any other unexpected errors (fail silently).
-            return null;
-        }
-    }
-
-    /**
-     * Stores a compiled regex pattern in the cache.
-     *
-     * Saves the given regex pattern with the specified key, either using APCu if available,
-     * or falling back to an internal storage mechanism.
-     *
-     * @param string $path
-     * @return void
-     */
-    private function storeRegexInCache(string $path): void
-    {
-        if ($this->cache === null) {
-            return;
-        }
-
-        try {
-            $cachedRegexpBucket = $this->cache->getItem(sha1($path));
-
-            // Cache the compiled/normalized regex for 1 hour to avoid recompilation.
-            $cachedRegexpBucket->expiresAfter(3600);
-            $cachedRegexpBucket->set($this->regex);
-            $this->cache->save($cachedRegexpBucket);
-        } catch (Throwable) {
-            // Swallow any other unexpected errors (fail silently).
-        }
     }
 
     /**

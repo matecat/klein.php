@@ -195,7 +195,7 @@ class Klein
         $this->service = $service ?: new ServiceProvider();
         $this->app = $app ?: new App();
         $this->routes = $routes ?: new RouteCollection();
-        $this->route_factory = $routeFactory ?: new RouteFactory('', new ArrayCachePool());
+        $this->route_factory = $routeFactory ?: new RouteFactory();
 
         $this->error_callbacks = new SplStack();
         $this->http_error_callbacks = new SplStack();
