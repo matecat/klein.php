@@ -549,6 +549,50 @@ class RoutingTest extends AbstractKleinTestCase
         );
     }
 
+    public function testNamespaceNegate()
+    {
+        $this->expectOutputString('');
+
+        $this->klein_app->with(
+            '/test/namespace',
+            function (): void
+            {
+                $this->klein_app->respond(
+                    path: '!/foo',
+                    callback: function () {
+                        echo 'y';
+                    }
+                );
+            }
+        );
+
+        $this->klein_app->dispatch(
+            MockRequestFactory::create('/test/namespace/foo')
+        );
+    }
+
+    public function testNamespaceRegexNegate()
+    {
+        $this->expectOutputString("y");
+
+        $this->klein_app->with(
+            '/test/namespace',
+            function (): void
+            {
+                $this->klein_app->respond(
+                    path: '!@/foo',
+                    callback: function () {
+                        echo 'y';
+                    }
+                );
+            }
+        );
+
+        $this->klein_app->dispatch(
+            MockRequestFactory::create('/bar')
+        );
+    }
+
     public function test404()
     {
         $this->expectOutputString("404\n");

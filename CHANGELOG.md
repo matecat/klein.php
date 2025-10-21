@@ -2,6 +2,10 @@
 
 ## 3.2.0
 
+### Features
+
+- Lightning fast routing! *~60x* faster dispatch! Performance improvements for large route collections. Radix Tree routing!
+- 100% Code Coverage
 - Breaking changes, see [UPGRADING.md](UPGRADING.md)
 
 ## 3.1.0

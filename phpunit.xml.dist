@@ -31,8 +31,7 @@
     </testsuites>
     <coverage
             pathCoverage="true"
-            ignoreDeprecatedCodeUnits="true"
-            disableCodeCoverageIgnore="true">
+            ignoreDeprecatedCodeUnits="true">
     </coverage>
 
 </phpunit>

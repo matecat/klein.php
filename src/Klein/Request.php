@@ -119,7 +119,7 @@ class Request
         $this->params_post = new DataCollection($params_post);
         $this->cookies = new DataCollection($cookies);
         $this->server = new ServerDataCollection($server);
-        $this->headers = new HeaderDataCollection($this->server->getHeaders());
+        $this->headers = new HeaderDataCollection($server);
         $this->files = new DataCollection($files);
         $this->body = $body;
 
@@ -142,7 +142,7 @@ class Request
             $_COOKIE,
             $_SERVER,
             $_FILES,
-            // null // Let our content getter take care of the "body"
+            null, // Let our content getter take care of the "body"
         );
     }
 

@@ -17,7 +17,6 @@ use Klein\Exceptions\RegularExpressionCompilationException;
 use Klein\Exceptions\RoutePathCompilationException;
 use Klein\HttpMethod;
 use Psr\Cache\CacheItemPoolInterface;
-use Throwable;
 
 /**
  * Route
@@ -222,7 +221,6 @@ class Route
 
         // Build the regex if it wasn't cached.
         $this->regex = $this->compileRegexp($path);
-
     }
 
     /**
@@ -249,19 +247,6 @@ class Route
     }
 
     /**
-     * Constructs an index string based on the method and URL.
-     *
-     * Combines the method property values and the URL into a single, formatted string
-     * with a specific delimiter.
-     *
-     * @return string The constructed index string.
-     */
-    public function getHash(): string
-    {
-        return $this->hash;
-    }
-
-    /**
      * Sets the route match status against a specified URI and stores the captured parameters.
      *
      * This method attempts to record the parameters captured by the route's regex and marks the URI
@@ -274,7 +259,6 @@ class Route
      */
     public function setRouteMatchedAgainstUri(array $regexMatchingParams, string $uri): static
     {
-
         // Combine the hash and the URI to form a unique key for the route.
         // We could do a method for this, but this is a faster way to do it.
         $hashPerUri = $this->hash . '|' . $uri;
@@ -297,7 +281,8 @@ class Route
     /**
      * Retrieves the matched route information.
      *
-     * Returns an array containing details about the matched route, typically including relevant route parameters and metadata.
+     * Returns an array containing details about the matched route,
+     * typically including relevant route parameters and metadata.
      *
      * @param string $uri
      * @return bool
@@ -335,13 +320,21 @@ class Route
     protected function validateMethod(string|array|null $method): string|array|null
     {
         if (is_string($method)) {
-            return HttpMethod::tryFrom(strtoupper($method))->name ?? throw new InvalidArgumentException(
-                "Invalid HTTP method: $method"
-            );
-
+            //fastest than Enum::tryFrom
+            return match (strtoupper($method)) {
+                HttpMethod::GET->name,
+                HttpMethod::POST->name,
+                HttpMethod::PUT->name,
+                HttpMethod::DELETE->name,
+                HttpMethod::PATCH->name,
+                HttpMethod::HEAD->name,
+                HttpMethod::OPTIONS->name,
+                HttpMethod::TRACE->name => strtoupper($method),
+                default => throw new InvalidArgumentException("Invalid HTTP method: $method")
+            };
+        } elseif (is_array($method)) {
             // If an array of methods was provided, validate each entry similarly,
             // returning a normalized array of valid method names.
-        } elseif (is_array($method)) {
             return $this->validateMethodsArray($method);
         }
 

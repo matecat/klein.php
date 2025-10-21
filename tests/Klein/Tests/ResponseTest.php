@@ -17,6 +17,7 @@ use Klein\DataCollection\ResponseCookieDataCollection;
 use Klein\Exceptions\LockedResponseException;
 use Klein\Exceptions\ResponseAlreadySentException;
 use Klein\HttpStatus;
+use Klein\Request;
 use Klein\Response;
 use Klein\ResponseCookie;
 use PHPUnit\Framework\Attributes\Group;
@@ -401,7 +402,7 @@ class ResponseTest extends AbstractKleinTestCase
         $response->redirect($url, $code);
 
         $this->assertSame($code, $response->code());
-        $this->assertSame($url, $response->headers()->get('location'));
+        $this->assertSame($url, $response->headers()->get('Location'));
         $this->assertTrue($response->isLocked());
     }
 
@@ -434,7 +435,7 @@ class ResponseTest extends AbstractKleinTestCase
         $file_mime = 'text/plain';
 
         $this->klein_app->respond(
-            callback: function ($request, $response, $service) use ($file_name, $file_mime) {
+            callback: function (Request $request, Response $response, $service) use ($file_name, $file_mime) {
                 $response->file(__FILE__, $file_name, $file_mime);
             }
         );

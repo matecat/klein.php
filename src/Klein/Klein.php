@@ -12,7 +12,6 @@
 
 namespace Klein;
 
-use Cache\Adapter\PHPArray\ArrayCachePool;
 use InvalidArgumentException;
 use Klein\DataCollection\RouteCollection;
 use Klein\Exceptions\DispatchHaltedException;
@@ -365,7 +364,8 @@ class Klein
 
         // Access the current Request object, get its "named parameters" collection,
         // and replace its internal attributes with an empty array (i.e., clear/reset them).
-        // paramsNamed() returns a DataCollection; replace([]) sets its attributes to [] and returns the same collection.
+        // paramsNamed() returns a DataCollection;
+        // replace([]) sets its attributes to [] and returns the same collection.
         $this->request->paramsNamed()->replace();
 
         // Bind our objects to our service
@@ -490,12 +490,14 @@ class Klein
                     return $captured;
                 }
                 // Normalize unknown capture modes to "no capture"
-                if (!in_array($capture, [
-                    self::DISPATCH_CAPTURE_AND_RETURN,
-                    self::DISPATCH_CAPTURE_AND_REPLACE,
-                    self::DISPATCH_CAPTURE_AND_PREPEND,
-                    self::DISPATCH_CAPTURE_AND_APPEND,
-                ], true)) {
+                if (
+                    !in_array($capture, [
+                        self::DISPATCH_CAPTURE_AND_RETURN,
+                        self::DISPATCH_CAPTURE_AND_REPLACE,
+                        self::DISPATCH_CAPTURE_AND_PREPEND,
+                        self::DISPATCH_CAPTURE_AND_APPEND,
+                    ], true)
+                ) {
                     $capture = self::DISPATCH_NO_CAPTURE;
                 }
             }
@@ -509,9 +511,11 @@ class Klein
                 // If not capturing output, flush any buffered output to the client
                 $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_flush');
             }
+            // @codeCoverageIgnoreStart
         } catch (LockedResponseException) {
             // Do nothing, since this is an automated behavior
         }
+        // @codeCoverageIgnoreEnd
 
         // Run our after dispatch callbacks
         $this->callAfterDispatchCallbacks();
@@ -599,7 +603,9 @@ class Klein
         while (ob_get_level() >= $targetLevel) {
             $content = ob_get_clean();
             if ($content === false) {
-                break;
+                // @codeCoverageIgnoreStart
+                break; // ob_get_clean() returns false if the output buffer is not active. In a normal operation, this should never happen.
+                // @codeCoverageIgnoreEnd
             }
             $onChunk($content);
         }
@@ -848,9 +854,11 @@ class Klein
                 if ($buffer !== '') {
                     $this->response->append($buffer);
                 }
+                // @codeCoverageIgnoreStart
             } catch (LockedResponseException) {
                 // Do nothing, since this is an automated behavior
             }
+            // @codeCoverageIgnoreEnd
         }
     }
 

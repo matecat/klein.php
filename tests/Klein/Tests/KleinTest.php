@@ -13,7 +13,9 @@
 namespace Klein\Tests;
 
 use Exception;
+use InvalidArgumentException;
 use Klein\App;
+use Klein\DataCollection\DataCollection;
 use Klein\DataCollection\RouteCollection;
 use Klein\Exceptions\DispatchHaltedException;
 use Klein\Exceptions\HttpExceptionInterface;
@@ -33,7 +35,6 @@ use TypeError;
  */
 class KleinTest extends AbstractKleinTestCase
 {
-
     /**
      * Constants
      */
@@ -258,6 +259,60 @@ class KleinTest extends AbstractKleinTestCase
     }
 
     public function testOnHttpError()
+    {
+        // Create expected arguments
+        $num_of_args = 0;
+        $expected_arguments = [
+            'code' => null,
+            'klein' => null,
+            'matched' => null,
+            'methods_matched' => null,
+        ];
+
+        $this->klein_app->onHttpError(
+            new Route(
+                function (
+                    Request $request,
+                    Response $response,
+                    ServiceProvider $serviceProvider,
+                    App $app,
+                    Klein $klein,
+                    DataCollection $matched,
+                    array $methods_matched
+                ) use (
+                    &$num_of_args,
+                    &$expected_arguments
+                ) {
+                    // Keep track of our arguments
+                    $num_of_args = func_num_args();
+                    $expected_arguments['code'] = $response->code();
+                    $expected_arguments['klein'] = $klein;
+                    $expected_arguments['matched'] = $matched;
+                    $expected_arguments['methods_matched'] = $methods_matched;
+                    $klein->response()->body($expected_arguments['code'] . ' error');
+                }
+            )
+        );
+
+        $this->klein_app->dispatch(null, null, false);
+
+        $this->assertSame(
+            '404 error',
+            $this->klein_app->response()->body()
+        );
+
+        $this->assertEquals(7, $num_of_args);
+        $this->assertEquals(4, count($expected_arguments));
+
+        $this->assertTrue(is_int($expected_arguments['code']));
+        $this->assertTrue($expected_arguments['klein'] instanceof Klein);
+        $this->assertTrue($expected_arguments['matched'] instanceof RouteCollection);
+        $this->assertTrue(is_array($expected_arguments['methods_matched']));
+
+        $this->assertSame($expected_arguments['klein'], $this->klein_app);
+    }
+
+    public function testOnHttpErrorWithRouteDefined()
     {
         // Create expected arguments
         $num_of_args = 0;
@@ -520,4 +575,54 @@ class KleinTest extends AbstractKleinTestCase
         $this->assertNotNull($route);
         $this->assertSame('PATCH', $route->method);
     }
+
+    public function testPRespondWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->respond();
+    }
+
+    public function testPatchWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->patch();
+    }
+
+    public function testOptionsWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->options();
+    }
+
+    public function testHeadWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->head();
+    }
+
+    public function testGetWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->get();
+    }
+
+    public function testPostWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->post();
+    }
+
+    public function testPutWithNullCallable()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->put();
+    }
+
+    public function testDeleteWithNullCallable()
+    {
+        // DELETE
+        $this->expectException(InvalidArgumentException::class);
+        $this->klein_app->delete();
+    }
+
 }

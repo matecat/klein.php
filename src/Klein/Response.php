@@ -103,13 +103,13 @@ class Response extends AbstractResponse
             }
         }
 
-        $this->header('Content-type', $mimetype ?? 'application/octet-stream');
+        $this->header('Content-Type', $mimetype ?? 'application/octet-stream');
         $this->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         // If the response is to be chunked, then the content length must not be sent
         // see: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4
         if (!$this->chunked) {
-            $this->header('Content-length', $fileSize);
+            $this->header('Content-Length', $fileSize);
         }
 
         // Send our response data

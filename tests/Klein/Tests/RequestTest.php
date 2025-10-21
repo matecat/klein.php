@@ -23,11 +23,11 @@ class RequestTest extends AbstractKleinTestCase
     public function testConstructorAndGetters()
     {
         // Test data
-        $params_get = array('get');
-        $params_post = array('post');
-        $cookies = array('cookies');
-        $server = array('server');
-        $files = array('files');
+        $params_get = ['get'];
+        $params_post = ['post'];
+        $cookies = ['cookies'];
+        $server = ['server'];
+        $files = ['files'];
         $body = 'body';
 
         // Create the request
@@ -55,11 +55,11 @@ class RequestTest extends AbstractKleinTestCase
         $key = uniqid();
 
         // Test data
-        $_GET = array_merge($_GET, array($key => 'get'));
-        $_POST = array_merge($_POST, array($key => 'post'));
-        $_COOKIE = array_merge($_COOKIE, array($key => 'cookies'));
-        $_SERVER = array_merge($_SERVER, array($key => 'server'));
-        $_FILES = array_merge($_FILES, array($key => 'files'));
+        $_GET = array_merge($_GET, [$key => 'get']);
+        $_POST = array_merge($_POST, [$key => 'post']);
+        $_COOKIE = array_merge($_COOKIE, [$key => 'cookies']);
+        $_SERVER = array_merge($_SERVER, [$key => 'server']);
+        $_FILES = array_merge($_FILES, [$key => 'files']);
 
         // Create the request
         $request = Request::createFromGlobals();
@@ -75,10 +75,10 @@ class RequestTest extends AbstractKleinTestCase
     public function testUniversalParams()
     {
         // Test data
-        $params_get = array('page' => 2, 'per_page' => 10, 'num' => 1, 5 => 'ok', 'empty' => null, 'blank' => '');
-        $params_post = array('first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => 2, 3 => 'hmm', 4 => 'thing');
-        $cookies = array('user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => 3, 4 => 'dog');
-        $named = array('id' => '1f8ae', 'num' => 4);
+        $params_get = ['page' => 2, 'per_page' => 10, 'num' => 1, 5 => 'ok', 'empty' => null, 'blank' => ''];
+        $params_post = ['first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => 2, 3 => 'hmm', 4 => 'thing'];
+        $cookies = ['user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => 3, 4 => 'dog'];
+        $named = ['id' => '1f8ae', 'num' => 4];
 
         // Create the request
         $request = new Request(
@@ -101,13 +101,13 @@ class RequestTest extends AbstractKleinTestCase
     public function testUniversalParamsWithFilter()
     {
         // Test data
-        $params_get = array('page' => 2, 'per_page' => 10, 'num' => 1, 5 => 'ok', 'empty' => null, 'blank' => '');
-        $params_post = array('first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => 2, 3 => 'hmm', 4 => 'thing');
-        $cookies = array('user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => 3, 4 => 'dog');
+        $params_get = ['page' => 2, 'per_page' => 10, 'num' => 1, 5 => 'ok', 'empty' => null, 'blank' => ''];
+        $params_post = ['first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => 2, 3 => 'hmm', 4 => 'thing'];
+        $cookies = ['user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => 3, 4 => 'dog'];
 
         // Create our filter and expected results
-        $filter = array('page', 'user', 'num', 'this-key-never-showed-up-anywhere');
-        $expected = array('page' => 2, 'user' => 'Rican7', 'num' => 3, 'this-key-never-showed-up-anywhere' => null);
+        $filter = ['page', 'user', 'num', 'this-key-never-showed-up-anywhere'];
+        $expected = ['page' => 2, 'user' => 'Rican7', 'num' => 3, 'this-key-never-showed-up-anywhere' => null];
 
         // Create the request
         $request = new Request(
@@ -122,7 +122,7 @@ class RequestTest extends AbstractKleinTestCase
     public function testMagic()
     {
         // Test data
-        $params = array('page' => 2, 'per_page' => 10, 'num' => 1);
+        $params = ['page' => 2, 'per_page' => 10, 'num' => 1];
 
         // Create the request
         $request = new Request($params);
@@ -206,7 +206,7 @@ class RequestTest extends AbstractKleinTestCase
         $this->assertEmpty($request->body());
 
         // In constructor
-        $request = new Request(array(), array(), array(), array(), array(), $body);
+        $request = new Request([], [], [], [], [], $body);
 
         $this->assertSame($body, $request->body());
     }
@@ -268,7 +268,7 @@ class RequestTest extends AbstractKleinTestCase
                 $test_two = $request->query('page', 7);
 
                 // Modify a current var
-                $test_three = $request->query(array('per_page' => 10));
+                $test_three = $request->query(['per_page' => 10]);
             }
         );
 
@@ -317,10 +317,10 @@ class RequestTest extends AbstractKleinTestCase
         // Test data
         $uri = '/test/uri';
         $method = 'OPTIONS';
-        $params = array('get');
-        $cookies = array('cookies');
-        $server = array('server');
-        $files = array('files');
+        $params = ['get'];
+        $cookies = ['cookies'];
+        $server = ['server'];
+        $files = ['files'];
         $body = 'body';
 
         // Create the request
@@ -339,8 +339,8 @@ class RequestTest extends AbstractKleinTestCase
         $this->assertSame($method, $request->method());
         $this->assertSame($params, $request->paramsGet()->all());
 
-        $this->assertSame(array(), $request->paramsPost()->all());
-        $this->assertSame(array(), $request->paramsNamed()->all());
+        $this->assertSame([], $request->paramsPost()->all());
+        $this->assertSame([], $request->paramsNamed()->all());
         $this->assertSame($cookies, $request->cookies()->all());
         $this->assertContains($cookies[0], $request->params());
         $this->assertContains($server[0], $request->server()->all());

@@ -21,256 +21,43 @@ class HeaderDataCollection extends DataCollection
 {
 
     /**
-     * Constants
+     * The list of Content related HTTP headers
+     *
+     * @var string[]
      */
+    protected static array $http_content_headers = [
+        'CONTENT_LENGTH',
+        'CONTENT_TYPE',
+        'CONTENT_MD5',
+    ];
 
-    /**
-     * Normalization option
-     *
-     * Don't normalize
-     *
-     * @type int
-     */
-    const int NORMALIZE_NONE = 0;
-
-    /**
-     * Normalization option
-     *
-     * Normalize the outer whitespace of the header
-     *
-     * @type int
-     */
-    const int NORMALIZE_TRIM = 1;
-
-    /**
-     * Normalization option
-     *
-     * Normalize the delimiters of the header
-     *
-     * @type int
-     */
-    const int NORMALIZE_DELIMITERS = 2;
-
-    /**
-     * Normalization option
-     *
-     * Normalize the case of the header
-     *
-     * @type int
-     */
-    const int NORMALIZE_CASE = 4;
-
-    /**
-     * Normalization option
-     *
-     * Normalize the header into canonical format
-     *
-     * @type int
-     */
-    const int NORMALIZE_CANONICAL = 8;
-
-    /**
-     * Normalization option
-     *
-     * Normalize using all normalization techniques
-     *
-     * @type int
-     */
-    const int NORMALIZE_ALL = -1;
-
-
-    /**
-     * Properties
-     */
-
-    /**
-     * The header key normalization technique/style to
-     * use when accessing headers in the collection
-     *
-     * @type int
-     */
-    protected int $normalization = self::NORMALIZE_ALL;
-
-
-    /**
-     * Methods
-     */
-
-    /**
-     * Constructor
-     *
-     * @override DataCollection::__construct()
-     * @param array<string, string> $headers The headers of this collection
-     * @param int $normalization The header key normalization technique/style to use
-     */
-    public function __construct(array $headers = [], int $normalization = self::NORMALIZE_ALL)
+    public function __construct(array $paramHeaders = [])
     {
-        parent::__construct();
-        $this->normalization = $normalization;
+        $headers = [];
+        // Iterate over server variables to reconstruct headers manually
+        foreach ($paramHeaders ?: $_SERVER as $name => $value) {
+            // Only consider HTTP_*-prefixed entries, which represent incoming headers
+            $isHttpPrefixed = str_starts_with($name, 'HTTP_');
+            $isContentHeader = in_array($name, self::$http_content_headers, true);
 
-        foreach ($headers as $key => $value) {
-            $this->set($key, $value);
-        }
-    }
+            if (!$isHttpPrefixed && !$isContentHeader) {
+                continue;
+            }
 
-    /**
-     * Get the header key normalization technique/style to use
-     *
-     * @return int
-     */
-    public function getNormalization(): int
-    {
-        return $this->normalization;
-    }
+            // Normalize a header key: "HTTP_FOO_BAR" or "CONTENT_TYPE" => "Foo-Bar" / "Content-Type"
+            // 1) possibly strip "HTTP_"
+            // 2) replace underscores with spaces
+            // 3) lowercase then ucwords to title-case words
+            // 4) replace spaces with hyphens
+            $normalizedKey = str_replace(
+                ' ',
+                '-',
+                ucwords(strtolower(str_replace('_', ' ', $isHttpPrefixed ? substr($name, 5) : $name)))
+            );
 
-    /**
-     * Set the header key normalization technique/style to use
-     *
-     * @param int $normalization
-     *
-     * @return static
-     */
-    public function setNormalization(int $normalization): static
-    {
-        $this->normalization = $normalization;
-
-        return $this;
-    }
-
-    /**
-     * Get a header
-     *
-     * {@inheritdoc}
-     *
-     * @param string $key The key of the header to return
-     * @param mixed|null $default_val The default value of the header if it contains no value
-     *
-     * @return ?string
-     * @see DataCollection::get()
-     */
-    public function get(string $key, mixed $default_val = null): ?string
-    {
-        $key = $this->normalizeKey($key);
-
-        return parent::get($key, $default_val);
-    }
-
-    /**
-     * Set a header
-     *
-     * {@inheritdoc}
-     *
-     * @param string $key The key of the header to set
-     * @param mixed $value The value of the header to set
-     *
-     * @return static
-     * @see DataCollection::set()
-     */
-    public function set(string $key, mixed $value): static
-    {
-        $key = $this->normalizeKey($key);
-
-        return parent::set($key, $value);
-    }
-
-    /**
-     * Check if a header exists
-     *
-     * {@inheritdoc}
-     *
-     * @param string $key The key of the header
-     *
-     * @return boolean
-     * @see DataCollection::exists()
-     */
-    public function exists(string $key): bool
-    {
-        $key = $this->normalizeKey($key);
-
-        return parent::exists($key);
-    }
-
-    /**
-     * Remove a header
-     *
-     * {@inheritdoc}
-     *
-     * @param string $key The key of the header
-     *
-     * @return void
-     * @see DataCollection::remove()
-     */
-    public function remove(string $key): void
-    {
-        $key = $this->normalizeKey($key);
-
-        parent::remove($key);
-    }
-
-    /**
-     * Normalize a header key based on our set normalization style
-     *
-     * @param string $key The ("field") key of the header
-     *
-     * @return string
-     */
-    protected function normalizeKey(string $key): string
-    {
-        if ($this->normalization & static::NORMALIZE_TRIM) {
-            $key = trim($key);
+            $headers[$normalizedKey] = $value;
         }
 
-        if ($this->normalization & static::NORMALIZE_DELIMITERS) {
-            $key = static::normalizeKeyDelimiters($key);
-        }
-
-        if ($this->normalization & static::NORMALIZE_CASE) {
-            $key = strtolower($key);
-        }
-
-        if ($this->normalization & static::NORMALIZE_CANONICAL) {
-            $key = static::canonicalizeKey($key);
-        }
-
-        return $key;
+        parent::__construct($headers);
     }
-
-    /**
-     * Normalize a header key's delimiters
-     *
-     * This will convert any space or underscore characters
-     * to a more standard hyphen (-) character
-     *
-     * @param string $key The ("field") key of the header
-     *
-     * @return string
-     */
-    public static function normalizeKeyDelimiters(string $key): string
-    {
-        return str_replace([' ', '_'], '-', $key);
-    }
-
-    /**
-     * Canonicalize a header key
-     *
-     * The canonical format is all lower case except for
-     * the first letter of "words" separated by a hyphen
-     *
-     * @link http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-     *
-     * @param string $key The ("field") key of the header
-     *
-     * @return string
-     */
-    public static function canonicalizeKey(string $key): string
-    {
-        $words = explode('-', strtolower($key));
-
-        foreach ($words as &$word) {
-            $word = ucfirst($word);
-        }
-
-        return implode('-', $words);
-    }
-
 }

@@ -4,7 +4,25 @@
 
 ### Behavior Changes
 
-- The execution order of the route callbacks is no more guaranteed to be the same as the order in which they were registered.
+- The execution order of the route callbacks is no more guaranteed to be the same as the order in which they were registered when mixing catch all routes and routes with specified paths.
+  - `HeaderDataCollection` class is now `ucword` sanitization. Underscores are not allowed in the header field names.
+  - Fields are now case-sensitive.
+      
+    Ex: 
+```shell
+    curl -H 'content-TOP: Fake Content Type' -H 'content-type: application/json' https://localhost
+    [
+        'Host' => 'localhost',
+        'User-Agent' => 'curl/8.5.0',
+        'Accept' => '*/*',
+        'content-TOP' => 'Fake',
+        'content-type' => 'application/json',
+    ] => 
+    HeaderDataCollection::get('content-TOP') => NULL
+    HeaderDataCollection::get('content-type') => NULL
+    HeaderDataCollection::get('Content-Top') => 'Fake Content Type'
+    HeaderDataCollection::get('Content-Type') => 'application/json'
+```
 
 ## 2.1.1 to 2.1.2
 

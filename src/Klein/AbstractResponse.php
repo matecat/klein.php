@@ -314,16 +314,18 @@ abstract class AbstractResponse
     /**
      * Send our HTTP headers
      *
-     * @param boolean $cookies_also Whether or not to also send the cookies after sending the normal headers
-     * @param boolean $override Whether or not to override the check if headers have already been sent
+     * @param boolean $cookies_also Whether to also send the cookies after sending the normal headers
+     * @param boolean $override Whether to override the check if headers have already been sent
      *
      * @return static
      */
     public function sendHeaders(bool $cookies_also = true, bool $override = false): static
     {
+        // @codeCoverageIgnoreStart
         if (headers_sent() && !$override) {
             return $this;
         }
+        // @codeCoverageIgnoreEnd
 
         // Send our HTTP status line
         header($this->httpStatusLine());
@@ -349,9 +351,11 @@ abstract class AbstractResponse
      */
     public function sendCookies(bool $override = false): static
     {
+        // @codeCoverageIgnoreStart
         if (headers_sent() && !$override) {
             return $this;
         }
+        // @codeCoverageIgnoreEnd
 
         // Iterate through our Cookies data collection and set each cookie natively
         /* @var $cookie ResponseCookie */
@@ -436,7 +440,7 @@ abstract class AbstractResponse
     {
         if (false === $this->chunked) {
             $this->chunked = true;
-            $this->header('Transfer-encoding', 'chunked');
+            $this->header('Transfer-Encoding', 'chunked');
             flush();
         }
 

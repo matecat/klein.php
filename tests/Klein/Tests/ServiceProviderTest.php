@@ -282,7 +282,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         $this->assertSame(
             $this->klein_app->request()->uri(),
-            $this->klein_app->response()->headers()->get('location')
+            $this->klein_app->response()->headers()->get('Location')
         );
         $this->assertTrue($this->klein_app->response()->isLocked());
 
@@ -299,7 +299,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
         $request->server()->set('HTTP_REFERER', $url);
 
         $this->klein_app->respond(
-            callback: function ($request, $response, $service) {
+            callback: function ($request, $response, ServiceProvider $service) {
                 $service->back();
             }
         );
@@ -308,7 +308,7 @@ class ServiceProviderTest extends AbstractKleinTestCase
 
         $this->assertSame(
             $url,
-            $this->klein_app->response()->headers()->get('location')
+            $this->klein_app->response()->headers()->get('Location')
         );
         $this->assertTrue($this->klein_app->response()->isLocked());
 
