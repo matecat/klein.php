@@ -5,7 +5,12 @@
 ### Behavior Changes
 
 - The execution order of the route callbacks is no more guaranteed to be the same as the order in which they were registered when mixing catch all routes and routes with specified paths.
-  - `HeaderDataCollection` class is now `ucword` sanitization. Underscores are not allowed in the header field names.
+  - `HeaderDataCollection` class is now `ucword` sanitization. 
+     Underscores are not allowed in the header field names since 
+     nginx and Apache will silently drop HTTP headers with underscores 
+     (which are perfectly valid, according to the HTTP standard). 
+     This is done to prevent ambiguities when mapping headers to CGI variables, 
+     as both dashes and underscores are mapped to underscores during that process.
   - Fields are now case-sensitive.
       
     Ex: 
