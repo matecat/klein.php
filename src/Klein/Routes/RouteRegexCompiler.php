@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * @author Domenico Lupinetti (Ostico) domenico@translated.net / ostico@gmail.com
@@ -13,7 +14,6 @@ use Klein\Exceptions\RegularExpressionCompilationException;
 
 class RouteRegexCompiler
 {
-
     /**
      * The regular expression used to compile and match URL's
      *
@@ -40,7 +40,7 @@ class RouteRegexCompiler
      *
      * @var array<string, string>
      */
-    protected const array match_types = [
+    protected const array MATCH_TYPES = [
         'i' => '[0-9]++',
         'a' => '[0-9A-Za-z]++',
         'h' => '[0-9A-Fa-f]++',
@@ -82,7 +82,7 @@ class RouteRegexCompiler
                 [, $pre, $type, $param, $optional] = $match;
 
                 // Map known type aliases (e.g. 'i' => '\d+') or use the raw type if not aliased.
-                $type = self::match_types[$type] ?? $type;
+                $type = self::MATCH_TYPES[$type] ?? $type;
 
                 // Build a non-capturing group for the segment that contains an optional named
                 // inner capture (?P<name>) followed by the resolved type pattern.
@@ -173,7 +173,8 @@ class RouteRegexCompiler
             // Strip leading "@", or "!@" for negation.
             $path = substr($path, $isNegated ? 2 : 1);
 
-            // If the regex begins with "^", keep it as-is; otherwise, allow any chars after the namespace by prefixing ".*".
+            // If the regex begins with "^", keep it as-is; otherwise,
+            // allow any chars after the namespace by prefixing ".*".
             // This lets patterns like "@^/posts" anchor immediately after the namespace,
             // while "@/posts" becomes ".*\/posts" to match deeper subpaths.
             $path = ($path[0] == '^') ? substr($path, 1) : '.*' . $path;
@@ -217,7 +218,8 @@ class RouteRegexCompiler
      * @param array<string, string>|null $params Key-value map of placeholder names to substitute into the route.
      *                                                Missing values for optional placeholders remove their segment;
      *                                                missing values for required placeholders keep the original token.
-     * @param bool $flatten_regex When true, flattens custom-regex routes (prefixed with "@") to "/" if no substitutions occur.
+     * @param bool $flatten_regex When true, flattens custom-regex routes (prefixed with "@") to "/" if
+     *                            no substitutions occur.
      *
      * @return string The generated path string for the named route.
      *
@@ -253,5 +255,4 @@ class RouteRegexCompiler
 
         return $path;
     }
-
 }

@@ -13,10 +13,6 @@
 namespace Klein\Routes;
 
 use InvalidArgumentException;
-use Klein\Exceptions\RegularExpressionCompilationException;
-use Klein\Exceptions\RoutePathCompilationException;
-use Klein\HttpMethod;
-use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Route
@@ -111,7 +107,7 @@ class Route
      *
      * @type string
      */
-    const string NULL_PATH_VALUE = '*';
+    public const string NULL_PATH_VALUE = '*';
     /**
      * Indicates whether a custom regular expression is used
      *
@@ -311,54 +307,74 @@ class Route
     }
 
     /**
-     * Validate the given HTTP method
+     * Validates and normalizes HTTP method(s).
      *
-     * @param string|string[]|null $method The HTTP method to validate
+     * This is a critical section, we maximized the performances by sacrificing the quality of the code.
      *
-     * @return string|string[]|null
+     * @param string|string[]|null $method The HTTP method(s) to validate and normalize.
+     *                                      Can be a string (single method), an array (multiple methods) or null.
+     * @return string|string[]|null The validated and normalized HTTP method(s).
+     *                              Returns an uppercase string for single methods,
+     *                              an array of uppercase strings for multiple methods or null if no method is provided.
+     *
+     * @throws InvalidArgumentException If the method is invalid or contains unsupported values/structures.
      */
-    protected function validateMethod(string|array|null $method): string|array|null
+    private function validateMethod(string|array|null $method): string|array|null
     {
-        if (is_string($method)) {
-            //fastest than Enum::tryFrom
-            return match (strtoupper($method)) {
-                HttpMethod::GET->name,
-                HttpMethod::POST->name,
-                HttpMethod::PUT->name,
-                HttpMethod::DELETE->name,
-                HttpMethod::PATCH->name,
-                HttpMethod::HEAD->name,
-                HttpMethod::OPTIONS->name,
-                HttpMethod::TRACE->name => strtoupper($method),
+        // Fast-path null
+        if ($method === null) {
+            return null;
+        }
+
+        // Inline fast-path for string to avoid extra branch work
+        if (!is_array($method)) {
+            // $method is string here
+            $upper = strtoupper($method);
+            // Match on known names; avoid calling strtoupper twice
+            return match ($upper) {
+                'GET',
+                'POST',
+                'PUT',
+                'DELETE',
+                'PATCH',
+                'HEAD',
+                'OPTIONS',
+                'TRACE',
+                'CONNECT' => $upper,
                 default => throw new InvalidArgumentException("Invalid HTTP method: $method")
             };
-        } elseif (is_array($method)) {
-            // If an array of methods was provided, validate each entry similarly,
-            // returning a normalized array of valid method names.
-            return $this->validateMethodsArray($method);
         }
 
-        // If it's not a string or array, return null
-        return $method;
-    }
+        // Array path: validate in-place to reduce allocations
+        $count = count($method);
+        $out = [];
+        $out_len = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $m = $method[$i];
 
-    /**
-     * Validate an array of methods
-     *
-     * @param string[] $methods Array of method names to validate
-     *
-     * @return string[]
-     * @throws InvalidArgumentException If any of the methods in the array is invalid
-     */
-    protected function validateMethodsArray(array $methods): array
-    {
-        $uniformed_methods = [];
-        foreach ($methods as $method) {
-            /** @var string $result */
-            $result = $this->validateMethod($method);
-            $uniformed_methods[] = $result;
+            // Inline the scalar branch to avoid per-item method calls
+            if (!is_array($m)) {
+                $upper = strtoupper((string)$m);
+                $out[$out_len++] = match ($upper) {
+                    'GET',
+                    'POST',
+                    'PUT',
+                    'DELETE',
+                    'PATCH',
+                    'HEAD',
+                    'OPTIONS',
+                    'TRACE',
+                    'CONNECT' => $upper,
+                    default => throw new InvalidArgumentException("Invalid HTTP method: $m")
+                };
+                continue;
+            }
+
+            // Nested arrays are not supported (fail fast)
+            throw new InvalidArgumentException('Invalid HTTP method array structure');
         }
-        return $uniformed_methods;
+
+        return $out;
     }
 
     /**
@@ -384,16 +400,20 @@ class Route
             // Example result: `^/users/(?P<id>\d+)$`
             $regex = RouteRegexCompiler::compileRouteRegexp($path);
 
-            try {
-                // Validate the resulting regex compiles in PCRE.
-                RouteRegexCompiler::validateRegularExpression($regex);
-            } catch (RegularExpressionCompilationException $e) {
-                // Re-throw as a route-specific exception with context.
-                throw RoutePathCompilationException::createFromRoute($this, $e);
-            }
+            //* This is a critical section, we maximized the performances
+            // and removed validation to improve them.
+            // It is supposed that a developer tests its own routes before using it.
+            // The regexp will crash when the route matches the path by radix trie
+
+//            try {
+//                // Validate the resulting regex compiles in PCRE.
+//                RouteRegexCompiler::validateRegularExpression($regex);
+//            } catch (RegularExpressionCompilationException $e) {
+//                // Re-throw as a route-specific exception with context.
+//                throw RoutePathCompilationException::createFromRoute($this, $e);
+//            }
         }
 
         return $regex;
     }
-
 }

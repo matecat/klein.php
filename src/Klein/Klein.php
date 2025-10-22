@@ -656,7 +656,10 @@ class Klein
                 }
                 // Special-case: HTTP/1.1 allows servers to treat HEAD like GET without a body.
                 // Consider HEAD matching routes that declare HEAD or GET.
-                if ($requestMethod == HttpMethod::HEAD->name && ($candidate == HttpMethod::HEAD->name || $candidate == HttpMethod::GET->name)) {
+                if (
+                    $requestMethod == HttpMethod::HEAD->name &&
+                    ($candidate == HttpMethod::HEAD->name || $candidate == HttpMethod::GET->name)
+                ) {
                     return true;
                 }
             }
@@ -675,7 +678,10 @@ class Klein
         }
 
         // Allow HEAD requests to match routes that declare HEAD or GET
-        if ($requestMethod == HttpMethod::HEAD->name && ($routeMethod == HttpMethod::HEAD->name || $routeMethod == HttpMethod::GET->name)) {
+        if (
+            $requestMethod == HttpMethod::HEAD->name &&
+            ($routeMethod == HttpMethod::HEAD->name || $routeMethod == HttpMethod::GET->name)
+        ) {
             return true;
         }
 

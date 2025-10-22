@@ -147,7 +147,16 @@ class RadixRouteIndex implements IndexInterface
             }
 
             // Query the radix index for all routes under this prefix (deep collection).
-            $tmpCommonPrefix = $this->explorePrefix($prefix);
+            // array_walk_recursive is slower for small sets,
+            // it has some kind of optimization for large sets,
+            // so we use a faster manual, non-recursive Depth First Search algorithm for shorter radix trees
+            if (count($this->radixTree) > 130000) {
+                // use array_walk_recursive for large sets
+                $tmpCommonPrefix = $this->lookupByArrayWalk($prefix);
+            } else {
+                // use a faster manual, non-recursive Depth First Search algorithm for shorter sets
+                $tmpCommonPrefix = $this->lookupByDFS($prefix);
+            }
 
             // If any candidates exist, this is the longest matching prefix; return them.
             if (count($tmpCommonPrefix) !== 0) {
@@ -165,7 +174,7 @@ class RadixRouteIndex implements IndexInterface
      * @param string $prefix The literal prefix to search.
      * @return array<string,Route> Flat map of routes under the prefix (recursively via references).
      */
-    private function explorePrefix(string $prefix): array
+    protected function lookupByArrayWalk(string $prefix): array
     {
         $collector = [];
         // Fetch the subtree (or empty) for the given prefix.
@@ -174,6 +183,48 @@ class RadixRouteIndex implements IndexInterface
         array_walk_recursive($indexedPrefix, function (Route $route) use (&$collector) {
             $collector[$route->hash] = $route;
         });
+        return $collector;
+    }
+
+    /**
+     * Explores the given prefix in the radix tree and collects associated routes.
+     *
+     * It's faster to use a manual, non-recursive Depth First Search algorithm when the route number is below 50,000
+     *
+     * @param string $prefix The literal prefix to search.
+     * @return array<string,Route> Flat map of routes under the prefix (recursively via references).
+     */
+    protected function lookupByDFS(string $prefix): array
+    {
+        // Fast path: nothing indexed for this prefix
+        if (!isset($this->radixTree[$prefix])) {
+            return [];
+        }
+
+        $collector = [];
+        $stack = [$this->radixTree[$prefix]];
+
+        // Manual, non-recursive DFS to avoid array_walk_recursive overhead/closures
+        while ($stack) {
+            $node = array_pop($stack);
+
+            // Iterate with type checks minimized; Route vs. arrays
+            foreach ($node as $v) {
+                if ($v instanceof Route) {
+                    // Key by route hash (avoid duplicate writes if already set)
+                    $collector[$v->hash] = $v;
+                    continue;
+                }
+                // $v is a child bucket (array); push for further traversal
+                if (is_array($v)) {
+                    $stack[] = $v;
+                } else {
+                    // Skip unexpected scalars (defensive; should not happen)
+                    // no-op
+                }
+            }
+        }
+
         return $collector;
     }
 
