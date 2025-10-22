@@ -18,6 +18,7 @@ use Klein\Exceptions\DispatchHaltedException;
 use Klein\Exceptions\HttpException;
 use Klein\Exceptions\HttpExceptionInterface;
 use Klein\Exceptions\LockedResponseException;
+use Klein\Exceptions\RoutePathCompilationException;
 use Klein\Exceptions\UnhandledException;
 use Klein\Routes\Route;
 use Klein\Routes\RouteFactory;
@@ -724,7 +725,7 @@ class Klein
                 }
 
                 // Test the route's compiled regex against the URI and capture params if it matches.
-                $matched = (bool)preg_match($route->regex, $uri, $params);
+                $matched = (bool)preg_match($route->getCompiledRegex(), $uri, $params);
 
                 // Check if the incoming HTTP method is allowed by the route.
                 // Supports arrays of methods and special HEAD/GET handling.
@@ -758,7 +759,7 @@ class Klein
             $catchAllRoutes,
             function ($route) use ($uri, $requestMethod) {
                 if ($route->isCustomRegex) {
-                    $matched = (bool)preg_match($route->regex, $uri, $params);
+                    $matched = (bool)preg_match($route->getCompiledRegex(), $uri, $params);
 
                     // Check if the incoming HTTP method is allowed by the route.
                     // Supports arrays of methods and special HEAD/GET handling.
@@ -883,49 +884,48 @@ class Klein
     /**
      * Routes an exception through the error callbacks
      *
-     * @param Throwable $err The exception that occurred
-     *
+     * @param Throwable $throwable
      * @return void
-     * @throws UnhandledException      If the error/exception isn't handled by an error callback
      * @throws Throwable
      */
-    private function error(Throwable $err): void
+    private function error(Throwable $throwable): void
     {
-        $type = get_class($err);
-        $msg = $err->getMessage();
+        $exceptionClass = get_class($throwable);
+        $message = $throwable->getMessage();
 
         try {
             if (!$this->error_callbacks->isEmpty()) {
                 foreach ($this->error_callbacks as $callback) {
                     if (is_callable($callback)) {
-                        call_user_func($callback, $this, $msg, $type, $err);
-
+                        /** @var callable $callback */
+                        call_user_func($callback, $this, $message, $exceptionClass, $throwable);
+                        //Lock our response, since we probably don't want anything else messing with our error code/body
+                        $this->response->lock();
                         return;
                     }
 
-                    $this->service->flash($err);
-                    $this->response->redirect($callback);
+                    // Non-callable callbacks are treated as redirect targets
+                    $this->service->flash($message);
+                    $this->response->redirect((string)$callback);
+                    // Lock our response, since we probably don't want anything else messing with our error code/body
+                    $this->response->lock();
+                    return;
                 }
+            } elseif ($throwable instanceof RoutePathCompilationException) {
+                $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
+                throw $throwable;
             } else {
                 $this->response->code(500);
-
-                while (ob_get_level() >= $this->output_buffer_level) {
-                    ob_end_clean();
-                }
-
-                throw new UnhandledException($msg, $err->getCode(), $err);
+                $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
+                throw new UnhandledException($message, $throwable->getCode(), $throwable);
             }
         } catch (Throwable $e) {
             // Make sure to clean the output buffer before bailing
-            while (ob_get_level() >= $this->output_buffer_level) {
-                ob_end_clean();
-            }
-
+            $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
             throw $e;
         }
 
-        // Lock our response, since we probably don't want
-        // anything else messing with our error code/body
+        // Lock our response, since we probably don't want anything else messing with our error code/body
         $this->response->lock();
     }
 

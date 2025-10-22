@@ -555,8 +555,7 @@ class RoutingTest extends AbstractKleinTestCase
 
         $this->klein_app->with(
             '/test/namespace',
-            function (): void
-            {
+            function (): void {
                 $this->klein_app->respond(
                     path: '!/foo',
                     callback: function () {
@@ -577,8 +576,7 @@ class RoutingTest extends AbstractKleinTestCase
 
         $this->klein_app->with(
             '/test/namespace',
-            function (): void
-            {
+            function (): void {
                 $this->klein_app->respond(
                     path: '!@/foo',
                     callback: function () {
@@ -907,7 +905,6 @@ class RoutingTest extends AbstractKleinTestCase
 
     public function testMethodCatchAll()
     {
-
         $this->klein_app->respond(
             'POST',
             null,
@@ -940,11 +937,10 @@ class RoutingTest extends AbstractKleinTestCase
         );
 
         $outputString = $this->getActualOutputForAssertion();
-        $this->assertStringContainsString('yup!',$outputString);
-        $this->assertStringContainsString('1',$outputString);
-        $this->assertStringContainsString('2',$outputString);
-        $this->assertStringContainsString('3',$outputString);
-
+        $this->assertStringContainsString('yup!', $outputString);
+        $this->assertStringContainsString('1', $outputString);
+        $this->assertStringContainsString('2', $outputString);
+        $this->assertStringContainsString('3', $outputString);
     }
 
     public function testLazyTrailingMatch()
@@ -1040,7 +1036,6 @@ class RoutingTest extends AbstractKleinTestCase
 
     public function testRespondArgumentOrder()
     {
-
         $this->klein_app->respond(
             callback: function () {
                 echo 'a';
@@ -1085,13 +1080,12 @@ class RoutingTest extends AbstractKleinTestCase
         );
 
         $outputString = $this->getActualOutputForAssertion();
-        $this->assertStringContainsString('a',$outputString);
-        $this->assertStringContainsString('b',$outputString);
-        $this->assertStringContainsString('c',$outputString);
-        $this->assertStringContainsString('d',$outputString);
-        $this->assertStringContainsString('e',$outputString);
-        $this->assertStringContainsString('f',$outputString);
-
+        $this->assertStringContainsString('a', $outputString);
+        $this->assertStringContainsString('b', $outputString);
+        $this->assertStringContainsString('c', $outputString);
+        $this->assertStringContainsString('d', $outputString);
+        $this->assertStringContainsString('e', $outputString);
+        $this->assertStringContainsString('f', $outputString);
     }
 
     public function testTrailingMatch()
@@ -2315,21 +2309,18 @@ class RoutingTest extends AbstractKleinTestCase
 
     public function testRoutePathCompilationFailure()
     {
-
         try {
-
             $this->klein_app->respond(
                 path: '/users/[i:id]/friends/[i:id]/',
                 callback: function () {
                     echo 'yup';
                 }
             );
-
+            $this->klein_app->dispatch(MockRequestFactory::create('/users/1/friends/1/'));
         } catch (Exception $e) {
             $this->assertTrue($e instanceof RoutePathCompilationException);
             $this->assertTrue($e->getRoute() instanceof Route);
         }
-
     }
 
     public function testRoutePathCompilationFailureWithoutWarnings()
@@ -2342,14 +2333,14 @@ class RoutingTest extends AbstractKleinTestCase
         error_reporting($old_error_val);
     }
 
-    public function testRoutePathCompilationFailure_2()
+    public function testRoutePathCompilationCustom()
     {
-        $this->expectOutputString('yup');
+        $this->expectOutputString('0f2f, d865');
 
         $this->klein_app->respond(
-            path: '/vc/izxfgrvomj/fipgbrekv/xyuckgj/jilwprdq/[:one]/bktcaysrv/[:two]',
-            callback: function () {
-                echo 'yup';
+            path: '@/vc/izxfgrvomj/fipgbrekv/xyuckgj/jilwprdq/(?<one>[^/]+?)/bktcaysrv/(?<two>[^/]+?)$',
+            callback: function ($request) {
+                echo $request->param('one') . ', ' . $request->param('two');
             }
         );
 
@@ -2360,7 +2351,7 @@ class RoutingTest extends AbstractKleinTestCase
                 MockRequestFactory::create('/vc/izxfgrvomj/fipgbrekv/xyuckgj/jilwprdq/0f2f/bktcaysrv/d865')
             );
         } catch (Exception $e) {
-            $exception = $e->getPrevious();
+            $exception = $e;
         }
 
         $this->assertNull($exception);

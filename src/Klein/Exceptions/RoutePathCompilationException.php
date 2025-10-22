@@ -22,7 +22,6 @@ use Throwable;
  */
 class RoutePathCompilationException extends RuntimeException implements KleinExceptionInterface
 {
-
     /**
      * Constants
      */
@@ -32,14 +31,14 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
      *
      * @type string
      */
-    const string MESSAGE_FORMAT = 'Route failed to compile with path "%s".';
+    private const string MESSAGE_FORMAT = 'Route failed to compile with path "%s".';
 
     /**
      * The extra failure message format
      *
      * @type string
      */
-    const string FAILURE_MESSAGE_TITLE_FORMAT = 'Failed with message: "%s"';
+    private const string FAILURE_MESSAGE_TITLE_FORMAT = 'Failed with message: "%s"';
 
 
     /**
@@ -71,7 +70,7 @@ class RoutePathCompilationException extends RuntimeException implements KleinExc
         $error = (null !== $previous) ? $previous->getMessage() : null;
         $code = (null !== $previous) ? $previous->getCode() : 0;
 
-        $message = sprintf(self::MESSAGE_FORMAT, $route->originalPath);
+        $message = sprintf(self::MESSAGE_FORMAT, $route->originalPath ?? '');
         $message .= ' ' . sprintf(self::FAILURE_MESSAGE_TITLE_FORMAT, $error);
 
         $exception = new self($message, $code, $previous);

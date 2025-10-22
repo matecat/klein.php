@@ -54,52 +54,80 @@ class RouteRegexCompiler
      * Compiles a route object into a regular expression string to handle dynamic route matching.
      *
      * @param string $path
+     * @param bool $isDynamic Whether the route is dynamic (contains parameters)
      * @return string The compiled regular expression representing the route.
-     * @throws RegularExpressionCompilationException
      */
-    public static function compileRouteRegexp(string $path): string
+    public static function compileRouteRegexp(string $path, bool $isDynamic = true): string
     {
-        // Escape all literal segments (outside [...] parameter blocks) so regex metacharacters
-        // in plain path text are treated as literals. This prevents accidental regex behavior
-        // from characters like ., +, ?, (, ), etc. We do this first to keep parameter blocks intact.
+        // Fast path: if there's no '[' and no special chars needing escape, just anchor and return
+        if (
+            !$isDynamic &&
+            $path == str_replace(
+                [
+                    ".",
+                    '"',
+                    "+",
+                    "*",
+                    "?",
+                    "[",
+                    "^",
+                    "]",
+                    "$",
+                    "(",
+                    ")",
+                    "{",
+                    "}",
+                    "=",
+                    "!",
+                    "<",
+                    ">",
+                    "|",
+                    ":",
+                    "-",
+                    "#"
+                ],
+                '',
+                $path
+            )
+        ) {
+            return "`^$path$`";
+        }
+
+        // Escape literal segments outside of [...] using a lightweight callback (no closures capturing scope)
         $route = preg_replace_callback(
             self::ROUTE_ESCAPE_REGEX,
-            function ($match) {
-                return preg_quote($match[0]);
+            static function ($m) {
+                return preg_quote($m[0]);
             },
             $path
         );
 
-        // Transform parameter blocks (e.g. [i:id], [:slug], [name] with optional suffix) into
-        // proper PCRE named-capturing groups. Each match provides:
-        // - $pre: any literal prefix before the parameter (like a leading slash)
-        // - $type: a type token or raw regex (resolved via self::match_types if aliased)
-        // - $param: the parameter name (maybe empty for unnamed groups)
-        // - $optional: whether the whole segment is optional
+        // Compile parameter blocks using string concatenation to avoid sprintf overhead
         $route = preg_replace_callback(
             self::ROUTE_COMPILE_REGEX,
-            function ($match) {
-                [, $pre, $type, $param, $optional] = $match;
+            static function ($m) {
+                $pre = $m[1];
+                $type = $m[2];
+                $param = $m[3];
+                $optional = $m[4] !== '';
 
-                // Map known type aliases (e.g. 'i' => '\d+') or use the raw type if not aliased.
-                $type = self::MATCH_TYPES[$type] ?? $type;
+                // Inline MATCH_TYPES lookup without extra vars
+                if (isset(self::MATCH_TYPES[$type])) {
+                    $type = self::MATCH_TYPES[$type];
+                }
 
-                // Build a non-capturing group for the segment that contains an optional named
-                // inner capture (?P<name>) followed by the resolved type pattern.
-                // Older PCRE variants need the 'P' style for named groups.
-                // Add ? after the group when the segment is optional.
-                return sprintf(
-                    '(?:%s(%s%s))%s',
-                    $pre,
-                    $param !== '' ? "?P<$param>" : '',
-                    $type,
-                    $optional ? '?' : ''
-                );
+                // '(?:' . $pre . '(' . (param ? "?P<param>" : '') . $type . '))' . (optional ? '?' : '')
+                return '(?:'
+                    . $pre .
+                    '(' .
+                    ($param !== '' ? ('?P<' . $param . '>') : '') .
+                    $type .
+                    '))' .
+                    ($optional ? '?' : '');
             },
             $route
         );
 
-        // Anchor the compiled route to match the entire path string.
         return "`^$route$`";
     }
 
@@ -113,6 +141,7 @@ class RouteRegexCompiler
      *
      * @return void
      * @throws RegularExpressionCompilationException
+     *
      */
     public static function validateRegularExpression(string $regex): void
     {
@@ -226,7 +255,7 @@ class RouteRegexCompiler
      */
     public static function getPathFor(Route $route, ?array $params = null, bool $flatten_regex = true): string
     {
-        $path = $route->originalPath;
+        $path = $route->originalPath ?? '';
 
         // Use our compilation regex to reverse the path's compilation from its definition
         $reversed_path = preg_replace_callback(

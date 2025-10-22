@@ -19,43 +19,31 @@ namespace Klein\DataCollection;
  */
 class HeaderDataCollection extends DataCollection
 {
-
-    /**
-     * The list of Content related HTTP headers
-     *
-     * @var string[]
-     */
-    protected static array $http_content_headers = [
-        'CONTENT_LENGTH',
-        'CONTENT_TYPE',
-        'CONTENT_MD5',
-    ];
-
     public function __construct(array $paramHeaders = [])
     {
-        $headers = [];
-        // Iterate over server variables to reconstruct headers manually
-        foreach ($paramHeaders ?: $_SERVER as $name => $value) {
-            // Only consider HTTP_*-prefixed entries, which represent incoming headers
-            $isHttpPrefixed = str_starts_with($name, 'HTTP_');
-            $isContentHeader = in_array($name, self::$http_content_headers, true);
+        $headers = $paramHeaders ?: $_SERVER;
+        $headers = array_change_key_case($headers);
 
-            if (!$isHttpPrefixed && !$isContentHeader) {
+        // Normalize a header key: "HTTP_FOO_BAR" or "CONTENT_TYPE" => "Foo-Bar" / "Content-Type"
+        // 1) possibly strip "HTTP_"
+        // 2) replace underscores with hyphens
+        // 3) title-case words
+        foreach ($headers as $key => $value) {
+            unset($headers[$key]);
+
+            $strArr = explode("_", $key);
+
+            if ($strArr[0] == "http") {
+                array_shift($strArr);
+            } elseif ($strArr[0] !== 'content') {
                 continue;
             }
 
-            // Normalize a header key: "HTTP_FOO_BAR" or "CONTENT_TYPE" => "Foo-Bar" / "Content-Type"
-            // 1) possibly strip "HTTP_"
-            // 2) replace underscores with spaces
-            // 3) lowercase then ucwords to title-case words
-            // 4) replace spaces with hyphens
-            $normalizedKey = str_replace(
-                ' ',
-                '-',
-                ucwords(strtolower(str_replace('_', ' ', $isHttpPrefixed ? substr($name, 5) : $name)))
-            );
+            foreach ($strArr as &$str) {
+                $str = ucfirst($str);
+            }
 
-            $headers[$normalizedKey] = $value;
+            $headers[implode("-", $strArr)] = $value;
         }
 
         parent::__construct($headers);

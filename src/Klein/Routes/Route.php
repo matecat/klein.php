@@ -13,6 +13,8 @@
 namespace Klein\Routes;
 
 use InvalidArgumentException;
+use Klein\Exceptions\RegularExpressionCompilationException;
+use Klein\Exceptions\RoutePathCompilationException;
 
 /**
  * Route
@@ -61,6 +63,11 @@ class Route
     public readonly string $originalPath;
 
     /**
+     * @var string
+     */
+    private string $processedPath;
+
+    /**
      * The HTTP method to match
      *
      * May either be represented as a string or an array containing multiple methods to match
@@ -94,7 +101,7 @@ class Route
      *
      * @type ?string
      */
-    public readonly ?string $regex;
+    private ?string $regex;
     /**
      * Indicates if the condition is negated
      *
@@ -205,7 +212,7 @@ class Route
 
         // Normalize/compile the incoming path into a fully qualified path or regex,
         // based on the current namespace and special syntaxes (e.g., "@regex", "!@negated-regex", or NULL_PATH_VALUE).
-        $path = RouteRegexCompiler::processPathString(
+        $this->processedPath = RouteRegexCompiler::processPathString(
             $this->namespace,
             $path ?? self::NULL_PATH_VALUE,
             $this->isNegated,
@@ -213,10 +220,7 @@ class Route
             $this->isNegatedCustomRegex
         );
 
-        $this->path = ltrim($path, '^/');
-
-        // Build the regex if it wasn't cached.
-        $this->regex = $this->compileRegexp($path);
+        $this->path = ltrim($this->processedPath, '^/');
     }
 
     /**
@@ -240,6 +244,28 @@ class Route
     {
         $this->name = $name;
         return $this;
+    }
+
+    /**
+     * @type boolean
+     */
+    private bool $isCompiled = false;
+
+    /**
+     * Compiles the route path into a regular expression and caches it.
+     *
+     * @return string Returns the compiled regex.
+     */
+    public function getCompiledRegex(): string
+    {
+        if ($this->isCompiled) {
+            return $this->regex;
+        }
+
+        // Build the regex if it wasn't cached.
+        $this->regex = $this->compileRegexp();
+        $this->isCompiled = true;
+        return $this->regex;
     }
 
     /**
@@ -386,32 +412,26 @@ class Route
      * validates that the resulting regex is properly formatted and can be compiled
      * by the PCRE engine. Throws an exception if the validation fails.
      *
-     * @param string $path
      * @return string
      */
-    private function compileRegexp(string $path): string
+    private function compileRegexp(): string
     {
         // Build the regex if it wasn't cached.
         // If the path is already a user-supplied regex, just wrap it with backticks as PCRE delimiters.
         if ($this->isCustomRegex) {
-            $regex = '`' . $path . '`';
+            $regex = '`' . $this->processedPath . '`';
         } else {
             // Otherwise, compile a human-readable route (with parameters) into a fully anchored regex.
             // Example result: `^/users/(?P<id>\d+)$`
-            $regex = RouteRegexCompiler::compileRouteRegexp($path);
+            $regex = RouteRegexCompiler::compileRouteRegexp($this->processedPath, $this->isDynamic);
 
-            //* This is a critical section, we maximized the performances
-            // and removed validation to improve them.
-            // It is supposed that a developer tests its own routes before using it.
-            // The regexp will crash when the route matches the path by radix trie
-
-//            try {
-//                // Validate the resulting regex compiles in PCRE.
-//                RouteRegexCompiler::validateRegularExpression($regex);
-//            } catch (RegularExpressionCompilationException $e) {
-//                // Re-throw as a route-specific exception with context.
-//                throw RoutePathCompilationException::createFromRoute($this, $e);
-//            }
+            try {
+                // Validate the resulting regex compiles in PCRE.
+                RouteRegexCompiler::validateRegularExpression($regex);
+            } catch (RegularExpressionCompilationException $e) {
+                // Re-throw as a route-specific exception with context.
+                throw RoutePathCompilationException::createFromRoute($this, $e);
+            }
         }
 
         return $regex;
