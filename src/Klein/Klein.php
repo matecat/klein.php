@@ -724,8 +724,17 @@ class Klein
                     return true;
                 }
 
-                // Test the route's compiled regex against the URI and capture params if it matches.
-                $matched = (bool)preg_match($route->getCompiledRegex(), $uri, $params);
+                // If the route is NOT dynamic (i.e., it has no parameter placeholders like [id]),
+                // we consider it a valid/eligible match immediately and stop further checks.
+                if ($route->isDynamic || $route->isNegated) {
+                    // Test the route's compiled regex against the URI and capture params if it matches.
+                    $matched = (bool)preg_match($route->getCompiledRegex(), $uri, $params);
+                } else {
+                    $params = [];
+                    $matched = $route->namespace ?
+                        $route->namespace . '/' . $route->originalPath === $uri :
+                        $route->originalPath === $uri;
+                }
 
                 // Check if the incoming HTTP method is allowed by the route.
                 // Supports arrays of methods and special HEAD/GET handling.
@@ -759,6 +768,7 @@ class Klein
             $catchAllRoutes,
             function ($route) use ($uri, $requestMethod) {
                 if ($route->isCustomRegex) {
+                    // Test the route's compiled regex against the URI and capture params if it matches.
                     $matched = (bool)preg_match($route->getCompiledRegex(), $uri, $params);
 
                     // Check if the incoming HTTP method is allowed by the route.
