@@ -17,4 +17,4 @@ before_script:
 
 script:
   - composer validate
-  - ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
+  - ./vendor/bin/phpunit
