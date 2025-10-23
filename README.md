@@ -6,7 +6,8 @@
 
 * Flexible regular expression routing (inspired by [Sinatra](http://www.sinatrarb.com/))
 * A set of [boilerplate methods](#api) for rapidly building web apps
-* Almost no overhead => [2500+ requests/second](https://gist.github.com/878833)
+* Almost no overhead => [Benchmarks](BENCHMARKS.md)
+  * Benchmark framework: https://github.com/follestad/php-router-benchmark
 
 ## Overview
 
@@ -16,7 +17,7 @@ The primary goal of this fork is to enable and support PHP 8.3 while preserving 
 
 ## Getting started
 
-1. PHP 5.3.x is required
+1. PHP >= 8.3 is required
 2. Install Klein using [Composer](#composer-installation) (recommended) or manually
 3. Setup [URL rewriting](https://gist.github.com/874000) so that all requests are handled by **index.php**
 4. (Optional) Throw in some [APC](http://pecl.php.net/package/APC) for good measure

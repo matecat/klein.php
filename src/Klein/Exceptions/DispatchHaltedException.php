@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
@@ -31,21 +32,21 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @type int
      */
-    const int SKIP_THIS = 1;
+    public const int SKIP_THIS = 1;
 
     /**
      * Skip the next match/callback
      *
      * @type int
      */
-    const int SKIP_NEXT = 2;
+    public const int SKIP_NEXT = 2;
 
     /**
      * Skip the rest of the matches
      *
      * @type int
      */
-    const int SKIP_REMAINING = 0;
+    public const int SKIP_REMAINING = 0;
 
 
     /**

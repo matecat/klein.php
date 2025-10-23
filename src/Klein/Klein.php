@@ -725,14 +725,14 @@ class Klein
                 }
 
                 // If the route is NOT dynamic (i.e., it has no parameter placeholders like [id]),
-                // we consider it a valid/eligible match immediately and stop further checks.
+                // we consider it a valid/eligible match immediately without compiling a regex.
                 if ($route->isDynamic || $route->isNegated) {
                     // Test the route's compiled regex against the URI and capture params if it matches.
                     $matched = (bool)preg_match($route->getCompiledRegex(), $uri, $params);
                 } else {
                     $params = [];
                     $matched = $route->namespace ?
-                        $route->namespace . '/' . $route->originalPath === $uri :
+                        $route->namespace . $route->originalPath === $uri :
                         $route->originalPath === $uri;
                 }
 
@@ -934,9 +934,6 @@ class Klein
             $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
             throw $e;
         }
-
-        // Lock our response, since we probably don't want anything else messing with our error code/body
-        $this->response->lock();
     }
 
     /**

@@ -18,7 +18,7 @@ use Klein\Klein;
 use Klein\Request;
 use Klein\Response;
 use Klein\ServiceProvider;
-use Klein\Tests\Mocks\MockRequestFactory;
+use Klein\Tests\Fixtures\Mocks\MockRequestFactory;
 use Klein\Validator;
 
 /**

@@ -4,7 +4,7 @@
 
 ### Features
 
-- Lightning fast routing! *~60x* faster dispatch! Performance improvements for large route collections. Radix Tree routing!
+- Lightning fast routing! From **100x to 1000x** faster dispatch. Big performance improvements for large route collections with radix Tree routing. [Benchmarks](BENCHMARKS.md)
 - 100% Code Coverage
 - Breaking changes, see [UPGRADING.md](UPGRADING.md)
 

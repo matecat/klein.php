@@ -12,7 +12,7 @@
 namespace Klein\Tests;
 
 use Klein\Request;
-use Klein\Tests\Mocks\MockRequestFactory;
+use Klein\Tests\Fixtures\Mocks\MockRequestFactory;
 
 /**
  * RequestTest

@@ -162,7 +162,7 @@ class KleinTest extends AbstractKleinTestCase
     {
         // Test data
         $test_namespace = '/test/namespace';
-        $test_routes_include = __DIR__ . '/routes/random.php';
+        $test_routes_include = __DIR__ . '/Fixtures/routes/random.php';
 
         // Test file include
         $this->assertEmpty($this->klein_app->routes()->all());

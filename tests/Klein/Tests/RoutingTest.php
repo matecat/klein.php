@@ -24,8 +24,8 @@ use Klein\Request;
 use Klein\Response;
 use Klein\Routes\Route;
 use Klein\ServiceProvider;
-use Klein\Tests\Mocks\MockRequestFactory;
-use Klein\Tests\Mocks\TestClass;
+use Klein\Tests\Fixtures\Mocks\MockRequestFactory;
+use Klein\Tests\Fixtures\Mocks\TestClass;
 use Throwable;
 
 /**
@@ -1228,6 +1228,29 @@ class RoutingTest extends AbstractKleinTestCase
             "404",
             $this->dispatchAndReturnOutput(
                 MockRequestFactory::create("/35")
+            )
+        );
+    }
+
+    public function testNSDispatchStaticRoute()
+    {
+        $this->klein_app->with(
+            '/u',
+            function ($klein_app) {
+                $klein_app->respond(
+                    'GET',
+                    '/foobar',
+                    function ($request, $response) {
+                        echo "slash";
+                    }
+                );
+            }
+        );
+
+        $this->assertSame(
+            "slash",
+            $this->dispatchAndReturnOutput(
+                MockRequestFactory::create("/u/foobar")
             )
         );
     }

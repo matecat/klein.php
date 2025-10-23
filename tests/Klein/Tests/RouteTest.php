@@ -14,6 +14,7 @@ namespace Klein\Tests;
 use Closure;
 use InvalidArgumentException;
 use Klein\Routes\Route;
+use Klein\Tests\Fixtures\Mocks\TestClass;
 use TypeError;
 
 /**
@@ -33,7 +34,7 @@ class RouteTest extends AbstractKleinTestCase
     {
         // Test functions
         $test_callable = $this->getTestCallable();
-        $test_class_callable = __NAMESPACE__ . '\Mocks\TestClass::GET';
+        $test_class_callable = [TestClass::class, 'get'];
 
         // Callback set in constructor
         $route = new Route($test_callable);
@@ -71,7 +72,7 @@ class RouteTest extends AbstractKleinTestCase
         // Test data
         $test_callable = $this->getTestCallable();
         $test_method_string = 'POST';
-        $test_method_array = array('POST', 'PATCH');
+        $test_method_array = ['POST', 'PATCH'];
 
         // Empty constructor
         $route = new Route($test_callable);
@@ -160,5 +161,23 @@ class RouteTest extends AbstractKleinTestCase
         $this->expectException(InvalidArgumentException::class);
         // Test setting with the WRONG type
         new Route($this->getTestCallable(), "", 100);
+    }
+
+    public function testIncorrectMethod()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new Route($this->getTestCallable(), "", "GETT");
+    }
+
+    public function testIncorrectMethodArray()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new Route($this->getTestCallable(), "", ["GETT", "POST"]);
+    }
+
+    public function testIncorrectMethodWithNestedArrays()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new Route($this->getTestCallable(), "", ["GET", ["HEAD", "POST"]]);
     }
 }

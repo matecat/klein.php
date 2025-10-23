@@ -5,7 +5,7 @@
 ### Behavior Changes
 
 - The execution order of the route callbacks is no more guaranteed to be the same as the order in which they were registered when mixing catch all routes and routes with specified paths.
-  - `HeaderDataCollection` class is now `ucword` sanitization. 
+  - The `HeaderDataCollection` class now uses `ucwords()` sanitization
      Underscores are not allowed in the header field names since 
      nginx and Apache will silently drop HTTP headers with underscores 
      (which are perfectly valid, according to the HTTP standard). 
@@ -15,7 +15,7 @@
       
     Ex: 
 ```shell
-    curl -H 'content-TOP: Fake Content Type' -H 'content-type: application/json' https://localhost
+    curl -H 'content-TOP: FooBar' -H 'content-type: application/json' https://localhost
     [
         'Host' => 'localhost',
         'User-Agent' => 'curl/8.5.0',
@@ -25,7 +25,7 @@
     ] => 
     HeaderDataCollection::get('content-TOP') => NULL
     HeaderDataCollection::get('content-type') => NULL
-    HeaderDataCollection::get('Content-Top') => 'Fake Content Type'
+    HeaderDataCollection::get('Content-Top') => 'FooBar'
     HeaderDataCollection::get('Content-Type') => 'application/json'
 ```
 
