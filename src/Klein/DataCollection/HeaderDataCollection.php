@@ -19,9 +19,8 @@ namespace Klein\DataCollection;
  */
 class HeaderDataCollection extends DataCollection
 {
-    public function __construct(array $paramHeaders = [])
+    public function __construct(array $headers = [])
     {
-        $headers = $paramHeaders ?: $_SERVER;
         $headers = array_change_key_case($headers);
 
         // Normalize a header key: "HTTP_FOO_BAR" or "CONTENT_TYPE" => "Foo-Bar" / "Content-Type"
