@@ -208,7 +208,12 @@ class Route
 
         $this->isDynamic =
             !$this->isCustomRegex &&
-            (str_contains($path ?? '', '[') || str_contains($path ?? '', '?'));
+            (
+                str_contains($path ?? '', '[') ||
+                str_contains($path ?? '', '?') ||
+                str_contains($this->namespace ?? '', '[') ||
+                str_contains($this->namespace ?? '', '?')
+            );
 
         // Normalize/compile the incoming path into a fully qualified path or regex,
         // based on the current namespace and special syntaxes (e.g., "@regex", "!@negated-regex", or NULL_PATH_VALUE).
