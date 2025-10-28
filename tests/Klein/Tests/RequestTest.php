@@ -219,9 +219,9 @@ class RequestTest extends AbstractKleinTestCase
         $request = new Request();
         $request->server()->set('REQUEST_METHOD', $method);
 
-        $this->assertSame($method, $request->method());
-        $this->assertTrue($request->method($method));
-        $this->assertTrue($request->method(strtolower($method)));
+        $this->assertSame($method, $request->httpMethod());
+        $this->assertTrue($request->httpMethod($method));
+        $this->assertTrue($request->httpMethod(strtolower($method)));
     }
 
     public function testMethodOverride()
@@ -235,16 +235,16 @@ class RequestTest extends AbstractKleinTestCase
         $request->server()->set('REQUEST_METHOD', $method);
         $request->server()->set('X_HTTP_METHOD_OVERRIDE', $override_method);
 
-        $this->assertSame($override_method, $request->method());
-        $this->assertTrue($request->method($override_method));
-        $this->assertTrue($request->method(strtolower($override_method)));
+        $this->assertSame($override_method, $request->httpMethod());
+        $this->assertTrue($request->httpMethod($override_method));
+        $this->assertTrue($request->httpMethod(strtolower($override_method)));
 
         $request->server()->remove('X_HTTP_METHOD_OVERRIDE');
         $request->paramsPost()->set('_method', $weird_override_method);
 
-        $this->assertSame($weird_override_method, $request->method());
-        $this->assertTrue($request->method($weird_override_method));
-        $this->assertTrue($request->method(strtolower($weird_override_method)));
+        $this->assertSame($weird_override_method, $request->httpMethod());
+        $this->assertTrue($request->httpMethod($weird_override_method));
+        $this->assertTrue($request->httpMethod(strtolower($weird_override_method)));
     }
 
     public function testQueryModify()
@@ -336,7 +336,7 @@ class RequestTest extends AbstractKleinTestCase
 
         // Make sure our data's the same
         $this->assertSame($uri, $request->uri());
-        $this->assertSame($method, $request->method());
+        $this->assertSame($method, $request->httpMethod());
         $this->assertSame($params, $request->paramsGet()->all());
 
         $this->assertSame([], $request->paramsPost()->all());

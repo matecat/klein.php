@@ -29,6 +29,11 @@
     HeaderDataCollection::get('Content-Type') => 'application/json'
 ```
 
+### Breaking Changes
+
+- Renamed `Request::method` to `Request::httpMethod` to allow the Klein library to be mocked with PHPUnit >= 12
+  - Because of PHPUnit decision to not allow methods named "method" to be mocked (it throws an Exception), we must introduce a big breaking change: https://github.com/sebastianbergmann/phpunit/issues/5415
+
 ## 2.1.1 to 2.1.2
 
 ### Interface Changes

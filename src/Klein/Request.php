@@ -439,7 +439,7 @@ class Request
      *
      * @return string|boolean
      */
-    public function method(?string $is = null, bool $allow_override = true): bool|string
+    public function httpMethod(?string $is = null, bool $allow_override = true): bool|string
     {
         $method = $this->server->get('REQUEST_METHOD', HttpMethod::GET->name);
 

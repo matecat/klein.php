@@ -380,7 +380,7 @@ class Klein
 
         /** @var string $requestMethod */
         /** @type string $requestMethod */
-        $requestMethod = $this->request->method();
+        $requestMethod = $this->request->httpMethod();
 
         // Set up some variables for matching
         $skipRemaining = 0;
