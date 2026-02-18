@@ -47,7 +47,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Klein\\Tests\\": "tests/Klein/Tests",
+      "Matecat\\Tests\\Klein\\": "tests/Matecat/Tests/Klein",
       "Benchmarks\\": "Benchmarks/"
     }
   }

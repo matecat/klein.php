@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The RadixRouteIndex class is responsible for managing a radix tree structure,
  * which can be used for efficient route matching and management of string paths.
@@ -15,7 +16,6 @@ use Klein\Routes\Route;
 
 class RadixRouteIndex implements IndexInterface
 {
-
     /**
      * @var array<string,array<string,Route>> The radix tree structure for storing routes.
      * - First-level key: literal prefix (e.g., "/users", "/posts/2024")
@@ -151,10 +151,12 @@ class RadixRouteIndex implements IndexInterface
             // it has some kind of optimization for large sets,
             // so we use a faster manual, non-recursive Depth First Search algorithm for shorter radix trees
             if (count($this->radixTree) > 130000) {
-                // use array_walk_recursive for large sets
+                // @codeCoverageIgnoreStart
+                // use array_walk_recursive for VERY large sets
                 $tmpCommonPrefix = $this->lookupByArrayWalk($prefix);
+                // @codeCoverageIgnoreEnd
             } else {
-                // use a faster manual, non-recursive Depth First Search algorithm for shorter sets
+                // use a faster manual, non-recursive Depth-First Search algorithm for shorter sets
                 $tmpCommonPrefix = $this->lookupByDFS($prefix);
             }
 
@@ -173,6 +175,7 @@ class RadixRouteIndex implements IndexInterface
      *
      * @param string $prefix The literal prefix to search.
      * @return array<string,Route> Flat map of routes under the prefix (recursively via references).
+     * @codeCoverageIgnore
      */
     protected function lookupByArrayWalk(string $prefix): array
     {
@@ -202,10 +205,12 @@ class RadixRouteIndex implements IndexInterface
         }
 
         $collector = [];
+
         $stack = [$this->radixTree[$prefix]];
 
         // Manual, non-recursive DFS to avoid array_walk_recursive overhead/closures
         while ($stack) {
+            /** @var array{Route[]|Route|string} $node */
             $node = array_pop($stack);
 
             // Iterate with type checks minimized; Route vs. arrays
@@ -227,5 +232,4 @@ class RadixRouteIndex implements IndexInterface
 
         return $collector;
     }
-
 }

@@ -26,7 +26,7 @@
 
     <testsuites>
         <testsuite name="Klein Test Suite">
-            <directory>./tests/</directory>
+            <directory>./tests/Matecat</directory>
         </testsuite>
     </testsuites>
     <coverage

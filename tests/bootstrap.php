@@ -15,7 +15,6 @@ ini_set('session.cache_limiter', '');   // Don't send cache headers when testing
 
 // Load our autoloader, and add our Test class namespace
 $autoloader = require(__DIR__ . '/../vendor/autoload.php');
-$autoloader->add('Klein\Tests', __DIR__);
 
 // Load our functions bootstrap
 require(__DIR__ . '/functions-bootstrap.php');

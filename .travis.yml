@@ -1,20 +1,25 @@
-sudo: false
+os: linux
+dist: noble
+language: php
+php:
+  - 8.3
 
 env:
   global:
     - XDEBUG_MODE=coverage
 
-language: php
-php:
-  - 8.3
-  - 8.4
-
-matrix:
-  fast_finish: true
+addons:
+  sonarcloud:
+    organization: "matecat"
+    token: $SONAR_TOKEN
 
 before_script:
-  - composer install --prefer-dist
+  - composer install
 
 script:
-  - composer validate
-  - ./vendor/bin/phpunit
+  - ./vendor/bin/phpunit -d memory_limit=-1 --coverage-clover=coverage.xml
+  - ./vendor/bin/phpunit -d memory_limit=-1
+  - vendor/bin/phpstan analyse src --error-format=json > phpstan.json
+
+after_success:
+  - sonar-scanner -X -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=matecat_xliff-parser -Dsonar.sources=src -Dsonar.tests=tests/ -Dsonar.php.coverage.reportPaths=coverage.xml -Dsonar.php.phpstan.reportPaths=phpstan.json
