@@ -19,6 +19,9 @@ namespace Klein\DataCollection;
  */
 class HeaderDataCollection extends DataCollection
 {
+    /**
+     * @param array<string, string> $headers
+     */
     public function __construct(array $headers = [])
     {
         $headers = array_change_key_case($headers);

@@ -17,14 +17,14 @@ use Klein\Routes\Route;
 class RadixRouteIndex implements IndexInterface
 {
     /**
-     * @var array<string,array<string,Route>> The radix tree structure for storing routes.
+     * @var array<string,array<string,Route|array<string,Route>>> The radix tree structure for storing routes.
      * - First-level key: literal prefix (e.g., "/users", "/posts/2024")
-     * - Second-level key: route hash
-     * - Value: Route instance
+     * - Second-level key: route hash or another prefix for nested references
+     * - Value: Route instance or reference to another prefix bucket
      */
     protected array $radixTree;
     /**
-     * @var array<Route> The catch-all route configuration.
+     * @var array<string,   Route> The catch-all route configuration.
      * - Routes that can't be indexed by a stable literal prefix (e.g., "*", custom regex).
      * - Keyed by route hash.
      */
@@ -33,8 +33,9 @@ class RadixRouteIndex implements IndexInterface
     /**
      * Constructor for initializing route indexes.
      *
-     * @param array $radixTree An optional array representing the radix tree structure for route storage.
-     * @param array $catchAllRoute An optional array for defining a catch-all route.
+     * @param array<string,array<string,Route|array<string,Route>>> $radixTree An optional array representing the
+     *                                                              radix tree structure for route storage.
+     * @param array<string,Route> $catchAllRoute An optional array for defining a catch-all route.
      *
      */
     public function __construct(
@@ -67,7 +68,8 @@ class RadixRouteIndex implements IndexInterface
         // Split on the first occurrence of characters that start dynamic parts:
         // [ ( . ? + * {        -> regex/meta for params/regex routes
         // Take the static prefix portion (index 0) or empty string.
-        $literalPrefixParts = preg_split('`[\[(.?+*{]`', $path, 2)[0] ?: '';
+        $splitResult = preg_split('`[\[(.?+*{]`', $path, 2);
+        $literalPrefixParts = ($splitResult !== false && isset($splitResult[0])) ? $splitResult[0] : '';
 
         // If no usable literal prefix, or the route is a custom regex, index it as a catch-all.
         if ($literalPrefixParts == '' || $route->isCustomRegex) {
@@ -88,6 +90,7 @@ class RadixRouteIndex implements IndexInterface
 
         // Iterate upward through the path by popping the last segment each time,
         // creating parent → child references in the radix tree.
+        // @phpstan-ignore-next-line notIdentical.alwaysTrue
         while (array_pop($segments) !== null) {
             // If we've removed all segments, we're at the top; stop.
             if (empty($segments)) {
@@ -95,6 +98,7 @@ class RadixRouteIndex implements IndexInterface
             }
             // Reconstruct the parent prefix from remaining segments (ensure "/" for root).
             $parent = implode('/', $segments);
+            // @phpstan-ignore-next-line identical.alwaysFalse
             if ($parent === '') {
                 $parent = '/';
             }
@@ -109,6 +113,7 @@ class RadixRouteIndex implements IndexInterface
             // Create a reference from the parent bucket to the current child bucket if missing.
             // This lets lookups at shorter prefixes reuse the same child routes.
             if (!isset($this->radixTree[$parent][$prefix])) {
+                // @phpstan-ignore-next-line assign.propertyType - Recursive array reference by design
                 $this->radixTree[$parent][$prefix] = &$this->radixTree[$prefix];
             } else {
                 // Link already exists; higher parents will also be linked, so stop.

@@ -259,7 +259,7 @@ class RouteRegexCompiler
 
         // Use our compilation regex to reverse the path's compilation from its definition
         $reversed_path = preg_replace_callback(
-            static::ROUTE_COMPILE_REGEX,
+            self::ROUTE_COMPILE_REGEX,
             function ($match) use ($params) {
                 [$block, $pre, , $param, $optional] = $match;
 

@@ -99,9 +99,9 @@ class Route
     /**
      * The regular expression pattern used for matching
      *
-     * @type ?string
+     * @type string
      */
-    private ?string $regex;
+    private string $regex;
     /**
      * Indicates if the condition is negated
      *
@@ -138,13 +138,13 @@ class Route
     /**
      * A regular expression pattern used for matching parameters
      *
-     * @type array<string,string[]>
+     * @var array<string,string[]>
      */
-    private array $regexMatchingParams;
+    private array $regexMatchingParams = [];
 
     /**
      * Indicates whether the route is matched
-     * @type array<string, Route>
+     * @var array<string, static>
      */
     private array $routeMatched = [];
 
@@ -211,8 +211,8 @@ class Route
             (
                 str_contains($path ?? '', '[') ||
                 str_contains($path ?? '', '?') ||
-                str_contains($this->namespace ?? '', '[') ||
-                str_contains($this->namespace ?? '', '?')
+                str_contains($this->namespace, '[') ||
+                str_contains($this->namespace, '?')
             );
 
         // Normalize/compile the incoming path into a fully qualified path or regex,
@@ -384,6 +384,7 @@ class Route
             $m = $method[$i];
 
             // Inline the scalar branch to avoid per-item method calls
+            // @phpstan-ignore-next-line function.impossibleType - Defensive check for runtime safety
             if (!is_array($m)) {
                 $upper = strtoupper((string)$m);
                 $out[$out_len++] = match ($upper) {
@@ -402,6 +403,7 @@ class Route
             }
 
             // Nested arrays are not supported (fail fast)
+            // @phpstan-ignore-next-line deadCode.unreachable - Defensive check for runtime safety
             throw new InvalidArgumentException('Invalid HTTP method array structure');
         }
 

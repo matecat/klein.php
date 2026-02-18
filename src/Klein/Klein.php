@@ -696,10 +696,10 @@ class Klein
      * regex matching to determine matches for the specified URI.
      *
      * @param string $uri The URI to be matched against the routes.
-     * @param string|array $requestMethod
+     * @param string $requestMethod
      * @return Route[] An associative array of route objects that match the given URI
      */
-    private function filterMatchingRoutes(string $uri, string|array $requestMethod): array
+    private function filterMatchingRoutes(string $uri, string $requestMethod): array
     {
         // Ask the radix-tree handler for candidate routes that share the longest common
         // literal prefix with the incoming URI. This prunes the search space to likely matches.
@@ -792,11 +792,11 @@ class Klein
 
                 // matchesMethod(...) returns true if $requestMethod is permitted by $route->method
                 // (supports arrays of methods and special HEAD/GET handling).
-                // setRouteMatchedAgainstUri([], $uri) records a match for this URI and returns $route,
-                // which is truthy; combined with && this ensures the route is kept only when method matches
-                // and also marks the URI as matched for later lookups.
-                return $this->matchesMethod($requestMethod, $route->method)
-                    && $route->setRouteMatchedAgainstUri([], $uri);
+                $methodMatches = $this->matchesMethod($requestMethod, $route->method);
+                if ($methodMatches) {
+                    $route->setRouteMatchedAgainstUri([], $uri);
+                }
+                return $methodMatches;
             }
         );
 
