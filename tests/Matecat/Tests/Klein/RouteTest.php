@@ -175,6 +175,12 @@ class RouteTest extends AbstractKleinTestCase
         new Route($this->getTestCallable(), "", ["GETT", "POST"]);
     }
 
+    public function testIncorrectMethodArrayNumbers()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new Route($this->getTestCallable(), "", ["123"]);
+    }
+
     public function testIncorrectMethodWithNestedArrays()
     {
         $this->expectException(InvalidArgumentException::class);

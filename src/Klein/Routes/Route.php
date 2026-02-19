@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
@@ -10,11 +11,14 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\Routes;
 
 use InvalidArgumentException;
 use Klein\Exceptions\RegularExpressionCompilationException;
 use Klein\Exceptions\RoutePathCompilationException;
+use Klein\HttpMethod;
 
 /**
  * Route
@@ -338,73 +342,35 @@ class Route
     }
 
     /**
-     * Validates and normalizes HTTP method(s).
-     *
-     * This is a critical section, we maximized the performances by sacrificing the quality of the code.
+     * Validates and normalizes HTTP method(s) using the HttpMethod enum.
      *
      * @param string|string[]|null $method The HTTP method(s) to validate and normalize.
-     *                                      Can be a string (single method), an array (multiple methods) or null.
-     * @return string|string[]|null The validated and normalized HTTP method(s).
-     *                              Returns an uppercase string for single methods,
-     *                              an array of uppercase strings for multiple methods or null if no method is provided.
+     * @return string|string[]|null Uppercase validated method(s), or null if unconstrained.
      *
-     * @throws InvalidArgumentException If the method is invalid or contains unsupported values/structures.
+     * @throws InvalidArgumentException If any method string is not a valid HTTP method.
      */
     private function validateMethod(string|array|null $method): string|array|null
     {
-        // Fast-path null
         if ($method === null) {
             return null;
         }
 
-        // Inline fast-path for string to avoid extra branch work
-        if (!is_array($method)) {
-            // $method is string here
-            $upper = strtoupper($method);
-            // Match on known names; avoid calling strtoupper twice
-            return match ($upper) {
-                'GET',
-                'POST',
-                'PUT',
-                'DELETE',
-                'PATCH',
-                'HEAD',
-                'OPTIONS',
-                'TRACE',
-                'CONNECT' => $upper,
-                default => throw new InvalidArgumentException("Invalid HTTP method: $method")
-            };
+        // Single method string — one enum lookup, zero allocations
+        if (is_string($method)) {
+            return (HttpMethod::tryFrom(strtoupper($method))
+                ?? throw new InvalidArgumentException("Invalid HTTP method: $method"))->value;
         }
 
-        // Array path: validate in-place to reduce allocations
-        $count = count($method);
+        // Array of methods — validate each element via the enum
         $out = [];
-        $out_len = 0;
-        for ($i = 0; $i < $count; $i++) {
-            $m = $method[$i];
-
-            // Inline the scalar branch to avoid per-item method calls
-            // @phpstan-ignore-next-line function.impossibleType - Defensive check for runtime safety
-            if (!is_array($m)) {
-                $upper = strtoupper((string)$m);
-                $out[$out_len++] = match ($upper) {
-                    'GET',
-                    'POST',
-                    'PUT',
-                    'DELETE',
-                    'PATCH',
-                    'HEAD',
-                    'OPTIONS',
-                    'TRACE',
-                    'CONNECT' => $upper,
-                    default => throw new InvalidArgumentException("Invalid HTTP method: $m")
-                };
-                continue;
+        /** @var string|mixed $m */
+        foreach ($method as $m) {
+            if (!is_string($m)) {
+                throw new InvalidArgumentException('Invalid HTTP method array structure');
             }
-
-            // Nested arrays are not supported (fail fast)
-            // @phpstan-ignore-next-line deadCode.unreachable - Defensive check for runtime safety
-            throw new InvalidArgumentException('Invalid HTTP method array structure');
+            $upper = strtoupper($m);
+            $out[] = (HttpMethod::tryFrom($upper)
+                ?? throw new InvalidArgumentException("Invalid HTTP method: $m"))->value;
         }
 
         return $out;

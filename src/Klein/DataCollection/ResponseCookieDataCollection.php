@@ -10,6 +10,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\DataCollection;
 
 use Klein\ResponseCookie;
@@ -31,13 +33,13 @@ class ResponseCookieDataCollection extends DataCollection
      * Constructor
      *
      * @override DataCollection::__construct()
-     * @param array<string, ResponseCookie> $cookies The cookies of this collection
+     * @param list<ResponseCookie> $cookies The cookies of this collection
      */
     public function __construct(array $cookies = [])
     {
         parent::__construct();
-        foreach ($cookies as $key => $value) {
-            $this->set($key, $value);
+        foreach ($cookies as $value) {
+            $this->set($value->getName(), $value);
         }
     }
 

@@ -21,7 +21,6 @@ use Klein\Request;
  */
 class MockRequestFactory
 {
-
     /**
      * Create a new mock request
      *
@@ -31,22 +30,22 @@ class MockRequestFactory
      * @param array $cookies
      * @param array $server
      * @param array $files
-     * @param string $body
-     * @return void
+     * @param ?string $body
+     * @return Request
      */
     public static function create(
-        $uri = '/',
-        $req_method = 'GET',
-        $parameters = array(),
-        $cookies = array(),
-        $server = array(),
-        $files = array(),
-        $body = null
-    ) {
+        string $uri = '/',
+        string $req_method = 'GET',
+        array $parameters = [],
+        array $cookies = [],
+        array $server = [],
+        array $files = [],
+        ?string $body = null
+    ): Request {
         // Create a new Request object
         $request = new Request(
-            array(),
-            array(),
+            [],
+            [],
             $cookies,
             $server,
             $files,

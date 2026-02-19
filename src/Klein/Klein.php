@@ -10,13 +10,15 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein;
 
-use InvalidArgumentException;
 use Klein\DataCollection\RouteCollection;
 use Klein\Exceptions\DispatchHaltedException;
 use Klein\Exceptions\HttpException;
 use Klein\Exceptions\HttpExceptionInterface;
+use Klein\Exceptions\InvalidCallableException;
 use Klein\Exceptions\LockedResponseException;
 use Klein\Exceptions\RoutePathCompilationException;
 use Klein\Exceptions\UnhandledException;
@@ -48,7 +50,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_NO_CAPTURE = 0;
+    public const int DISPATCH_NO_CAPTURE = 0;
 
     /**
      * Dispatch route output handling
@@ -57,7 +59,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_RETURN = 1;
+    public const int DISPATCH_CAPTURE_AND_RETURN = 1;
 
     /**
      * Dispatch route output handling
@@ -66,7 +68,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_REPLACE = 2;
+    public const int DISPATCH_CAPTURE_AND_REPLACE = 2;
 
     /**
      * Dispatch route output handling
@@ -75,7 +77,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_PREPEND = 3;
+    public const int DISPATCH_CAPTURE_AND_PREPEND = 3;
 
     /**
      * Dispatch route output handling
@@ -84,7 +86,7 @@ class Klein
      *
      * @type int
      */
-    const int DISPATCH_CAPTURE_AND_APPEND = 4;
+    public const int DISPATCH_CAPTURE_AND_APPEND = 4;
 
 
     /**
@@ -103,21 +105,21 @@ class Klein
      *
      * @type AbstractRouteFactory
      */
-    private AbstractRouteFactory $route_factory;
+    private AbstractRouteFactory $routeFactory;
 
     /**
      * A stack of error callback callables
      *
      * @var SplStack<callable|string>
      */
-    private SplStack $error_callbacks;
+    private SplStack $errorCallbacks;
 
     /**
      * A stack of HTTP error callback callables
      *
      * @var SplStack<callable>
      */
-    private SplStack $http_error_callbacks;
+    private SplStack $httpErrorCallbacks;
 
     /**
      * A queue of callbacks to call after processing the dispatch loop
@@ -125,14 +127,14 @@ class Klein
      *
      * @var SplQueue<callable|string>
      */
-    private SplQueue $after_filter_callbacks;
+    private SplQueue $afterFilterCallbacks;
 
     /**
      * The output buffer level used by the dispatch process
      *
      * @type int
      */
-    private int $output_buffer_level;
+    private int $outputBufferLevel;
 
 
     /**
@@ -195,11 +197,11 @@ class Klein
         $this->service = $service ?: new ServiceProvider();
         $this->app = $app ?: new App();
         $this->routes = $routes ?: new RouteCollection();
-        $this->route_factory = $routeFactory ?: new RouteFactory();
+        $this->routeFactory = $routeFactory ?: new RouteFactory();
 
-        $this->error_callbacks = new SplStack();
-        $this->http_error_callbacks = new SplStack();
-        $this->after_filter_callbacks = new SplQueue();
+        $this->errorCallbacks = new SplStack();
+        $this->httpErrorCallbacks = new SplStack();
+        $this->afterFilterCallbacks = new SplQueue();
 
         $this->radixRouteIndex = $radixRouteIndex ?: new RadixRouteIndex();
     }
@@ -287,10 +289,10 @@ class Klein
     public function respond(string|array|null $method = null, ?string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
-        $route = $this->route_factory->build($callback, $path, $method);
+        $route = $this->routeFactory->build($callback, $path, $method);
         $this->routes->add($route);
 
         $this->radixRouteIndex->addRoute($route);
@@ -326,17 +328,17 @@ class Klein
      */
     public function with(string $namespace, callable|string $routes): void
     {
-        $previous = $this->route_factory->getNamespace();
+        $previous = $this->routeFactory->getNamespace();
 
-        $this->route_factory->appendNamespace($namespace);
+        $this->routeFactory->appendNamespace($namespace);
 
         if (is_callable($routes)) {
             call_user_func($routes, $this);
         } else {
-            require $routes;
+            require_once $routes;
         }
 
-        $this->route_factory->setNamespace($previous);
+        $this->routeFactory->setNamespace($previous);
     }
 
     /**
@@ -389,7 +391,7 @@ class Klein
 
         // Start output buffering
         ob_start();
-        $this->output_buffer_level = ob_get_level();
+        $this->outputBufferLevel = ob_get_level();
 
         try {
             $routes = $this->filterMatchingRoutes($uri, $requestMethod);
@@ -507,10 +509,10 @@ class Klein
             if ($requestMethod == HttpMethod::HEAD->name) {
                 $this->response->body(''); // Ensure an empty body for HEAD
                 // Discard any buffered output so nothing is sent
-                $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
+                $this->endBuffersToLevel($this->outputBufferLevel, 'ob_end_clean');
             } elseif ($capture === self::DISPATCH_NO_CAPTURE) {
                 // If not capturing output, flush any buffered output to the client
-                $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_flush');
+                $this->endBuffersToLevel($this->outputBufferLevel, 'ob_end_flush');
             }
             // @codeCoverageIgnoreStart
         } catch (LockedResponseException) {
@@ -534,8 +536,11 @@ class Klein
      * prepend to the response body, or append to the response body. If the mode is unknown, no action is performed.
      *
      * @param int $captureMode The mode that determines how the captured output is handled.
-     *                         Must match one of the defined constants such as DISPATCH_CAPTURE_AND_RETURN,
-     *                         DISPATCH_CAPTURE_AND_REPLACE, DISPATCH_CAPTURE_AND_PREPEND, or DISPATCH_CAPTURE_AND_APPEND.
+     *                          Must match one of the defined constants such as
+     *                              DISPATCH_CAPTURE_AND_RETURN,
+     *                              DISPATCH_CAPTURE_AND_REPLACE,
+     *                              DISPATCH_CAPTURE_AND_PREPEND, or
+     *                              DISPATCH_CAPTURE_AND_APPEND.
      *
      * @return ?string Returns the last drained chunk if the mode is DISPATCH_CAPTURE_AND_RETURN.
      *                 Otherwise, returns null.
@@ -543,7 +548,8 @@ class Klein
     private function handleCaptureStrategy(int $captureMode): ?string
     {
         // Handle different strategies for dealing with any content currently sitting in PHP's output buffers.
-        // All cases use drainBuffersToLevel($this->output_buffer_level, $callback) to consume buffered chunks up to a target level
+        // All cases use drainBuffersToLevel($this->output_buffer_level, $callback)
+        // to consume buffered chunks up to a target level
         // and then decide what to do with each chunk (return it, replace, prepend, or append to the response).
 
         switch ($captureMode) {
@@ -553,7 +559,7 @@ class Klein
                 // If no output exists, null is returned.
                 $lastCaptured = null;
                 $this->drainBuffersToLevel(
-                    $this->output_buffer_level,
+                    $this->outputBufferLevel,
                     function (string $chunk) use (&$lastCaptured): void {
                         // Overwrite on each chunk so the final value is the last drained piece.
                         $lastCaptured = $chunk;
@@ -565,7 +571,7 @@ class Klein
                 // Replace the entire response body with the drained output.
                 // If multiple chunks are drained, the response body is set for each chunk in order,
                 // resulting in the final chunk becoming the response body.
-                $this->drainBuffersToLevel($this->output_buffer_level, function (string $chunk): void {
+                $this->drainBuffersToLevel($this->outputBufferLevel, function (string $chunk): void {
                     $this->response->body($chunk);
                 });
                 return null;
@@ -574,7 +580,7 @@ class Klein
                 // Prepend drained output to the beginning of the existing response body.
                 // If multiple chunks are drained, each is prepended in the order they are drained,
                 // which can affect final ordering depending on a drain sequence.
-                $this->drainBuffersToLevel($this->output_buffer_level, function (string $chunk): void {
+                $this->drainBuffersToLevel($this->outputBufferLevel, function (string $chunk): void {
                     $this->response->prepend($chunk);
                 });
                 return null;
@@ -582,7 +588,7 @@ class Klein
             case self::DISPATCH_CAPTURE_AND_APPEND:
                 // Append drained output to the end of the existing response body.
                 // Multiple chunks will be appended sequentially in the order they are drained.
-                $this->drainBuffersToLevel($this->output_buffer_level, function (string $chunk): void {
+                $this->drainBuffersToLevel($this->outputBufferLevel, function (string $chunk): void {
                     $this->response->append($chunk);
                 });
                 return null;
@@ -888,7 +894,7 @@ class Klein
      */
     public function onError(callable|string $callback): void
     {
-        $this->error_callbacks->push($callback);
+        $this->errorCallbacks->push($callback);
     }
 
     /**
@@ -904,8 +910,8 @@ class Klein
         $message = $throwable->getMessage();
 
         try {
-            if (!$this->error_callbacks->isEmpty()) {
-                foreach ($this->error_callbacks as $callback) {
+            if (!$this->errorCallbacks->isEmpty()) {
+                foreach ($this->errorCallbacks as $callback) {
                     if (is_callable($callback)) {
                         /** @var callable $callback */
                         call_user_func($callback, $this, $message, $exceptionClass, $throwable);
@@ -922,16 +928,16 @@ class Klein
                     return;
                 }
             } elseif ($throwable instanceof RoutePathCompilationException) {
-                $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
+                $this->endBuffersToLevel($this->outputBufferLevel, 'ob_end_clean');
                 throw $throwable;
             } else {
                 $this->response->code(500);
-                $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
+                $this->endBuffersToLevel($this->outputBufferLevel, 'ob_end_clean');
                 throw new UnhandledException($message, $throwable->getCode(), $throwable);
             }
         } catch (Throwable $e) {
             // Make sure to clean the output buffer before bailing
-            $this->endBuffersToLevel($this->output_buffer_level, 'ob_end_clean');
+            $this->endBuffersToLevel($this->outputBufferLevel, 'ob_end_clean');
             throw $e;
         }
     }
@@ -945,7 +951,7 @@ class Klein
      */
     public function onHttpError(callable $callback): void
     {
-        $this->http_error_callbacks->push($callback);
+        $this->httpErrorCallbacks->push($callback);
     }
 
     /**
@@ -966,8 +972,8 @@ class Klein
             $this->response->code($http_exception->getCode());
         }
 
-        if (!$this->http_error_callbacks->isEmpty()) {
-            foreach ($this->http_error_callbacks as $callback) {
+        if (!$this->httpErrorCallbacks->isEmpty()) {
+            foreach ($this->httpErrorCallbacks as $callback) {
                 if ($callback instanceof Route) {
                     $this->handleRouteCallback($callback, $matched, $methods_matched);
                 } elseif (is_callable($callback)) {
@@ -999,7 +1005,7 @@ class Klein
      */
     public function afterDispatch(callable $callback): void
     {
-        $this->after_filter_callbacks->enqueue($callback);
+        $this->afterFilterCallbacks->enqueue($callback);
     }
 
     /**
@@ -1011,7 +1017,7 @@ class Klein
     private function callAfterDispatchCallbacks(): void
     {
         try {
-            foreach ($this->after_filter_callbacks as $callback) {
+            foreach ($this->afterFilterCallbacks as $callback) {
                 if (is_callable($callback)) {
                     call_user_func($callback, $this);
                 }
@@ -1092,7 +1098,7 @@ class Klein
     public function options(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::OPTIONS->name, $path, $callback);
@@ -1110,7 +1116,7 @@ class Klein
     public function head(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::HEAD->name, $path, $callback);
@@ -1128,7 +1134,7 @@ class Klein
     public function get(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::GET->name, $path, $callback);
@@ -1146,7 +1152,7 @@ class Klein
     public function post(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::POST->name, $path, $callback);
@@ -1164,7 +1170,7 @@ class Klein
     public function put(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::PUT->name, $path, $callback);
@@ -1182,7 +1188,7 @@ class Klein
     public function delete(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::DELETE->name, $path, $callback);
@@ -1204,7 +1210,7 @@ class Klein
     public function patch(string $path = '*', ?callable $callback = null): Route
     {
         if (!is_callable($callback)) {
-            throw new InvalidArgumentException('Expected a callable. Got an uncallable ' . gettype($callback));
+            throw new InvalidCallableException(gettype($callback));
         }
 
         return $this->respond(HttpMethod::PATCH->name, $path, $callback);

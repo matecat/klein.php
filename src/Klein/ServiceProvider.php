@@ -10,6 +10,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein;
 
 use Klein\DataCollection\DataCollection;
@@ -207,7 +209,7 @@ class ServiceProvider
      * ... OR this method will simply take a variable number of arguments (after the initial str arg)
      *
      * @param string $str The text strings to parse
-     * @param array<string|null> $args Optional arguments to be parsed by Markdown
+     * @param array<mixed> $args Optional arguments to be parsed by Markdown
      *
      * @return string
      */
@@ -223,7 +225,7 @@ class ServiceProvider
 
         // Encode our args so we can insert them into an HTML string
         foreach ($args as &$arg) {
-            $arg = htmlentities($arg ?? '', ENT_QUOTES, 'UTF-8');
+            $arg = htmlentities((string)($arg ?? ''), ENT_QUOTES, 'UTF-8');
         }
 
         // Actually make our Markdown conversion
@@ -394,7 +396,8 @@ class ServiceProvider
      */
     public function validateParam(?string $param, ?string $err = null): Validator
     {
-        return $this->validate($this->request->param($param), $err);
+        $value = $this->request->param($param);
+        return $this->validate($value !== null ? (string)$value : null, $err);
     }
 
 

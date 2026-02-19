@@ -24,11 +24,43 @@ class RequestTest extends Klein\AbstractKleinTestCase
     public function testConstructorAndGetters()
     {
         // Test data
-        $params_get = ['get'];
-        $params_post = ['post'];
-        $cookies = ['cookies'];
-        $server = ['server'];
-        $files = ['files'];
+        $params_get = ['a_get_key_name' => 'value'];
+        $params_post = ['a_post_key_name' => 'value'];
+        $cookies = ['a_cookie_key_name' => 'value'];
+        $server = ['a_server_key_name' => 'value'];
+        $files = json_decode(
+            '{
+                "file": {
+                    "name": [
+                        "ICU - EN.jsont2"
+                    ],
+                    "full_path": [
+                        "ICU - EN.jsont2"
+                    ],
+                    "type": [
+                        "application\/octet-stream"
+                    ],
+                    "tmp_name": [
+                        "\/tmp\/phprv3qbM"
+                    ],
+                    "error": [
+                        0
+                    ],
+                    "size": [
+                        6633
+                    ]
+                },
+                "file1": {
+                    "name": "Multiple ICU cases - EN.txt",
+                    "full_path": "Multiple ICU cases - EN.txt",
+                    "type": "text\/plain",
+                    "tmp_name": "\/tmp\/phpT7J0qV",
+                    "error": 0,
+                    "size": 1165
+                }
+            }',
+            true
+        );
         $body = 'body';
 
         // Create the request
@@ -318,10 +350,43 @@ class RequestTest extends Klein\AbstractKleinTestCase
         // Test data
         $uri = '/test/uri';
         $method = 'OPTIONS';
-        $params = ['get'];
-        $cookies = ['cookies'];
-        $server = ['server'];
-        $files = ['files'];
+        // Test data
+        $params = ['a_get_key_name' => 'value'];
+        $cookies = ['a_cookie_key_name' => 'value'];
+        $server = ['a_server_key_name' => 'value'];
+        $files = json_decode(
+            '{
+                "file": {
+                    "name": [
+                        "ICU - EN.jsont2"
+                    ],
+                    "full_path": [
+                        "ICU - EN.jsont2"
+                    ],
+                    "type": [
+                        "application\/octet-stream"
+                    ],
+                    "tmp_name": [
+                        "\/tmp\/phprv3qbM"
+                    ],
+                    "error": [
+                        0
+                    ],
+                    "size": [
+                        6633
+                    ]
+                },
+                "file1": {
+                    "name": "Multiple ICU cases - EN.txt",
+                    "full_path": "Multiple ICU cases - EN.txt",
+                    "type": "text\/plain",
+                    "tmp_name": "\/tmp\/phpT7J0qV",
+                    "error": 0,
+                    "size": 1165
+                }
+            }',
+            true
+        );
         $body = 'body';
 
         // Create the request
@@ -343,8 +408,8 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame([], $request->paramsPost()->all());
         $this->assertSame([], $request->paramsNamed()->all());
         $this->assertSame($cookies, $request->cookies()->all());
-        $this->assertContains($cookies[0], $request->params());
-        $this->assertContains($server[0], $request->server()->all());
+        $this->assertContains(array_values($cookies)[0], $request->params());
+        $this->assertContains(array_values($server)[0], $request->server()->all());
         $this->assertSame($files, $request->files()->all());
         $this->assertSame($body, $request->body());
     }

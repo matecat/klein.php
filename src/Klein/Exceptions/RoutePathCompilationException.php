@@ -9,6 +9,8 @@
  * @license     MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\Exceptions;
 
 use Klein\Routes\Route;

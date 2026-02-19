@@ -11,6 +11,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\DataCollection;
 
 use ArrayAccess;
@@ -133,9 +135,9 @@ class DataCollection implements IteratorAggregate, ArrayAccess, Countable
              */
 
             return array_intersect_key(
-                    $this->attributes,
-                    array_flip($mask)
-                ) + $attributes;
+                $this->attributes,
+                array_flip($mask)
+            ) + $attributes;
         }
 
         return $this->attributes;

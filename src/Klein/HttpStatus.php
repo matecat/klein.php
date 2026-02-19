@@ -10,6 +10,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein;
 
 /**
@@ -40,7 +42,7 @@ class HttpStatus
      * @link http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
      * @var array<int, string>
      */
-    protected static array $http_messages = [
+    protected static array $httpMessages = [
         // Informational 1xx
         100 => 'Continue',
         101 => 'Switching Protocols',
@@ -197,6 +199,6 @@ class HttpStatus
      */
     public static function getMessageFromCode(int $int): ?string
     {
-        return static::$http_messages[$int] ?? null;
+        return static::$httpMessages[$int] ?? null;
     }
 }

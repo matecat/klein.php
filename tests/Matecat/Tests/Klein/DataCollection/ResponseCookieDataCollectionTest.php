@@ -99,7 +99,7 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
 
         // Create our collection with NO data
         $data_collection = new ResponseCookieDataCollection($array_of_cookie_instances);
-        $this->assertSame($array_of_cookie_instances, $data_collection->all());
+        $this->assertSame($array_of_cookie_instances, array_values($data_collection->all()));
 
         foreach ($data_collection as $cookie) {
             $this->assertTrue($cookie instanceof ResponseCookie);

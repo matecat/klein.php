@@ -10,6 +10,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\Routes;
 
 use Klein\AbstractRouteFactory;
@@ -21,7 +23,6 @@ use Klein\AbstractRouteFactory;
  */
 class RouteFactory extends AbstractRouteFactory
 {
-
     /**
      * Build a Route instance
      *

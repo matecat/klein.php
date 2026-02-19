@@ -10,6 +10,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\DataCollection;
 
 /**
@@ -20,7 +22,7 @@ namespace Klein\DataCollection;
 class HeaderDataCollection extends DataCollection
 {
     /**
-     * @param array<string, string> $headers
+     * @param array<string, mixed> $headers
      */
     public function __construct(array $headers = [])
     {

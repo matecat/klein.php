@@ -8,6 +8,8 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Klein\Routes;
 
 use Klein\Exceptions\RegularExpressionCompilationException;

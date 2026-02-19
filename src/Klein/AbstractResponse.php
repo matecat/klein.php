@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
@@ -9,6 +10,8 @@
  * @link            https://github.com/klein/klein.php
  * @license         MIT
  */
+
+declare(strict_types=1);
 
 namespace Klein;
 
@@ -22,7 +25,6 @@ use Klein\Exceptions\ResponseAlreadySentException;
  */
 abstract class AbstractResponse
 {
-
     /**
      * Properties
      */
@@ -32,7 +34,7 @@ abstract class AbstractResponse
      *
      * @type string
      */
-    protected string $protocol_version = '1.1';
+    protected string $protocolVersion = '1.1';
 
     /**
      * The response body
@@ -125,12 +127,12 @@ abstract class AbstractResponse
             // Require that the response be unlocked before changing it
             $this->requireUnlocked();
 
-            $this->protocol_version = $protocol_version;
+            $this->protocolVersion = $protocol_version;
 
             return $this;
         }
 
-        return $this->protocol_version;
+        return $this->protocolVersion;
     }
 
     /**
@@ -308,7 +310,7 @@ abstract class AbstractResponse
      */
     protected function httpStatusLine(): string
     {
-        return sprintf('HTTP/%s %s', $this->protocol_version, $this->status);
+        return sprintf('HTTP/%s %s', $this->protocolVersion, $this->status);
     }
 
     /**

@@ -11,6 +11,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein\Exceptions;
 
 use RuntimeException;
@@ -58,7 +60,7 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      *
      * @type int
      */
-    protected int $number_of_skips = 1;
+    protected int $numberOfSkips = 1;
 
 
     /**
@@ -72,19 +74,19 @@ class DispatchHaltedException extends RuntimeException implements KleinException
      */
     public function getNumberOfSkips(): int
     {
-        return $this->number_of_skips;
+        return $this->numberOfSkips;
     }
 
     /**
      * Sets the number of matches to skip on a "next" skip
      *
-     * @param int $number_of_skips
+     * @param int $numberOfSkips
      *
      * @return DispatchHaltedException
      */
-    public function setNumberOfSkips(int $number_of_skips): DispatchHaltedException
+    public function setNumberOfSkips(int $numberOfSkips): DispatchHaltedException
     {
-        $this->number_of_skips = $number_of_skips;
+        $this->numberOfSkips = $numberOfSkips;
 
         return $this;
     }

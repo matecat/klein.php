@@ -10,6 +10,8 @@
  * @license         MIT
  */
 
+declare(strict_types=1);
+
 namespace Klein;
 
 use Klein\DataCollection\DataCollection;
@@ -103,7 +105,14 @@ class Request
      * @param array<string, string> $params_post
      * @param array<string, string> $cookies
      * @param array<string, string> $server
-     * @param array<string, array<string,string|int>> $files
+     * @param array<string, array{
+     *      name: string|array<string>,
+     *      full_path: string|array<string>,
+     *      type: string|array<string>,
+     *      tmp_name: string|array<string>,
+     *      error: int|array<int>,
+     *      size: int|array<int>
+     *  }> $files
      * @param string|null $body
      */
     public function __construct(
