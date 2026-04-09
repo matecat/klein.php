@@ -2,7 +2,7 @@
 
 [![Build Status](https://app.travis-ci.com/matecat/klein.php.svg?token=qBazxkHwP18h3EWnHjjF&branch=master)](https://app.travis-ci.com/matecat/klein.php)
 [![license](https://img.shields.io/github/license/matecat/klein.php.svg)]()
-[![Packagist](https://img.shields.io/packagist/v/matecat/klein.php.svg)]()
+[![Packagist](https://img.shields.io/packagist/v/matecat/klein.svg)]()
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=matecat_klein.php&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=matecat_klein.php)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=matecat_klein.php&metric=coverage)](https://sonarcloud.io/summary/new_code?id=matecat_klein.php)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=matecat_klein.php&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=matecat_klein.php)
