@@ -12,3 +12,8 @@ report/
 /coverage.clover
 /cache/
 /Benchmarks/
+/hide/*
+/hide/
+
+composer.phar
+.idea/
