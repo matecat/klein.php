@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 3.2.3
+
+### Features
+
+- Added abstract `json()` method to `AbstractResponse` class, enforcing a consistent JSON response contract across all response implementations.
+- Added `declare(strict_types=1)` to all source files for improved type safety.
+- Resolved all PHPStan static analysis errors across the codebase.
+
+### Refactoring
+
+- Refactored tests and benchmarks with updated namespaces and structural improvements.
+
+### Documentation
+
+- Added routing architecture technical documentation (`docs/routing-architecture.md`).
+- Updated Packagist badge link in `README.md`.
+
 ## 3.2.0
 
 ### Features

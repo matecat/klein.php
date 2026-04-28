@@ -535,4 +535,14 @@ abstract class AbstractResponse
 
         return $this;
     }
+
+
+    /**
+     * Converts the given object to a JSON representation.
+     *
+     * @param mixed $object The data to be encoded as JSON.
+     * @param ?string $jsonp_prefix Optional JSONP prefix to wrap the JSON response.
+     * @return static Returns the current instance for method chaining.
+     */
+    abstract public function json(mixed $object, ?string $jsonp_prefix = null): static;
 }
