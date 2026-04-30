@@ -19,6 +19,7 @@ before_script:
 script:
   - ./vendor/bin/phpunit -d memory_limit=-1 --coverage-clover=coverage.xml
   - ./vendor/bin/phpunit -d memory_limit=-1
+  - vendor/bin/phpstan analyse src
   - vendor/bin/phpstan analyse src --error-format=json > phpstan.json
 
 after_success:
