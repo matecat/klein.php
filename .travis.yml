@@ -20,7 +20,6 @@ script:
   - ./vendor/bin/phpunit -d memory_limit=-1 --coverage-clover=coverage.xml
   - ./vendor/bin/phpunit -d memory_limit=-1
   - vendor/bin/phpstan analyse src
-  - vendor/bin/phpstan analyse src --error-format=json > phpstan.json
 
 after_success:
-  - sonar-scanner -X -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=matecat_klein.php -Dsonar.sources=src -Dsonar.tests=tests/ -Dsonar.php.coverage.reportPaths=coverage.xml -Dsonar.php.phpstan.reportPaths=phpstan.json
+  - sonar-scanner -X -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=matecat_klein.php -Dsonar.sources=src -Dsonar.tests=tests/ -Dsonar.php.coverage.reportPaths=coverage.xml
