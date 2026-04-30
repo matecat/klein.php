@@ -410,13 +410,14 @@ class Klein
                     // If the pattern captured params, decode per RFC 3986 and merge into request.
                     if (!empty($route->getRegexMatchingParams($uri))) {
                         // RFC 3986: decode percent-encoded octets without converting '+' to space.
+                        // Only merge string-keyed (named) captures; numeric keys are positional
+                        // regex groups (full match, unnamed groups) and not meaningful named params.
                         $paramsNamed = $this->request->paramsNamed()->all();
                         foreach ($route->getRegexMatchingParams($uri) as $key => $value) {
                             if (is_numeric($key)) {
-                                $paramsNamed[] = rawurldecode($value);
-                            } else {
-                                $paramsNamed[$key] = rawurldecode($value);
+                                continue;
                             }
+                            $paramsNamed[$key] = rawurldecode($value);
                         }
                         $this->request->paramsNamed()->replace($paramsNamed);
                     }
