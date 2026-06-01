@@ -206,10 +206,9 @@ class ServiceProvider
     /**
      * Render a text string as Markdown
      *
-     * Supports basic Markdown syntax
-     *
-     * Optionally takes an array of arguments as the second parameter.
-     * Arguments are HTML-escaped and substituted into the string via vsprintf.
+     * Supports basic Markdown syntax (bold, italic, links).
+     * The input string is HTML-escaped before conversion to prevent XSS.
+     * Dangerous URL schemes (javascript:, data:, vbscript:) are blocked in links.
      *
      * @param string $str The text string to parse
      * @param array<mixed> $args Optional arguments to be substituted into the string
@@ -217,21 +216,56 @@ class ServiceProvider
      */
     public static function markdown(string $str, array $args = []): string
     {
-        // Create our Markdown parse/conversion regex's
-        /** @noinspection HtmlUnknownTarget */
-        $md = [
-            '/\[([^\]]++)\]\(([^\)]++)\)/' => '<a href="$2">$1</a>',
-            '/\*\*([^\*]++)\*\*/' => '<strong>$1</strong>',
-            '/\*([^\*]++)\*/' => '<em>$1</em>'
-        ];
+        // 1. Escape the raw template string FIRST to neutralize any injected HTML
+        $str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 
-        // Encode our args so we can insert them into an HTML string
+        // 2. Apply Markdown-to-HTML conversions on the now-safe string
+        $md = [
+            '/\*\*([^\*]++)\*\*/' => '<strong>$1</strong>',
+            '/\*([^\*]++)\*/' => '<em>$1</em>',
+        ];
+        $str = preg_replace(array_keys($md), $md, $str) ?? $str;
+
+        // 3. Convert Markdown links with dangerous-scheme blocklist
+        $str = preg_replace_callback(
+            '/\[([^]]++)]\(([^)]++)\)/',
+            static function (array $matches): string {
+                $text = $matches[1];
+                $url = $matches[2];
+
+                // Decode HTML entities to check the real URL value
+                $decodedUrl = html_entity_decode($url, ENT_QUOTES, 'UTF-8');
+
+                // Block dangerous URL schemes
+                if (preg_match('/^\s*(javascript|data|vbscript)\s*:/i', $decodedUrl)) {
+                    return $text;
+                }
+
+                // Only allow safe URL characters — reject URLs with quotes, spaces, or angle brackets
+                if (preg_match('/["\'<>\s]/', $decodedUrl)) {
+                    return $text;
+                }
+
+                return '<a href="' .
+                    htmlspecialchars($decodedUrl, ENT_QUOTES, 'UTF-8') .
+                    '" rel="noopener noreferrer">' .
+                    $text .
+                    '</a>';
+            },
+            $str
+        ) ?? $str;
+
+        // 4. Encode args for safe HTML insertion
         foreach ($args as &$arg) {
             $arg = htmlentities((string)($arg ?? ''), ENT_QUOTES, 'UTF-8');
         }
 
-        // Actually make our Markdown conversion
-        return vsprintf(preg_replace(array_keys($md), $md, $str) ?? str_repeat('%s ', count($args)), $args);
+        // 5. Substitute args via vsprintf
+        if (!empty($args)) {
+            $str = vsprintf($str, $args);
+        }
+
+        return $str;
     }
 
     /**

@@ -252,7 +252,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
     {
         // Test basic markdown conversion
         $this->assertSame(
-            '<strong>dog</strong> <em>cat</em> <a href="src">name</a>',
+            '<strong>dog</strong> <em>cat</em> <a href="src" rel="noopener noreferrer">name</a>',
             ServiceProvider::markdown('**dog** *cat* [name](src)')
         );
 
@@ -266,6 +266,52 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->assertSame(
             '<strong>huh</strong> <em>12</em> <strong>CD</strong>',
             ServiceProvider::markdown('**%s** *%d* **%X**', ['huh', '12', 205])
+        );
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testMarkdownXssPrevention(): void
+    {
+        // Raw HTML injection — script tags must be escaped
+        $this->assertStringNotContainsString(
+            '<script>',
+            ServiceProvider::markdown('<script>alert(1)</script>')
+        );
+
+        // javascript: protocol in link URL must be neutralized
+        $result = ServiceProvider::markdown('[click](javascript:alert(1))');
+        $this->assertStringNotContainsString('javascript:', $result);
+
+        // data: protocol in link URL must be neutralized
+        $result = ServiceProvider::markdown('[click](data:text/html,<script>alert(1)</script>)');
+        $this->assertStringNotContainsString('data:', $result);
+
+        // Event handler injection via link text — img tag must be escaped
+        $result = ServiceProvider::markdown('[<img src=x onerror=alert(1)>](http://safe.com)');
+        $this->assertStringNotContainsString('<img', $result);
+
+        // Attribute breakout in URL via double quote
+        $result = ServiceProvider::markdown('[x](http://x" onclick="alert(1))');
+        $this->assertStringNotContainsString('onclick', $result);
+
+        // Ensure normal markdown still works after hardening
+        $this->assertSame(
+            '<strong>bold</strong> <em>italic</em>',
+            ServiceProvider::markdown('**bold** *italic*')
+        );
+
+        // Ensure safe links still work (using blocklist — bare relative URLs allowed)
+        $this->assertSame(
+            '<a href="https://example.com" rel="noopener noreferrer">link</a>',
+            ServiceProvider::markdown('[link](https://example.com)')
+        );
+
+        // Ensure mailto links work
+        $this->assertSame(
+            '<a href="mailto:test@example.com" rel="noopener noreferrer">email</a>',
+            ServiceProvider::markdown('[email](mailto:test@example.com)')
         );
     }
 
@@ -482,7 +528,6 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
 
     /**
      * @return void
-     * @runInSeparateProcess
      */
     #[RunInSeparateProcess]
     public function testAddValidator(): void
