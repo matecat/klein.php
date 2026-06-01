@@ -1,0 +1,111 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CI: static analysis + unit tests for klein.php
+#
+# Runs on every push to master and on every pull request.
+# PHP is provisioned via shivammathur/setup-php.
+#
+# SonarCloud analysis runs as a separate job after tests complete.
+# Required secrets: SONAR_TOKEN (generate at https://sonarcloud.io/account/security)
+# ─────────────────────────────────────────────────────────────────────────────
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} – PHPStan & PHPUnit
+    runs-on: ubuntu-24.04
+    environment: master
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '8.3', '8.4' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, json
+          coverage: ${{ matrix.php == '8.3' && 'xdebug' || 'none' }}
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php${{ matrix.php }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+      - name: Run PHPUnit
+        env:
+          XDEBUG_MODE: ${{ matrix.php == '8.3' && 'coverage' || 'off' }}
+        run: >-
+          ./vendor/bin/phpunit -d memory_limit=-1 --colors=always
+          ${{ matrix.php == '8.3' && '--coverage-clover=coverage.xml' || '' }}
+
+      - name: Upload coverage artifact
+        if: matrix.php == '8.3'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 1
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # SonarCloud – runs once after tests, using the coverage from PHP 8.3.
+  #
+  # Improvements over the Travis-based approach:
+  #   • Uses the official SonarSource/sonarqube-scan-action (maintained, cached)
+  #   • Runs as a dedicated job — no repeated scans per matrix entry
+  #   • Static config lives in sonar-project.properties, not CLI flags
+  #   • fetch-depth: 0 enables proper blame/new-code detection
+  # ───────────────────────────────────────────────────────────────────────────
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-24.04
+    needs: tests
+    environment: master
+    # Skip SonarCloud on PRs from forks (they can't access secrets)
+    if: >-
+      github.event_name == 'push'
+      || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout repository (full history for blame data)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

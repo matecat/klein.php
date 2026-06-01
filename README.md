@@ -1,6 +1,6 @@
 # Klein.php
 
-[![Build Status](https://app.travis-ci.com/matecat/klein.php.svg?token=qBazxkHwP18h3EWnHjjF&branch=master)](https://app.travis-ci.com/matecat/klein.php)
+[![Tests](https://github.com/matecat/klein.php/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/matecat/klein.php/actions/workflows/tests.yml)
 [![license](https://img.shields.io/github/license/matecat/klein.php.svg)]()
 [![Packagist](https://img.shields.io/packagist/v/matecat/klein.svg)]()
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=matecat_klein.php&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=matecat_klein.php)
