@@ -39,7 +39,7 @@ class AbstractRouteFactoryTest extends AbstractKleinTestCase
      * @param list<non-empty-string>|null $methods_to_mock
      * @return TestStubBuilder<AbstractRouteFactory>
      */
-    protected function getStubBuilderForFactory(array $methods_to_mock = null): TestStubBuilder
+    protected function getStubBuilderForFactory(?array $methods_to_mock = null): TestStubBuilder
     {
         $methods_to_mock = $methods_to_mock ?: $this->getDefaultMethodsToMock();
 
