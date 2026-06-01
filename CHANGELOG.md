@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## 3.3.0
+
+### Security
+
+- Hardened `ServiceProvider::markdown()` against XSS injection: input strings are now HTML-escaped before Markdown conversion, dangerous URL schemes (`javascript:`, `data:`, `vbscript:`) are blocked in links, and `rel="noopener noreferrer"` is added to all generated anchor tags.
+
+### Features
+
+- Full PHPStan level 8 compliance across the entire codebase (production and tests), including checked exception annotations (`@throws`).
+- Migrated CI from Travis CI to GitHub Actions with parallel PHP 8.3/8.4 matrix, SonarCloud integration, and code coverage reporting.
+
+### Fixes
+
+- Removed `ext-xdebug` from `composer.json` `require-dev` to fix CI failures on PHP 8.4 (xdebug is a runtime tool, not a dependency).
+- Fixed PHP 8.4 deprecation: explicit nullable type for implicitly nullable parameters.
+
+### CI/CD
+
+- Migrated from Travis CI to GitHub Actions.
+- Updated all GitHub Actions to latest Node.js 24-compatible versions (`checkout@v6`, `cache@v5`, `upload-artifact@v7`, `download-artifact@v8`, `sonarqube-scan-action@v8`).
+- Added SonarCloud analysis as a dedicated post-test job.
+
+### Refactoring
+
+- Added `@throws` PHPDoc annotations to all production and test methods for PHPStan checked exception compliance.
+- Replaced `assertTrue($x instanceof Y)` with `assertInstanceOf()` across all test files.
+- Added proper return types, parameter types, and PHPDoc type annotations to all test methods and helpers.
+
 ## 3.2.3
 
 ### Features
