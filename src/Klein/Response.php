@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Klein;
 
+use Klein\Exceptions\LockedResponseException;
 use Klein\Exceptions\ResponseAlreadySentException;
 use RuntimeException;
 
@@ -52,6 +53,7 @@ class Response extends AbstractResponse
      *
      * @param mixed $obj The variable to dump
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function dump(mixed $obj): static
     {
@@ -153,6 +155,8 @@ class Response extends AbstractResponse
      * @param mixed $object The data to encode as JSON
      * @param string|null $jsonp_prefix The name of the JSON-P function prefix
      * @return static
+     * @throws ResponseAlreadySentException If the response has already been sent
+     * @throws LockedResponseException If the response is locked
      */
     public function json(mixed $object, ?string $jsonp_prefix = null): static
     {

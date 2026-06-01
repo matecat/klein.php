@@ -20,7 +20,7 @@ use Matecat\Tests\Klein;
 class HttpStatusTest extends Klein\AbstractKleinTestCase
 {
 
-    public function testStaticMessageFromCode()
+    public function testStaticMessageFromCode(): void
     {
         // Set our test data
         $code = 404;
@@ -29,7 +29,7 @@ class HttpStatusTest extends Klein\AbstractKleinTestCase
         $this->assertSame($message, HttpStatus::getMessageFromCode($code));
     }
 
-    public function testManualEntryViaConstructor()
+    public function testManualEntryViaConstructor(): void
     {
         // Set our manual test data
         $code = 666;
@@ -41,7 +41,7 @@ class HttpStatusTest extends Klein\AbstractKleinTestCase
         $this->assertSame($message, $http_status->getMessage());
     }
 
-    public function testManualEntryViaSetters()
+    public function testManualEntryViaSetters(): void
     {
         // Set our manual test data
         $constructor_code = 123;
@@ -57,7 +57,7 @@ class HttpStatusTest extends Klein\AbstractKleinTestCase
         $this->assertSame($message, $http_status->getMessage());
     }
 
-    public function testAutomaticMessage()
+    public function testAutomaticMessage(): void
     {
         $code = 201;
         $expected_message = 'Created';
@@ -68,7 +68,7 @@ class HttpStatusTest extends Klein\AbstractKleinTestCase
         $this->assertSame($expected_message, $http_status->getMessage());
     }
 
-    public function testStringOutput()
+    public function testStringOutput(): void
     {
         // Set our manual test data
         $code = 404;

@@ -9,6 +9,7 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=matecat_klein.php&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=matecat_klein.php)
 
 **klein.php** is a fast & flexible router for PHP
+**klein.php** is a fast & flexible router for PHP
 
 * Flexible regular expression routing (inspired by [Sinatra](http://www.sinatrarb.com/))
 * A set of [boilerplate methods](#api) for rapidly building web apps
@@ -372,7 +373,7 @@ $service->
     startSession()                                  // Start a session and return its ID
     flash($msg, $type = 'info', $params = array()   // Set a flash message
     flashes($type = null)                           // Retrieve and clears all flashes of $type
-    markdown($str, $args, ...)                      // Return a string formatted with markdown
+    markdown($str, $args)                           // Return a string formatted with markdown
     escape($str)                                    // Escape a string
     refresh()                                       // Redirect to the current URL
     back()                                          // Redirect to the referer

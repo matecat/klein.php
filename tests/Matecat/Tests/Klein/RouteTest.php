@@ -23,6 +23,14 @@ use TypeError;
 class RouteTest extends AbstractKleinTestCase
 {
 
+    /**
+     * Returns a value of the given type, opaque to static analysis.
+     */
+    private function value(mixed $val): mixed
+    {
+        return $val;
+    }
+
     protected function getTestCallable(): Closure
     {
         return function () {
@@ -30,7 +38,10 @@ class RouteTest extends AbstractKleinTestCase
         };
     }
 
-    public function testCallbackGetSet()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCallbackGetSet(): void
     {
         // Test functions
         $test_callable = $this->getTestCallable();
@@ -49,7 +60,10 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertIsCallable($route->callback);
     }
 
-    public function testPathGetSet()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPathGetSet(): void
     {
         // Test data
         $test_callable = $this->getTestCallable();
@@ -58,8 +72,7 @@ class RouteTest extends AbstractKleinTestCase
         // Empty constructor
         $route = new Route($test_callable);
 
-        $this->assertNotNull($route->path);
-        $this->assertIsString($route->path);
+        $this->assertNotEmpty($route->path);
 
         // Set in constructor
         $route = new Route($test_callable, $test_path);
@@ -67,7 +80,10 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertSame(ltrim($test_path, '/'), $route->path);
     }
 
-    public function testMethodGetSet()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testMethodGetSet(): void
     {
         // Test data
         $test_callable = $this->getTestCallable();
@@ -90,7 +106,10 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertSame($test_method_array, $route->method);
     }
 
-    public function testCountMatchGetSet()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCountMatchGetSet(): void
     {
         // Test data
         $test_callable = $this->getTestCallable();
@@ -106,7 +125,10 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertFalse($route->countMatch);
     }
 
-    public function testNameGetSet()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testNameGetSet(): void
     {
         // Test data
         $test_callable = $this->getTestCallable();
@@ -129,7 +151,10 @@ class RouteTest extends AbstractKleinTestCase
         $this->assertSame($test_name, $route->getName());
     }
 
-    public function testInvokeMethod()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testInvokeMethod(): void
     {
         // Test data
         $test_callable = function ($id, $name) {
@@ -147,43 +172,59 @@ class RouteTest extends AbstractKleinTestCase
 
     /**
      * Exception tests
+     * @throws InvalidArgumentException
      */
 
-    public function testCallbackSetWithIncorrectType()
+    public function testCallbackSetWithIncorrectType(): void
     {
         $this->expectException(TypeError::class);
         // Test setting with the WRONG type
-        new Route(100);
+        new Route($this->value(100));
     }
 
-    public function testMethodSetWithIncorrectType()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testMethodSetWithIncorrectType(): void
     {
         $this->expectException(InvalidArgumentException::class);
         // Test setting with the WRONG type
-        new Route($this->getTestCallable(), "", 100);
+        new Route($this->getTestCallable(), "", $this->value(100));
     }
 
-    public function testIncorrectMethod()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testIncorrectMethod(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new Route($this->getTestCallable(), "", "GETT");
     }
 
-    public function testIncorrectMethodArray()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testIncorrectMethodArray(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new Route($this->getTestCallable(), "", ["GETT", "POST"]);
     }
 
-    public function testIncorrectMethodArrayNumbers()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testIncorrectMethodArrayNumbers(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new Route($this->getTestCallable(), "", ["123"]);
     }
 
-    public function testIncorrectMethodWithNestedArrays()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testIncorrectMethodWithNestedArrays(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new Route($this->getTestCallable(), "", ["GET", ["HEAD", "POST"]]);
+        new Route($this->getTestCallable(), "", $this->value(["GET", ["HEAD", "POST"]]));
     }
 }

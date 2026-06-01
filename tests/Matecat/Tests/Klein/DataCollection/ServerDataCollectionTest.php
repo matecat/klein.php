@@ -28,7 +28,7 @@ class ServerDataCollectionTest extends AbstractKleinTestCase
      * Tests
      */
 
-    public function testHasPrefix()
+    public function testHasPrefix(): void
     {
         $this->assertTrue(ServerDataCollection::hasPrefix('dog_wierd', 'dog'));
         $this->assertTrue(ServerDataCollection::hasPrefix('_dog_wierd', '_dog'));

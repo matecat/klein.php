@@ -16,6 +16,7 @@ use Klein\Request;
 use Klein\Response;
 use PHPUnit\Framework\TestCase;
 use Throwable;
+use InvalidArgumentException;
 
 /**
  * AbstractKleinTestCase
@@ -39,6 +40,7 @@ abstract class AbstractKleinTestCase extends TestCase
      * (runs before each test)
      *
      * @return void
+     * @throws InvalidArgumentException
      */
     protected function setUp(): void
     {
@@ -125,13 +127,13 @@ abstract class AbstractKleinTestCase extends TestCase
      * Loads externally defined routes under the filename's namespace
      *
      * @param Klein $app_context The application context to attach the routes to
-     * @return array
+     * @return array<string>
      */
-    protected function loadExternalRoutes(?Klein $app_context = null)
+    protected function loadExternalRoutes(?Klein $app_context = null): array
     {
         // Did we not pass an instance?
         if (is_null($app_context)) {
-            $app_context = $this->klein_app ?: new Klein();
+            $app_context = $this->klein_app;
         }
 
         $route_directory = __DIR__ . '/routes/';

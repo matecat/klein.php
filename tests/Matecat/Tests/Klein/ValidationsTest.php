@@ -21,6 +21,8 @@ use Klein\Response;
 use Klein\ServiceProvider;
 use Klein\Validator;
 use Matecat\Tests\Klein\Mocks\MockRequestFactory;
+use Klein\Exceptions\LockedResponseException;
+use InvalidArgumentException;
 
 /**
  * ValidationsTest
@@ -28,6 +30,10 @@ use Matecat\Tests\Klein\Mocks\MockRequestFactory;
 class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
 {
 
+    /**
+     * @throws LockedResponseException
+     * @throws InvalidArgumentException
+     */
     public function setUp(): void
     {
         parent::setUp();
@@ -39,7 +45,7 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->klein_app->onError([$this, 'errorHandler']);
     }
 
-    public function errorHandler($response, $message, $type, $exception)
+    public function errorHandler(mixed $response, mixed $message, mixed $type, mixed $exception): void
     {
         if (!empty($message) && $message != 'Validation failed') {
             echo $message;
@@ -48,12 +54,15 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         }
     }
 
-    protected function validator($string, $error_message = null)
+    protected function validator(?string $string, ?string $error_message = null): Validator
     {
         return new Validator($string, $error_message);
     }
 
-    public function testCustomValidationMessage()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCustomValidationMessage(): void
     {
         $custom_message = 'This is a custom error message...';
 
@@ -77,7 +86,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testStringLengthExact()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testStringLengthExact(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -106,7 +118,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testStringLengthRange()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testStringLengthRange(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -164,7 +179,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testInt()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testInt(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -222,7 +240,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testFloat()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testFloat(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -286,7 +307,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testEmail()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testEmail(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -332,7 +356,11 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testUrl()
+    /**
+     * @throws BadMethodCallException
+     * @throws ValidationException
+     */
+    public function testUrl(): void
     {
         // Is
         $this->validator('http://www.test.com/path/file.ext?query=param#anchor')->isUrl();
@@ -351,7 +379,11 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->validator('www.com')->notUrl();
     }
 
-    public function testIp()
+    /**
+     * @throws BadMethodCallException
+     * @throws ValidationException
+     */
+    public function testIp(): void
     {
         // Is
         $this->validator('0000:0000:0000:0000:0000:0000:0000:0001')->isIp();
@@ -373,7 +405,11 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->validator('string')->notIp();
     }
 
-    public function testRemoteIp()
+    /**
+     * @throws BadMethodCallException
+     * @throws ValidationException
+     */
+    public function testRemoteIp(): void
     {
         // Is
         $this->validator('2001:0db5:86a3:0000:0000:8a2e:0370:7335')->isRemoteIp();
@@ -401,7 +437,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
 //        $this->validator('::ffff:74.125.226.192')->notRemoteIp(); // this ip gives a false positive in PHP 8. This is an ip in the reserved range `::ffff:0:0/96` - IPv4-mapped addresses and the IPv4 is a public address
     }
 
-    public function testAlpha()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testAlpha(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -459,7 +498,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testAlnum()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testAlnum(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -517,7 +559,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testContains()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testContains(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -569,7 +614,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testChars()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testChars(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -615,7 +663,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRegex()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRegex(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -673,7 +724,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNotRegex()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testNotRegex(): void
     {
         $this->klein_app->respond(
             path: '/[:test_param]',
@@ -731,7 +785,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testCustomValidator()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCustomValidator(): void
     {
         // Add our custom validator
         $this->klein_app->service()->addValidator(
@@ -799,7 +856,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testCustomValidatorWithManyArgs()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCustomValidatorWithManyArgs(): void
     {
         $request = MockRequestFactory::create('/', 'GET', [
             'tRUe' => 1,
@@ -833,14 +893,20 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
             }
         );
 
-        $klein->service()->validateParam('tRUe')->isBooleanEqual(1, true, 'true');
-        $klein->service()->validateParam('false')->isBooleanEqual(0, null, '', [], '0', false);
+        $klein->service()->validateParam('tRUe')->isBooleanEqual(1, true, 'true'); // @phpstan-ignore method.notFound
+        $klein->service()->validateParam('false')
+            ->isBooleanEqual(0, null, '', [], '0', false); // @phpstan-ignore method.notFound
     }
 
-    public function testValidatorReturnsResult()
+    /**
+     * @throws BadMethodCallException
+     * @throws InvalidArgumentException
+     * @throws ValidationException
+     */
+    public function testValidatorReturnsResult(): void
     {
         $request = MockRequestFactory::create('/', 'GET', [
-            '12' => 1
+            'key' => '1'
         ]);
 
         $sp = new ServiceProvider();
@@ -853,9 +919,10 @@ class ValidationsTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $klein->service()->validateParam('12', 'ooops')->isInt();
     }
 
-    public function testValidatorThatDoesntExist()
+    public function testValidatorThatDoesntExist(): void
     {
         $this->expectException(BadMethodCallException::class);
-        $this->klein_app->service()->validateParam('12')->isALongNameOfAThingThatDoesntExist();
+        $this->klein_app->service()->validateParam('12')
+            ->isALongNameOfAThingThatDoesntExist(); // @phpstan-ignore method.notFound
     }
 }

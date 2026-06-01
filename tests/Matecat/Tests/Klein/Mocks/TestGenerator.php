@@ -7,9 +7,15 @@ namespace Matecat\Tests\Klein\Mocks;
 use Closure;
 use Random\RandomException;
 use RuntimeException;
+use DivisionByZeroError;
 
 final class TestGenerator
 {
+    /**
+     * @return array<array{path: string, wildcard_path: string, result: string}>
+     * @throws DivisionByZeroError
+     * @throws RuntimeException
+     */
     public static function generatePaths(
         int $count,
         int $maxSegments,
@@ -78,6 +84,9 @@ final class TestGenerator
         }
     }
 
+    /**
+     * @param array<string> $replacements
+     */
     public static function replaceWildcards(string $wildcardPath, array $replacements): string
     {
         $segments = explode('/', trim($wildcardPath, '/'));
@@ -93,6 +102,9 @@ final class TestGenerator
         return '/' . implode('/', $segments);
     }
 
+    /**
+     * @throws RandomException
+     */
     private static function randomSegment(): string
     {
         /** @noinspection SpellCheckingInspection */
@@ -100,7 +112,7 @@ final class TestGenerator
     }
 
     /**
-     * @param array $tests
+     * @param array<array{path: string, result: string, wildcard_path: string, closure?: Closure}> $tests
      * @param Closure|null $closure
      * @return ClosureTestClass[]
      */
@@ -113,7 +125,7 @@ final class TestGenerator
             $closure = $data['closure'] ?? $closure ?? static function () use ($path): string {
                 return $path;
             };
-            return new \Matecat\Tests\Klein\Mocks\ClosureTestClass(
+            return new ClosureTestClass(
                 $data['path'],
                 $data['result'],
                 $data['wildcard_path'],

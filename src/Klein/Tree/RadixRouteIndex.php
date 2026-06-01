@@ -92,7 +92,6 @@ class RadixRouteIndex implements IndexInterface
 
         // Iterate upward through the path by popping the last segment each time,
         // creating parent → child references in the radix tree.
-        // @phpstan-ignore-next-line notIdentical.alwaysTrue
         while (array_pop($segments) !== null) {
             // If we've removed all segments, we're at the top; stop.
             if (empty($segments)) {
@@ -100,7 +99,6 @@ class RadixRouteIndex implements IndexInterface
             }
             // Reconstruct the parent prefix from remaining segments (ensure "/" for root).
             $parent = implode('/', $segments);
-            // @phpstan-ignore-next-line identical.alwaysFalse
             if ($parent === '') {
                 $parent = '/';
             }

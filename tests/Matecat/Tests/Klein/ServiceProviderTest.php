@@ -22,6 +22,8 @@ use Matecat\Tests\Klein;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use ReflectionException;
 use ReflectionProperty;
+use Klein\Exceptions\LockedResponseException;
+use InvalidArgumentException;
 
 /**
  * ServiceProviderTest
@@ -29,7 +31,10 @@ use ReflectionProperty;
 class ServiceProviderTest extends Klein\AbstractKleinTestCase
 {
 
-    protected function getBasicServiceProvider()
+    /**
+     * @throws LockedResponseException
+     */
+    protected function getBasicServiceProvider(): ServiceProvider
     {
         return new ServiceProvider(
             $request = new Request(),
@@ -39,8 +44,9 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
 
     /**
      * @throws ReflectionException
+     * @throws LockedResponseException
      */
-    public function testConstructor()
+    public function testConstructor(): void
     {
         $service = new ServiceProvider();
 
@@ -64,8 +70,9 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
 
     /**
      * @throws ReflectionException
+     * @throws LockedResponseException
      */
-    public function testBinder()
+    public function testBinder(): void
     {
         $service = new ServiceProvider();
 
@@ -91,15 +98,14 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->assertSame($service, $return_val);
     }
 
-    public function testSharedDataGetter()
+    public function testSharedDataGetter(): void
     {
         $service = new ServiceProvider();
 
-        $this->assertIsObject($service->sharedData());
-        $this->assertTrue($service->sharedData() instanceof DataCollection);
+        $this->assertInstanceOf(DataCollection::class, $service->sharedData());
     }
 
-    public function testStartSession()
+    public function testStartSession(): void
     {
         $service = new ServiceProvider();
 
@@ -111,7 +117,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         session_destroy();
     }
 
-    public function testStartSessionFails()
+    public function testStartSessionFails(): void
     {
         // Only care about some errors, and keep the old value
         $old_error_val = error_reporting();
@@ -131,7 +137,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         error_reporting($old_error_val);
     }
 
-    public function testFlash()
+    public function testFlash(): void
     {
         // Test data
         $test_session_key = '__flashes';
@@ -162,7 +168,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $_SESSION = [];
     }
 
-    public function testFlashWithMarkdown()
+    public function testFlashWithMarkdown(): void
     {
         // Test data
         $test_session_key = '__flashes';
@@ -188,7 +194,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $_SESSION = [];
     }
 
-    public function testFlashes()
+    public function testFlashes(): void
     {
         // Test data
         $test_session_key = '__flashes';
@@ -242,7 +248,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $_SESSION = [];
     }
 
-    public function testMarkdownParser()
+    public function testMarkdownParser(): void
     {
         // Test basic markdown conversion
         $this->assertSame(
@@ -259,11 +265,11 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         // Test second array argument overrides other arguments
         $this->assertSame(
             '<strong>huh</strong> <em>12</em> <strong>CD</strong>',
-            ServiceProvider::markdown('**%s** *%d* **%X**', ['huh', '12', 205], 'dog', 'cheese')
+            ServiceProvider::markdown('**%s** *%d* **%X**', ['huh', '12', 205])
         );
     }
 
-    public function testEscapeCharacters()
+    public function testEscapeCharacters(): void
     {
         $this->assertSame(
             'H&egrave;&egrave;&egrave;llo! A&amp;W root beer is now 20% off!!',
@@ -271,7 +277,11 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRefresh()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testRefresh(): void
     {
         $this->klein_app->respond(
             callback: function ($request, $response, $service) {
@@ -292,7 +302,11 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->assertLessThan(400, $this->klein_app->response()->code());
     }
 
-    public function testBack()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testBack(): void
     {
         $url = 'http://google.com/';
 
@@ -318,7 +332,11 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->assertLessThan(400, $this->klein_app->response()->code());
     }
 
-    public function testBackWithoutRefererSet()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testBackWithoutRefererSet(): void
     {
         $request = new Request();
 
@@ -337,7 +355,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->assertLessThan(400, $this->klein_app->response()->code());
     }
 
-    public function testLayoutGetSet()
+    public function testLayoutGetSet(): void
     {
         $test_layout = 'boom!! :D';
 
@@ -352,8 +370,9 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
 
     /**
      * NOTE: Also tests "yield()"
+     * @throws InvalidArgumentException
      */
-    public function testRender()
+    public function testRender(): void
     {
         $test_data = [
             'name' => 'trevor suarez',
@@ -387,7 +406,11 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRenderChunked()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testRenderChunked(): void
     {
         $test_data = [
             'name' => 'trevor suarez',
@@ -424,7 +447,10 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         );
     }
 
-    public function testPartial()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPartial(): void
     {
         $test_data = [
             'name' => 'trevor suarez',
@@ -459,7 +485,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
      * @runInSeparateProcess
      */
     #[RunInSeparateProcess]
-    public function testAddValidator()
+    public function testAddValidator(): void
     {
         $service = new ServiceProvider();
 
@@ -477,7 +503,10 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->assertContains($test_callback, Validator::$methods);
     }
 
-    public function testValidate()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testValidate(): void
     {
         $this->expectException(ValidationException::class);
         $this->klein_app->onError(
@@ -495,7 +524,10 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
         $this->klein_app->dispatch();
     }
 
-    public function testValidateParam()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testValidateParam(): void
     {
         $this->expectException(ValidationException::class);
         $this->klein_app->onError(
@@ -517,7 +549,7 @@ class ServiceProviderTest extends Klein\AbstractKleinTestCase
     }
 
     // Test ALL of the magic setter, getter, exists, and removal methods
-    public function testMagicGetSetExistsRemove()
+    public function testMagicGetSetExistsRemove(): void
     {
         $test_data = [
             'name' => 'huh?',

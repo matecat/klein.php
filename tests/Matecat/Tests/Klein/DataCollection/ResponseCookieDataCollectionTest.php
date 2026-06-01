@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Klein (klein.php) - A fast & flexible router for PHP
  *
@@ -21,17 +22,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
 {
-
     /*
      * Data Providers and Methods
      */
 
     /**
-     * Sample data provider
-     *
-     * @return array
+     * @return array{0: array{ResponseCookie, ResponseCookie}}
      */
-    public static function sampleDataProvider()
+    public static function sampleDataProvider(): array
     {
         $sample_cookie = new ResponseCookie(
             'Trevor',
@@ -53,9 +51,9 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
             true
         );
 
-        return array(
-            array($sample_cookie, $sample_other_cookie),
-        );
+        return [
+            [$sample_cookie, $sample_other_cookie],
+        ];
     }
 
 
@@ -64,7 +62,7 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
      */
 
     #[DataProvider('sampleDataProvider')]
-    public function testSet($sample_cookie, $sample_other_cookie)
+    public function testSet(ResponseCookie $sample_cookie, ResponseCookie $sample_other_cookie): void
     {
         // Create our collection with NO data
         $data_collection = new ResponseCookieDataCollection();
@@ -73,10 +71,10 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
         $data_collection->set('first', $sample_cookie);
 
         $this->assertSame($sample_cookie, $data_collection->get('first'));
-        $this->assertTrue($data_collection->get('first') instanceof ResponseCookie);
+        $this->assertInstanceOf(ResponseCookie::class, $data_collection->get('first'));
     }
 
-    public function testSetStringConvertsToCookie()
+    public function testSetStringConvertsToCookie(): void
     {
         // Create our collection with NO data
         $data_collection = new ResponseCookieDataCollection();
@@ -85,24 +83,26 @@ class ResponseCookieDataCollectionTest extends AbstractKleinTestCase
         $data_collection->set('first', 'value');
 
         $this->assertNotSame('value', $data_collection->get('first'));
-        $this->assertTrue($data_collection->get('first') instanceof ResponseCookie);
+        $this->assertInstanceOf(ResponseCookie::class, $data_collection->get('first'));
     }
 
     #[DataProvider('sampleDataProvider')]
-    public function testConstructorRoutesThroughSet($sample_cookie, $sample_other_cookie)
-    {
-        $array_of_cookie_instances = array(
+    public function testConstructorRoutesThroughSet(
+        ResponseCookie $sample_cookie,
+        ResponseCookie $sample_other_cookie
+    ): void {
+        $array_of_cookie_instances = [
             $sample_cookie,
             $sample_other_cookie,
             new ResponseCookie('test'),
-        );
+        ];
 
         // Create our collection with NO data
         $data_collection = new ResponseCookieDataCollection($array_of_cookie_instances);
         $this->assertSame($array_of_cookie_instances, array_values($data_collection->all()));
 
         foreach ($data_collection as $cookie) {
-            $this->assertTrue($cookie instanceof ResponseCookie);
+            $this->assertInstanceOf(ResponseCookie::class, $cookie);
         }
     }
 }

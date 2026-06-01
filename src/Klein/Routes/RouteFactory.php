@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Klein\Routes;
 
+use InvalidArgumentException;
 use Klein\AbstractRouteFactory;
 
 /**
@@ -36,6 +37,7 @@ class RouteFactory extends AbstractRouteFactory
      * @param string|null $name The name of the route
      *
      * @return Route
+     * @throws InvalidArgumentException
      */
     public function build(
         callable $callback,

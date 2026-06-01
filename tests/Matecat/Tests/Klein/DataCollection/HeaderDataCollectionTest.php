@@ -24,10 +24,8 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
 
     /**
      * Non existent key in the sample data
-     *
-     * @type string
      */
-    protected static $nonexistent_key = 'non-standard-header';
+    protected static string $nonexistent_key = 'non-standard-header';
 
 
     /*
@@ -38,11 +36,9 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
      * Quickly makes sure that no sample data arrays
      * have any keys that match the "nonexistent_key"
      *
-     * @param array $sample_data
-     *
-     * @return void
+     * @param array<string, mixed> $sample_data
      */
-    protected static function prepareSampleData(&$sample_data)
+    protected static function prepareSampleData(array &$sample_data): void
     {
         if (isset($sample_data[static::$nonexistent_key])) {
             unset($sample_data[static::$nonexistent_key]);
@@ -57,11 +53,9 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
     }
 
     /**
-     * Sample data provider
-     *
-     * @return array
+     * @return array{0: array{array<string, mixed>, HeaderDataCollection}}
      */
-    public static function sampleDataProvider()
+    public static function sampleDataProvider(): array
     {
         // Populate our sample data
         $sample_data = [
@@ -129,14 +123,20 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
      * Tests
      */
 
+    /**
+     * @param array<string, mixed> $sample_data
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testConstructorCorrectContentRelatedKeys($sample_data, $data_collection)
+    public function testConstructorCorrectContentRelatedKeys(array $sample_data, HeaderDataCollection $data_collection): void
     {
         $this->assertSame('application/json', $data_collection->get('Content-Type'));
     }
 
+    /**
+     * @param array<string, mixed> $sample_data
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testConstructorCorrectlyFormatted($sample_data, $data_collection)
+    public function testConstructorCorrectlyFormatted(array $sample_data, HeaderDataCollection $data_collection): void
     {
         $this->assertNotSame($sample_data, $data_collection->all());
         $this->assertArrayNotHasKey('HTTP_HOST', $data_collection->all());
@@ -145,8 +145,11 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
     }
 
 
+    /**
+     * @param array<string, mixed> $sample_data
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testGet($sample_data, $data_collection)
+    public function testGet(array $sample_data, HeaderDataCollection $data_collection): void
     {
         $default = 'WOOT!';
 
@@ -155,7 +158,7 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
         $this->assertNull($data_collection->get(static::$nonexistent_key));
     }
 
-    public function testSet()
+    public function testSet(): void
     {
         // Test data
         $data = [
@@ -173,16 +176,22 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
         $this->assertArrayHasKey(key($data), $data_collection->all());
     }
 
+    /**
+     * @param array<string, mixed> $sample_data
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testExists($sample_data, $data_collection)
+    public function testExists(array $sample_data, HeaderDataCollection $data_collection): void
     {
         // Make sure the set worked, but the key is different
         $this->assertTrue($data_collection->exists('Host'));
         $this->assertFalse($data_collection->exists(static::$nonexistent_key));
     }
 
+    /**
+     * @param array<string, mixed> $sample_data
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testRemove($sample_data, $data_collection)
+    public function testRemove(array $sample_data, HeaderDataCollection $data_collection): void
     {
         $this->assertTrue($data_collection->exists('Host'));
 
@@ -192,7 +201,7 @@ class HeaderDataCollectionTest extends AbstractKleinTestCase
     }
 
 
-    public function testNameNotNormalizing()
+    public function testNameNotNormalizing(): void
     {
         // Test data
         $header = [

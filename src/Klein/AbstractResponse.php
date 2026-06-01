@@ -99,6 +99,7 @@ abstract class AbstractResponse
      * @param ?string $body The response body's content
      * @param int $status_code The status code
      * @param array<string, string> $headers The response header "hash"
+     * @throws LockedResponseException If the response is locked
      */
     public function __construct(?string $body = null, int $status_code = 200, array $headers = [])
     {
@@ -120,6 +121,7 @@ abstract class AbstractResponse
      * @param string|null $protocol_version
      *
      * @return string|AbstractResponse
+     * @throws LockedResponseException If the response is locked
      */
     public function protocolVersion(?string $protocol_version = null): AbstractResponse|string|static
     {
@@ -144,6 +146,7 @@ abstract class AbstractResponse
      * @param string|null $body The body content string
      *
      * @return string|AbstractResponse
+     * @throws LockedResponseException If the response is locked
      */
     public function body(?string $body = null): AbstractResponse|string|static
     {
@@ -199,6 +202,7 @@ abstract class AbstractResponse
      * @param int|null $code The HTTP status code to send
      *
      * @return int|AbstractResponse
+     * @throws LockedResponseException If the response is locked
      */
     public function code(?int $code = null): AbstractResponse|int|static
     {
@@ -220,6 +224,7 @@ abstract class AbstractResponse
      * @param string $content The string to prepend
      *
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function prepend(string $content): static
     {
@@ -237,6 +242,7 @@ abstract class AbstractResponse
      * @param string $content The string to append
      *
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function append(string $content): static
     {
@@ -437,6 +443,7 @@ abstract class AbstractResponse
      * @link https://github.com/klein/klein.php/wiki/Response-Chunking
      * @link http://bit.ly/hg3gHb
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function chunk(): static
     {
@@ -526,6 +533,7 @@ abstract class AbstractResponse
      * @param int $code The HTTP status code to use for redirection
      *
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function redirect(string $url, int $code = 302): static
     {

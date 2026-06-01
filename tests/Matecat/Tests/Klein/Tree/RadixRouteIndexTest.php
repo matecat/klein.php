@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use InvalidArgumentException;
 
 /**
  * Test class for the `lookupByDFS` method in the `RadixRouteIndex` class.
@@ -20,6 +21,7 @@ class RadixRouteIndexTest extends TestCase
     /**
      * Tests that `lookupByDFS` returns an empty array
      * when no routes are associated with the given prefix.
+     * @throws ReflectionException
      */
     public function testlookupByDFSReturnsEmptyForUndefinedPrefix(): void
     {
@@ -34,6 +36,8 @@ class RadixRouteIndexTest extends TestCase
 
     /**
      * Tests that `lookupByDFS` correctly retrieves routes for a specific prefix.
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
      */
     public function testlookupByDFSFetchesRoutes(): void
     {
@@ -62,6 +66,8 @@ class RadixRouteIndexTest extends TestCase
 
     /**
      * Tests that `lookupByDFS` correctly handles nested prefixes.
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
      */
     public function testlookupByDFSHandlesNestedPrefixes(): void
     {
@@ -92,6 +98,8 @@ class RadixRouteIndexTest extends TestCase
 
     /**
      * Tests that `lookupByDFS` skips invalid nodes gracefully.
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
      */
     public function testlookupByDFSSkipsInvalidNodes(): void
     {
@@ -101,11 +109,11 @@ class RadixRouteIndexTest extends TestCase
             'GET'
         );
 
-        // Add an invalid scalar value in the tree
+        // Add an empty array node (no routes) alongside a valid route
         $radixTree = [
             '/users' => [
                 $route->hash => $route,
-                'invalid-node' => 'not-a-route'
+                'invalid-node' => []
             ]
         ];
 
@@ -131,8 +139,6 @@ class RadixRouteIndexTest extends TestCase
     private function getPrivateMethod(string $methodName, object $object): ReflectionMethod
     {
         $reflector = new ReflectionClass($object);
-        $method = $reflector->getMethod($methodName);
-        $method->setAccessible(true);
-        return $method;
+        return $reflector->getMethod($methodName);
     }
 }

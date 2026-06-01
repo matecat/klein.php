@@ -14,6 +14,7 @@ namespace Matecat\Tests\Klein;
 use Klein\Routes\Route;
 use Klein\Routes\RouteFactory;
 use Matecat\Tests\Klein;
+use InvalidArgumentException;
 
 /**
  * RouteFactoryTest
@@ -32,7 +33,7 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
      * Helpers
      */
 
-    protected function getTestCallable($message = self::TEST_CALLBACK_MESSAGE)
+    protected function getTestCallable(string $message = self::TEST_CALLBACK_MESSAGE): \Closure
     {
         return function () use ($message) {
             return $message;
@@ -42,14 +43,15 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
 
     /**
      * Tests
+     * @throws InvalidArgumentException
      */
 
     public function testBuildBasic(
-        $test_namespace = null,
-        $test_path = null,
-        $test_paths_match = true,
-        $should_match = true
-    ) {
+        ?string $test_namespace = null,
+        ?string $test_path = null,
+        bool $test_paths_match = true,
+        bool $should_match = true
+    ): void {
         // Test data
         $test_path = is_string($test_path) ? $test_path : '/test';
         $test_callable = $this->getTestCallable();
@@ -62,7 +64,7 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
             $test_path
         );
 
-        $this->assertTrue($route instanceof Route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertNull($route->method);
         $this->assertNull($route->getName());
         $this->assertSame($test_callable(), $route());
@@ -74,7 +76,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         }
     }
 
-    public function testBuildWithNamespacedPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithNamespacedPath(): void
     {
         // Test data
         $test_namespace = '/users';
@@ -83,7 +88,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic($test_namespace, $test_path, false);
     }
 
-    public function testBuildWithNamespacedCatchAllPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithNamespacedCatchAllPath(): void
     {
         // Test data
         $test_namespace = '/users';
@@ -92,7 +100,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic($test_namespace, $test_path, false, false);
     }
 
-    public function testBuildWithNamespacedNullPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithNamespacedNullPath(): void
     {
         // Test data
         $test_namespace = '/users';
@@ -100,7 +111,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic($test_namespace, null, false);
     }
 
-    public function testBuildWithNamespacedEmptyPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithNamespacedEmptyPath(): void
     {
         // Test data
         $test_namespace = '/users';
@@ -109,7 +123,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic($test_namespace, $test_path, false, true);
     }
 
-    public function testBuildWithCustomRegexPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithCustomRegexPath(): void
     {
         // Test data
         $test_path = '@/test';
@@ -117,7 +134,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic(null, $test_path);
     }
 
-    public function testBuildWithCustomRegexNamespacedPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithCustomRegexNamespacedPath(): void
     {
         // Test data
         $test_namespace = '/users';
@@ -126,7 +146,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic($test_namespace, $test_path, false);
     }
 
-    public function testBuildWithCustomNegatedRegexPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithCustomNegatedRegexPath(): void
     {
         // Test data
         $test_path = '!@/test';
@@ -134,7 +157,10 @@ class RouteFactoryTest extends Klein\AbstractKleinTestCase
         $this->testBuildBasic(null, $test_path, false);
     }
 
-    public function testBuildWithCustomNegatedAnchoredRegexPath()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBuildWithCustomNegatedAnchoredRegexPath(): void
     {
         // Test data
         $test_path = '!@^/test';

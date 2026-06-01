@@ -16,6 +16,7 @@ use Klein\DataCollection\RouteCollection;
 use Klein\Routes\Route;
 use Matecat\Tests\Klein\AbstractKleinTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use InvalidArgumentException;
 
 /**
  * RouteCollectionTest
@@ -28,11 +29,10 @@ class RouteCollectionTest extends AbstractKleinTestCase
      */
 
     /**
-     * Sample data provider
-     *
-     * @return array
+     * @return array{0: array{Route, Route, Route}}
+     * @throws InvalidArgumentException
      */
-    public static function sampleDataProvider()
+    public static function sampleDataProvider(): array
     {
         $sample_route = new Route(
             function () {
@@ -40,7 +40,7 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/test/path',
             'PUT',
-            true
+            'true'
         );
 
         $sample_other_route = new Route(
@@ -49,7 +49,7 @@ class RouteCollectionTest extends AbstractKleinTestCase
             },
             '/test/dafuq',
             'HEAD',
-            false
+            ''
         );
 
         $sample_named_route = new Route(
@@ -72,8 +72,11 @@ class RouteCollectionTest extends AbstractKleinTestCase
      * Tests
      */
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testSet($sample_route, $sample_other_route, $sample_named_route)
+    public function testSet(Route $sample_route, Route $sample_other_route, Route $sample_named_route): void
     {
         // Create our collection with NO data
         $routes = new RouteCollection();
@@ -82,10 +85,13 @@ class RouteCollectionTest extends AbstractKleinTestCase
         $routes->set('first', $sample_route);
 
         $this->assertSame($sample_route, $routes->get('first'));
-        $this->assertTrue($routes->get('first') instanceof Route);
+        $this->assertInstanceOf(Route::class, $routes->get('first'));
     }
 
-    public function testSetCallableConvertsToRoute()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testSetCallableConvertsToRoute(): void
     {
         // Create our collection with NO data
         $routes = new RouteCollection();
@@ -98,33 +104,40 @@ class RouteCollectionTest extends AbstractKleinTestCase
         );
 
         $this->assertNotSame('value', $routes->get('first'));
-        $this->assertTrue($routes->get('first') instanceof Route);
+        $this->assertInstanceOf(Route::class, $routes->get('first'));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testConstructorRoutesThroughAdd($sample_route, $sample_other_route, $sample_named_route)
+    public function testConstructorRoutesThroughAdd(Route $sample_route, Route $sample_other_route, Route $sample_named_route): void
     {
+        $extra_route = new Route(
+            function () {
+            }
+        );
         $array_of_route_instances = [
-            $sample_route,
-            $sample_other_route,
-            new Route(
-                function () {
-                }
-            ),
+            'a' => $sample_route,
+            'b' => $sample_other_route,
+            'c' => $extra_route,
         ];
 
         // Create our collection
         $routes = new RouteCollection($array_of_route_instances);
-        $this->assertSame($array_of_route_instances, array_values($routes->all()));
+        $this->assertSame(array_values($array_of_route_instances), array_values($routes->all()));
         $this->assertNotSame(array_keys($array_of_route_instances), $routes->keys());
 
         foreach ($routes as $route) {
-            $this->assertTrue($route instanceof Route);
+            $this->assertInstanceOf(Route::class, $route);
         }
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testAddRoute($sample_route, $sample_other_route, $sample_named_route)
+    public function testAddRoute(Route $sample_route, Route $sample_other_route, Route $sample_named_route): void
     {
         $array_of_routes = [
             $sample_route,
@@ -141,7 +154,10 @@ class RouteCollectionTest extends AbstractKleinTestCase
         $this->assertSame($array_of_routes, array_values($routes->all()));
     }
 
-    public function testAddCallableConvertsToRoute()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testAddCallableConvertsToRoute(): void
     {
         // Create our collection with NO data
         $routes = new RouteCollection();
@@ -153,19 +169,23 @@ class RouteCollectionTest extends AbstractKleinTestCase
         $routes->add($callable);
 
         $this->assertNotSame($callable, current($routes->all()));
-        $this->assertTrue(current($routes->all()) instanceof Route);
+        $this->assertInstanceOf(Route::class, current($routes->all()));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testPrepareNamed($sample_route, $sample_other_route, $sample_named_route)
+    public function testPrepareNamed(Route $sample_route, Route $sample_other_route, Route $sample_named_route): void
     {
         $array_of_routes = [
-            $sample_route,
-            $sample_other_route,
-            $sample_named_route,
+            'a' => $sample_route,
+            'b' => $sample_other_route,
+            'c' => $sample_named_route,
         ];
 
         $route_name = $sample_named_route->getName();
+        $this->assertNotNull($route_name);
 
         // Create our collection
         $routes = new RouteCollection($array_of_routes);
@@ -180,11 +200,13 @@ class RouteCollectionTest extends AbstractKleinTestCase
         $this->assertSame($sample_named_route, $routes->get($route_name));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     #[DataProvider('sampleDataProvider')]
-    public function testRouteOrderDoesntChangeAfterPreparing($sample_route, $sample_other_route, $sample_named_route)
+    public function testRouteOrderDoesntChangeAfterPreparing(Route $sample_route, Route $sample_other_route, Route $sample_named_route): void
     {
-        // Get the provided data dynamically
-        $array_of_routes = func_get_args();
+        $array_of_routes = ['a' => $sample_route, 'b' => $sample_other_route, 'c' => $sample_named_route];
 
         // Set the number of times we should loop
         $loop_num = 10;
@@ -192,15 +214,16 @@ class RouteCollectionTest extends AbstractKleinTestCase
         // Loop a set number of times to check different permutations
         for ($i = 0; $i < $loop_num; $i++) {
             // Shuffle the sample routes array
-            shuffle($array_of_routes);
+            $shuffled = $array_of_routes;
+            shuffle($shuffled);
 
             // Create our collection and prepare the routes
-            $routes = new RouteCollection($array_of_routes);
+            $routes = new RouteCollection(['a' => $shuffled[0], 'b' => $shuffled[1], 'c' => $shuffled[2]]);
             $routes->prepareNamed();
 
             $this->assertSame(
                 array_values($routes->all()),
-                array_values($array_of_routes)
+                $shuffled
             );
         }
     }

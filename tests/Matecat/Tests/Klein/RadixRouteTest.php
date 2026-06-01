@@ -18,6 +18,9 @@ use Matecat\Tests\Klein\Mocks\ClosureTestClass;
 use Matecat\Tests\Klein\Mocks\TestGenerator;
 use ReflectionClass;
 use ReflectionException;
+use InvalidArgumentException;
+use DivisionByZeroError;
+use RuntimeException;
 
 class RadixRouteTest extends Klein\AbstractKleinTestCase
 {
@@ -31,6 +34,10 @@ class RadixRouteTest extends Klein\AbstractKleinTestCase
      */
     private static array $bigTestSet;
 
+    /**
+     * @throws DivisionByZeroError
+     * @throws RuntimeException
+     */
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
@@ -58,6 +65,8 @@ class RadixRouteTest extends Klein\AbstractKleinTestCase
 
     /**
      * @throws ReflectionException
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function testLookupByDSP(): void
     {
@@ -99,6 +108,8 @@ class RadixRouteTest extends Klein\AbstractKleinTestCase
 
     /**
      * @throws ReflectionException
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function testLookupByArrayWalk(): void
     {

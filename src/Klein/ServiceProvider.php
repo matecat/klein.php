@@ -15,12 +15,15 @@ declare(strict_types=1);
 namespace Klein;
 
 use Klein\DataCollection\DataCollection;
+use Klein\Exceptions\LockedResponseException;
 
 /**
  * ServiceProvider
  *
  * Service provider class for handling logic extending between
  * a request's data and a response's behavior
+ *
+ * @property mixed $name
  */
 class ServiceProvider
 {
@@ -205,12 +208,11 @@ class ServiceProvider
      *
      * Supports basic Markdown syntax
      *
-     * Also, this method takes in EITHER an array of optional arguments (as the second parameter)
-     * ... OR this method will simply take a variable number of arguments (after the initial str arg)
+     * Optionally takes an array of arguments as the second parameter.
+     * Arguments are HTML-escaped and substituted into the string via vsprintf.
      *
-     * @param string $str The text strings to parse
-     * @param array<mixed> $args Optional arguments to be parsed by Markdown
-     *
+     * @param string $str The text string to parse
+     * @param array<mixed> $args Optional arguments to be substituted into the string
      * @return string
      */
     public static function markdown(string $str, array $args = []): string
@@ -229,7 +231,7 @@ class ServiceProvider
         }
 
         // Actually make our Markdown conversion
-        return vsprintf(preg_replace(array_keys($md), $md, $str), $args);
+        return vsprintf(preg_replace(array_keys($md), $md, $str) ?? str_repeat('%s ', count($args)), $args);
     }
 
     /**
@@ -253,9 +255,13 @@ class ServiceProvider
      * Redirects the request to the current URL
      *
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function refresh(): static
     {
+        assert($this->response !== null);
+        assert($this->request !== null);
+
         $this->response->redirect(
             $this->request->uri()
         );
@@ -267,9 +273,13 @@ class ServiceProvider
      * Redirects the request back to the referrer
      *
      * @return static
+     * @throws LockedResponseException If the response is locked
      */
     public function back(): static
     {
+        assert($this->request !== null);
+        assert($this->response !== null);
+
         $referer = $this->request->server()->get('HTTP_REFERER');
 
         if (null !== $referer) {
@@ -319,6 +329,7 @@ class ServiceProvider
      * @param array<string, mixed> $data The data to render in the view
      *
      * @return void
+     * @throws LockedResponseException If the response is locked
      */
     public function render(string $view, array $data = []): void
     {
@@ -336,7 +347,7 @@ class ServiceProvider
             require $this->layout;
         }
 
-        if (false !== $this->response->chunked) {
+        if (null !== $this->response && false !== $this->response->chunked) {
             $this->response->chunk();
         }
 
@@ -351,6 +362,7 @@ class ServiceProvider
      * @param array<string, mixed> $data The data to render in the view
      *
      * @return void
+     * @throws LockedResponseException
      */
     public function partial(string $view, array $data = []): void
     {
@@ -396,7 +408,9 @@ class ServiceProvider
      */
     public function validateParam(?string $param, ?string $err = null): Validator
     {
-        $value = $this->request->param($param);
+        assert($this->request !== null);
+
+        $value = $param !== null ? $this->request->param($param) : null;
         return $this->validate($value !== null ? (string)$value : null, $err);
     }
 

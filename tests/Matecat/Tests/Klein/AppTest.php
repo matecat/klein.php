@@ -12,6 +12,7 @@
 namespace Matecat\Tests\Klein;
 
 use BadMethodCallException;
+use Closure;
 use Klein\App;
 use Klein\Exceptions\DuplicateServiceException;
 use Klein\Exceptions\UnknownServiceException;
@@ -35,7 +36,7 @@ class AppTest extends Klein\AbstractKleinTestCase
      * Helpers
      */
 
-    protected function getTestCallable($message = self::TEST_CALLBACK_MESSAGE)
+    protected function getTestCallable(string $message = self::TEST_CALLBACK_MESSAGE): Closure
     {
         return function () use ($message) {
             return $message;
@@ -45,9 +46,10 @@ class AppTest extends Klein\AbstractKleinTestCase
 
     /**
      * Tests
+     * @throws DuplicateServiceException
      */
 
-    public function testRegisterFiller()
+    public function testRegisterFiller(): void
     {
         $func_name = 'yay_func';
 
@@ -55,60 +57,62 @@ class AppTest extends Klein\AbstractKleinTestCase
 
         $app->register($func_name, $this->getTestCallable());
 
-        return array(
-            'app' => $app,
-            'func_name' => $func_name,
-        );
-    }
-
-    #[Depends('testRegisterFiller')]
-    public function testGet(array $args)
-    {
-        // Get our vars from our args
-        extract($args);
-
-        $returned = $app->$func_name;
-
-        $this->assertNotNull($returned);
-        $this->assertSame(self::TEST_CALLBACK_MESSAGE, $returned);
+        $this->assertInstanceOf(App::class, $app);
     }
 
     /**
-     * @return void
+     * @throws DuplicateServiceException
      */
-    public function testGetBadMethod()
+    public function testGet(): void
     {
+        $func_name = 'yay_func';
         $app = new App();
-        $this->expectException(UnknownServiceException::class);
-        $app->random_thing_that_doesnt_exist;
-    }
+        $app->register($func_name, $this->getTestCallable());
 
-    #[Depends('testRegisterFiller')]
-    public function testCall(array $args)
-    {
-        // Get our vars from our args
-        extract($args);
-
-        $returned = $app->{$func_name}();
+        $returned = $app->$func_name; // @phpstan-ignore property.notFound
 
         $this->assertNotNull($returned);
         $this->assertSame(self::TEST_CALLBACK_MESSAGE, $returned);
     }
 
-    public function testCallBadMethod()
+    public function testGetBadMethod(): void
+    {
+        $app = new App();
+        $this->expectException(UnknownServiceException::class);
+        $app->random_thing_that_doesnt_exist; // @phpstan-ignore property.notFound, expr.resultUnused
+    }
+
+    /**
+     * @throws DuplicateServiceException
+     */
+    public function testCall(): void
+    {
+        $func_name = 'yay_func';
+        $app = new App();
+        $app->register($func_name, $this->getTestCallable());
+
+        $returned = $app->{$func_name}(); // @phpstan-ignore method.notFound
+
+        $this->assertNotNull($returned);
+        $this->assertSame(self::TEST_CALLBACK_MESSAGE, $returned);
+    }
+
+    public function testCallBadMethod(): void
     {
         $this->expectException(BadMethodCallException::class);
         $app = new App();
-        $app->random_thing_that_doesnt_exist();
+        $app->random_thing_that_doesnt_exist(); // @phpstan-ignore method.notFound
     }
 
-    #[Depends('testRegisterFiller')]
-    public function testRegisterDuplicateMethod(array $args)
+    /**
+     * @throws DuplicateServiceException
+     */
+    public function testRegisterDuplicateMethod(): void
     {
         $this->expectException(DuplicateServiceException::class);
-        // Get our vars from our args
-        extract($args);
-
+        $func_name = 'yay_func';
+        $app = new App();
+        $app->register($func_name, $this->getTestCallable());
         $app->register($func_name, $this->getTestCallable());
     }
 }

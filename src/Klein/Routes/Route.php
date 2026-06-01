@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Klein\Routes;
 
 use InvalidArgumentException;
+use RuntimeException;
 use Klein\Exceptions\RegularExpressionCompilationException;
 use Klein\Exceptions\RoutePathCompilationException;
 use Klein\HttpMethod;
@@ -166,6 +167,7 @@ class Route
      * @param string|null $namespace
      * @param bool|null $count_match
      * @param string|null $name
+     * @throws InvalidArgumentException If the provided HTTP method is not valid
      */
     public function __construct(
         callable $callback,
@@ -264,6 +266,8 @@ class Route
      * Compiles the route path into a regular expression and caches it.
      *
      * @return string Returns the compiled regex.
+     * @throws RoutePathCompilationException If the route path cannot be compiled
+     * @throws RuntimeException
      */
     public function getCompiledRegex(): string
     {
@@ -386,6 +390,8 @@ class Route
      * by the PCRE engine. Throws an exception if the validation fails.
      *
      * @return string
+     * @throws RoutePathCompilationException If the route path cannot be compiled
+     * @throws RuntimeException
      */
     private function compileRegexp(): string
     {

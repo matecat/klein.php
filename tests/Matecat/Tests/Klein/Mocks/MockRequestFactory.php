@@ -26,10 +26,10 @@ class MockRequestFactory
      *
      * @param string $uri
      * @param string $req_method
-     * @param array $parameters
-     * @param array $cookies
-     * @param array $server
-     * @param array $files
+     * @param array<string, mixed> $parameters
+     * @param array<string, mixed> $cookies
+     * @param array<string, mixed> $server
+     * @param array<string, mixed> $files
      * @param ?string $body
      * @return Request
      */

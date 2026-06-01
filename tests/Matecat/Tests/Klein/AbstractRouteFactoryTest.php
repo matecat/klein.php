@@ -12,6 +12,8 @@
 namespace Matecat\Tests\Klein;
 
 use Klein\AbstractRouteFactory;
+use PHPUnit\Framework\MockObject\Stub;
+use PHPUnit\Framework\MockObject\TestStubBuilder;
 
 /**
  * AbstractRouteFactoryTest
@@ -23,63 +25,73 @@ class AbstractRouteFactoryTest extends AbstractKleinTestCase
      * Helpers
      */
 
-    protected function getDefaultMethodsToMock()
+    /**
+     * @return list<non-empty-string>
+     */
+    protected function getDefaultMethodsToMock(): array
     {
         return array(
             'build',
         );
     }
 
-    protected function getMockBuilderForFactory(array $methods_to_mock = null)
+    /**
+     * @param list<non-empty-string>|null $methods_to_mock
+     * @return TestStubBuilder<AbstractRouteFactory>
+     */
+    protected function getStubBuilderForFactory(array $methods_to_mock = null): TestStubBuilder
     {
         $methods_to_mock = $methods_to_mock ?: $this->getDefaultMethodsToMock();
 
-        return $this->getMockBuilder(AbstractRouteFactory::class)
+        return $this->getStubBuilder(AbstractRouteFactory::class)
             ->onlyMethods($methods_to_mock);
     }
-
 
     /**
      * Tests
      */
 
-    public function testNamespaceGetSet()
+    public function testNamespaceGetSet(): void
     {
         // Test data
         $test_namespace = '/users';
 
         // Empty constructor
-        $factory = $this->getMockBuilderForFactory()->getMock();
+        /** @var AbstractRouteFactory&Stub $stub */
+        $stub = $this->getStubBuilderForFactory()->getStub();
 
-        $this->assertEmpty($factory->getNamespace());
+        $this->assertEmpty($stub->getNamespace());
 
         // Set in constructor
-        $factory = $this->getMockBuilderForFactory()
+        /** @var AbstractRouteFactory&Stub $stub */
+        $stub = $this->getStubBuilderForFactory()
             ->setConstructorArgs([$test_namespace,])
-            ->getMock();
+            ->getStub();
 
-        $this->assertSame($test_namespace, $factory->getNamespace());
+        $this->assertSame($test_namespace, $stub->getNamespace());
 
         // Set in method
-        $factory = $this->getMockBuilderForFactory()->getMock();
-        $factory->setNamespace($test_namespace);
+        /** @var AbstractRouteFactory&Stub $stub */
+        $stub = $this->getStubBuilderForFactory()->getStub();
+        $stub->setNamespace($test_namespace);
 
-        $this->assertSame($test_namespace, $factory->getNamespace());
+        $this->assertSame($test_namespace, $stub->getNamespace());
     }
 
-    public function testAppendNamespace()
+    public function testAppendNamespace(): void
     {
         // Test data
         $test_namespace = '/users';
         $test_namespace_append = '/names';
 
-        $factory = $this->getMockBuilderForFactory()->getMock();
-        $factory->setNamespace($test_namespace);
-        $factory->appendNamespace($test_namespace_append);
+        /** @var AbstractRouteFactory&Stub $stub */
+        $stub = $this->getStubBuilderForFactory()->getStub();
+        $stub->setNamespace($test_namespace);
+        $stub->appendNamespace($test_namespace_append);
 
         $this->assertSame(
             $test_namespace . $test_namespace_append,
-            $factory->getNamespace()
+            $stub->getNamespace()
         );
     }
 }

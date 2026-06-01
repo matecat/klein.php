@@ -12,6 +12,7 @@
 
 namespace Matecat\Tests\Klein;
 
+use Closure;
 use Exception;
 use InvalidArgumentException;
 use Klein\App;
@@ -29,6 +30,8 @@ use OutOfBoundsException;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Throwable;
 use TypeError;
+use Klein\Exceptions\LockedResponseException;
+use RuntimeException;
 
 /**
  * KleinTest
@@ -46,7 +49,7 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
      * Helpers
      */
 
-    protected function getTestCallable($message = self::TEST_CALLBACK_MESSAGE)
+    protected function getTestCallable(string $message = self::TEST_CALLBACK_MESSAGE): Closure
     {
         return function () use ($message) {
             return $message;
@@ -56,73 +59,70 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
 
     /**
      * Tests
+     * @throws InvalidArgumentException
      */
 
-    public function testConstructor()
+    public function testConstructor(): void
     {
         $klein = new Klein();
 
-        $this->assertNotNull($klein);
-        $this->assertTrue($klein instanceof Klein);
+        $this->assertInstanceOf(Klein::class, $klein);
     }
 
-    public function testService()
+    public function testService(): void
     {
         $service = $this->klein_app->service();
 
-        $this->assertNotNull($service);
-        $this->assertTrue($service instanceof ServiceProvider);
+        $this->assertInstanceOf(ServiceProvider::class, $service);
     }
 
-    public function testApp()
+    public function testApp(): void
     {
         $app = $this->klein_app->app();
 
-        $this->assertNotNull($app);
-        $this->assertTrue($app instanceof App);
+        $this->assertInstanceOf(App::class, $app);
     }
 
-    public function testRoutes()
+    public function testRoutes(): void
     {
         $routes = $this->klein_app->routes();
 
-        $this->assertNotNull($routes);
-        $this->assertTrue($routes instanceof RouteCollection);
+        $this->assertInstanceOf(RouteCollection::class, $routes);
     }
 
-    public function testRequest()
+    public function testRequest(): void
     {
         $this->klein_app->dispatch();
 
         $request = $this->klein_app->request();
 
-        $this->assertNotNull($request);
-        $this->assertTrue($request instanceof Request);
+        $this->assertInstanceOf(Request::class, $request);
     }
 
-    public function testResponse()
+    public function testResponse(): void
     {
         $this->klein_app->dispatch();
 
         $response = $this->klein_app->response();
 
-        $this->assertNotNull($response);
-        $this->assertTrue($response instanceof Response);
+        $this->assertInstanceOf(Response::class, $response);
     }
 
-    public function testRespond()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRespond(): void
     {
         $route = $this->klein_app->respond(callback: $this->getTestCallable());
 
         $object_id = spl_object_hash($route);
 
-        $this->assertNotNull($route);
-        $this->assertTrue($route instanceof Route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertTrue($this->klein_app->routes()->exists($object_id));
         $this->assertSame($route, $this->klein_app->routes()->get($object_id));
     }
 
-    public function testWith()
+    public function testWith(): void
     {
         // Test data
         $test_namespace = '/test/namespace';
@@ -135,10 +135,10 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
             }
         );
 
-        $this->assertTrue($passed_context instanceof Klein);
+        $this->assertInstanceOf(Klein::class, $passed_context);
     }
 
-    public function testWithStringCallable()
+    public function testWithStringCallable(): void
     {
         // Test data
         $test_namespace = '/test/namespace';
@@ -158,7 +158,7 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
      *
      */
     #[RunInSeparateProcess]
-    public function testWithUsingFileInclude()
+    public function testWithUsingFileInclude(): void
     {
         // Test data
         $test_namespace = '/test/namespace';
@@ -173,11 +173,14 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $all_routes = array_values($this->klein_app->routes()->all());
         $test_route = $all_routes[0];
 
-        $this->assertTrue($test_route instanceof Route);
+        $this->assertInstanceOf(Route::class, $test_route);
         $this->assertSame(ltrim($test_namespace, '/') . '/?', $test_route->path);
     }
 
-    public function testDispatch()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testDispatch(): void
     {
         $request = new Request();
         $response = new Response();
@@ -188,7 +191,11 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($response, $this->klein_app->response());
     }
 
-    public function testGetPathFor()
+    /**
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
+    public function testGetPathFor(): void
     {
         // Test data
         $test_path = '/test';
@@ -203,7 +210,7 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         try {
             $this->klein_app->getPathFor($test_name);
         } catch (Exception $e) {
-            $this->assertTrue($e instanceof OutOfBoundsException);
+            $this->assertInstanceOf(OutOfBoundsException::class, $e);
         }
 
         $this->klein_app->routes()->prepareNamed();
@@ -214,7 +221,10 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($test_path, $returned_path);
     }
 
-    public function testOnErrorWithStringCallables()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOnErrorWithStringCallables(): void
     {
         $this->klein_app->onError('test_num_args_wrapper');
 
@@ -230,12 +240,15 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function out($a, $b, $c, $d)
+    public function out(mixed $a, mixed $b, mixed $c, mixed $d): void
     {
         echo $b;
     }
 
-    public function testOnErrorWithBadCallables()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOnErrorWithBadCallables(): void
     {
         $this->klein_app->onError('this_function_doesnt_exist');
 
@@ -258,7 +271,11 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         session_destroy();
     }
 
-    public function testOnHttpError()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testOnHttpError(): void
     {
         // Create expected arguments
         $num_of_args = 0;
@@ -289,7 +306,7 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
                     $expected_arguments['klein'] = $klein;
                     $expected_arguments['matched'] = $matched;
                     $expected_arguments['methods_matched'] = $methods_matched;
-                    $klein->response()->body($expected_arguments['code'] . ' error');
+                    $klein->response()->body($expected_arguments['code'] . ' error'); // @phpstan-ignore binaryOp.invalid
                 }
             )
         );
@@ -305,14 +322,17 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertEquals(4, count($expected_arguments));
 
         $this->assertTrue(is_int($expected_arguments['code']));
-        $this->assertTrue($expected_arguments['klein'] instanceof Klein);
-        $this->assertTrue($expected_arguments['matched'] instanceof RouteCollection);
+        $this->assertInstanceOf(Klein::class, $expected_arguments['klein']);
+        $this->assertInstanceOf(RouteCollection::class, $expected_arguments['matched']);
         $this->assertTrue(is_array($expected_arguments['methods_matched']));
 
         $this->assertSame($expected_arguments['klein'], $this->klein_app);
     }
 
-    public function testOnHttpErrorWithRouteDefined()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testOnHttpErrorWithRouteDefined(): void
     {
         // Create expected arguments
         $num_of_args = 0;
@@ -348,15 +368,15 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(count($expected_arguments), $num_of_args);
 
         $this->assertTrue(is_int($expected_arguments['code']));
-        $this->assertTrue($expected_arguments['klein'] instanceof Klein);
-        $this->assertTrue($expected_arguments['matched'] instanceof RouteCollection);
+        $this->assertInstanceOf(Klein::class, $expected_arguments['klein']);
+        $this->assertInstanceOf(RouteCollection::class, $expected_arguments['matched']);
         $this->assertTrue(is_array($expected_arguments['methods_matched']));
-        $this->assertTrue($expected_arguments['exception'] instanceof HttpExceptionInterface);
+        $this->assertInstanceOf(HttpExceptionInterface::class, $expected_arguments['exception']);
 
         $this->assertSame($expected_arguments['klein'], $this->klein_app);
     }
 
-    public function testOnHttpErrorWithStringCallables()
+    public function testOnHttpErrorWithStringCallables(): void
     {
         $this->klein_app->onHttpError('test_num_args_wrapper');
 
@@ -366,7 +386,7 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testOnHttpErrorWithBadCallables()
+    public function testOnHttpErrorWithBadCallables(): void
     {
         $this->klein_app->onError('this_function_doesnt_exist');
 
@@ -376,7 +396,10 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testAfterDispatch()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testAfterDispatch(): void
     {
         $this->klein_app->afterDispatch(
             function ($klein) {
@@ -392,7 +415,10 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testAfterDispatchWithMultipleCallbacks()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testAfterDispatchWithMultipleCallbacks(): void
     {
         $this->klein_app->afterDispatch(
             function (Klein $klein) {
@@ -414,7 +440,10 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testAfterDispatchWithStringCallables()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testAfterDispatchWithStringCallables(): void
     {
         $this->klein_app->afterDispatch('test_response_edit_wrapper');
 
@@ -429,14 +458,17 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
     /**
      * @throws Throwable
      */
-    public function testAfterDispatchWithBadCallables()
+    public function testAfterDispatchWithBadCallables(): void
     {
         $this->expectException(TypeError::class);
-        $this->klein_app->afterDispatch('this_function_doesnt_exist');
+        $this->klein_app->afterDispatch('this_function_doesnt_exist'); // @phpstan-ignore argument.type
         $this->klein_app->dispatch();
     }
 
-    public function testAfterDispatchWithCallableThatThrowsException()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testAfterDispatchWithCallableThatThrowsException(): void
     {
         $this->expectException(UnhandledException::class);
         $this->klein_app->afterDispatch(
@@ -453,7 +485,11 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testErrorsWithNoCallbacks()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testErrorsWithNoCallbacks(): void
     {
         $this->expectException(UnhandledException::class);
         $this->klein_app->respond(
@@ -470,41 +506,45 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testSkipThis()
+    public function testSkipThis(): void
     {
         try {
             $this->klein_app->skipThis();
         } catch (Exception $e) {
-            $this->assertTrue($e instanceof DispatchHaltedException);
+            $this->assertInstanceOf(DispatchHaltedException::class, $e);
             $this->assertSame(DispatchHaltedException::SKIP_THIS, $e->getCode());
             $this->assertSame(1, $e->getNumberOfSkips());
         }
     }
 
-    public function testSkipNext()
+    public function testSkipNext(): void
     {
         $number_of_skips = 3;
 
         try {
             $this->klein_app->skipNext($number_of_skips);
         } catch (Exception $e) {
-            $this->assertTrue($e instanceof DispatchHaltedException);
+            $this->assertInstanceOf(DispatchHaltedException::class, $e);
             $this->assertSame(DispatchHaltedException::SKIP_NEXT, $e->getCode());
             $this->assertSame($number_of_skips, $e->getNumberOfSkips());
         }
     }
 
-    public function testSkipRemaining()
+    public function testSkipRemaining(): void
     {
         try {
             $this->klein_app->skipRemaining();
         } catch (Exception $e) {
-            $this->assertTrue($e instanceof DispatchHaltedException);
+            $this->assertInstanceOf(DispatchHaltedException::class, $e);
             $this->assertSame(DispatchHaltedException::SKIP_REMAINING, $e->getCode());
         }
     }
 
-    public function testAbort()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testAbort(): void
     {
         $test_code = 503;
 
@@ -520,105 +560,150 @@ class KleinTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertTrue($this->klein_app->response()->isLocked());
     }
 
-    public function testOptions()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOptions(): void
     {
         $route = $this->klein_app->options('*', $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('OPTIONS', $route->method);
     }
 
-    public function testHead()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHead(): void
     {
         $route = $this->klein_app->head(callback: $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('HEAD', $route->method);
     }
 
-    public function testGet()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testGet(): void
     {
         $route = $this->klein_app->get(callback: $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('GET', $route->method);
     }
 
-    public function testPost()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPost(): void
     {
         $route = $this->klein_app->post(callback: $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('POST', $route->method);
     }
 
-    public function testPut()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPut(): void
     {
         $route = $this->klein_app->put(callback: $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('PUT', $route->method);
     }
 
-    public function testDelete()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testDelete(): void
     {
         $route = $this->klein_app->delete(callback: $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('DELETE', $route->method);
     }
 
-    public function testPatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPatch(): void
     {
         $route = $this->klein_app->patch(callback: $this->getTestCallable());
 
-        $this->assertNotNull($route);
+        $this->assertInstanceOf(Route::class, $route);
         $this->assertSame('PATCH', $route->method);
     }
 
-    public function testPRespondWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPRespondWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->respond();
     }
 
-    public function testPatchWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPatchWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->patch();
     }
 
-    public function testOptionsWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOptionsWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->options();
     }
 
-    public function testHeadWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHeadWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->head();
     }
 
-    public function testGetWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testGetWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->get();
     }
 
-    public function testPostWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPostWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->post();
     }
 
-    public function testPutWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPutWithNullCallable(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->klein_app->put();
     }
 
-    public function testDeleteWithNullCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testDeleteWithNullCallable(): void
     {
         // DELETE
         $this->expectException(InvalidArgumentException::class);

@@ -26,7 +26,9 @@ use Klein\Routes\Route;
 use Klein\Routes\RouteFactory;
 use Klein\Routes\RouteRegexCompiler;
 use Klein\Tree\RadixRouteIndex;
+use InvalidArgumentException;
 use OutOfBoundsException;
+use RuntimeException;
 use SplQueue;
 use SplStack;
 use Throwable;
@@ -185,6 +187,7 @@ class Klein
      * @param App|null $app An object passed to each route callback, defaults to an App instance
      * @param RouteCollection|null $routes Collection object responsible for containing all route instances
      * @param AbstractRouteFactory|null $routeFactory A factory class responsible for creating Route instances
+     * @throws InvalidArgumentException
      */
     public function __construct(
         ?ServiceProvider $service = null,
@@ -285,6 +288,8 @@ class Klein
      * @param callable|null $callback Callable callback method to execute on route match
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      */
     public function respond(string|array|null $method = null, ?string $path = '*', ?callable $callback = null): Route
     {
@@ -292,7 +297,7 @@ class Klein
             throw new InvalidCallableException(gettype($callback));
         }
 
-        $route = $this->routeFactory->build($callback, $path, $method);
+        $route = $this->routeFactory->build($callback, $path ?? '*', $method);
         $this->routes->add($route);
 
         $this->radixRouteIndex->addRoute($route);
@@ -705,6 +710,8 @@ class Klein
      * @param string $uri The URI to be matched against the routes.
      * @param string $requestMethod
      * @return Route[] An associative array of route objects that match the given URI
+     * @throws RoutePathCompilationException
+     * @throws RuntimeException
      */
     private function filterMatchingRoutes(string $uri, string $requestMethod): array
     {
@@ -828,11 +835,13 @@ class Klein
      * @param array<string, string>|null $params Key-value map of placeholder names to substitute into the route.
      *                                                Missing values for optional placeholders remove their segment;
      *                                                missing values for required placeholders keep the original token.
-     * @param bool $flatten_regex When true, flattens custom-regex routes (prefixed with "@") to "/" if no substitutions occur.
+     * @param bool $flatten_regex When true, flattens custom-regex routes (prefixed with "@") to "/" if
+     *                            no substitutions occur.
      *
      * @return string The generated path string for the named route.
      *
      * @throws OutOfBoundsException If no route exists with the given name.
+     * @throws RuntimeException
      */
     public function getPathFor(string $route_name, ?array $params = null, bool $flatten_regex = true): string
     {
@@ -963,6 +972,7 @@ class Klein
      * @param string[] $methods_matched The HTTP methods that were matched in dispatch
      *
      * @return void
+     * @throws LockedResponseException
      */
     private function httpError(
         HttpExceptionInterface $http_exception,
@@ -1077,6 +1087,7 @@ class Klein
      *
      * @return void
      * @throws DispatchHaltedException To halt/skip the current dispatch loop
+     * @throws HttpException
      */
     public function abort(?int $code = null): void
     {
@@ -1094,6 +1105,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      * @see Klein::respond()
      */
     public function options(string $path = '*', ?callable $callback = null): Route
@@ -1112,6 +1125,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      * @see Klein::respond()
      */
     public function head(string $path = '*', ?callable $callback = null): Route
@@ -1130,6 +1145,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      * @see Klein::respond()
      */
     public function get(string $path = '*', ?callable $callback = null): Route
@@ -1148,6 +1165,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      * @see Klein::respond()
      */
     public function post(string $path = '*', ?callable $callback = null): Route
@@ -1166,6 +1185,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      * @see Klein::respond()
      */
     public function put(string $path = '*', ?callable $callback = null): Route
@@ -1184,6 +1205,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      * @see Klein::respond()
      */
     public function delete(string $path = '*', ?callable $callback = null): Route
@@ -1207,6 +1230,8 @@ class Klein
      * @param callable|null $callback
      *
      * @return Route
+     * @throws InvalidCallableException
+     * @throws InvalidArgumentException
      */
     public function patch(string $path = '*', ?callable $callback = null): Route
     {

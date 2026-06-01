@@ -27,6 +27,10 @@ use Klein\ServiceProvider;
 use Matecat\Tests\Klein\Mocks\MockRequestFactory;
 use Matecat\Tests\Klein\Mocks\TestClass;
 use Throwable;
+use Klein\Exceptions\LockedResponseException;
+use Error;
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * RoutingTest
@@ -34,7 +38,10 @@ use Throwable;
 class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
 {
 
-    public function testBasic()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testBasic(): void
     {
         $this->expectOutputString('x');
 
@@ -56,7 +63,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testCallable()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCallable(): void
     {
         $this->expectOutputString('okok');
 
@@ -68,7 +78,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testCallbackArguments()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCallbackArguments(): void
     {
         // Create expected objects
         $expected_objects = [
@@ -110,7 +123,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($expected_objects['klein'], $this->klein_app);
     }
 
-    public function testAppReference()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testAppReference(): void
     {
         $this->expectOutputString('ab');
 
@@ -144,7 +160,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchOutput()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchOutput(): void
     {
         $expected_output = [
             'returned1' => 'alright!',
@@ -176,7 +196,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchOutputNotSent()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchOutputNotSent(): void
     {
         $this->klein_app->respond(
             callback: function () {
@@ -194,7 +218,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchOutputCaptured()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchOutputCaptured(): void
     {
         $expected_output = [
             'echoed' => 'yup',
@@ -224,7 +252,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($expected_output['returned'], $this->klein_app->response()->body());
     }
 
-    public function testDispatchOutputReplaced()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchOutputReplaced(): void
     {
         $expected_output = [
             'echoed' => 'yup',
@@ -251,7 +283,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($expected_output['echoed'], $this->klein_app->response()->body());
     }
 
-    public function testDispatchOutputPrepended()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchOutputPrepended(): void
     {
         $expected_output = [
             'echoed' => 'yup',
@@ -287,7 +323,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchOutputAppended()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchOutputAppended(): void
     {
         $expected_output = [
             'echoed' => 'yup',
@@ -323,7 +363,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchResponseReplaced()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchResponseReplaced(): void
     {
         $expected_body = 'You SHOULD see this';
         $expected_code = 201;
@@ -365,7 +409,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRespondReturn()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRespondReturn(): void
     {
         $return_one = $this->klein_app->respond(
             callback: function () {
@@ -380,11 +427,14 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
 
         $this->klein_app->dispatch(null, null, false);
 
-        $this->assertTrue(is_callable($return_one));
-        $this->assertTrue(is_callable($return_two));
+        $this->assertInstanceOf(Route::class, $return_one);
+        $this->assertInstanceOf(Route::class, $return_two);
     }
 
-    public function testRespondReturnChaining()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRespondReturnChaining(): void
     {
         $return_one = $this->klein_app->respond(
             callback: function () {
@@ -400,7 +450,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($return_one->path, $return_two);
     }
 
-    public function testCatchallImplicit()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCatchallImplicit(): void
     {
         $this->expectOutputString('b');
 
@@ -432,7 +485,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testCatchallAsterisk()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCatchallAsterisk(): void
     {
         $this->expectOutputString('b');
 
@@ -465,7 +521,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testCatchallImplicitTriggers404()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testCatchallImplicitTriggers404(): void
     {
         $this->expectOutputString("b404\n");
 
@@ -488,7 +547,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRegex()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRegex(): void
     {
         $this->expectOutputString('zz');
 
@@ -517,7 +579,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRegexNegate()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRegexNegate(): void
     {
         $this->expectOutputString("y");
 
@@ -533,7 +598,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNormalNegate()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testNormalNegate(): void
     {
         $this->expectOutputString('');
 
@@ -549,7 +617,7 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNamespaceNegate()
+    public function testNamespaceNegate(): void
     {
         $this->expectOutputString('');
 
@@ -570,7 +638,7 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNamespaceRegexNegate()
+    public function testNamespaceRegexNegate(): void
     {
         $this->expectOutputString("y");
 
@@ -591,7 +659,7 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNamespaceDynamic()
+    public function testNamespaceDynamic(): void
     {
         $this->expectOutputString('y');
 
@@ -612,7 +680,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function test404()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function test404(): void
     {
         $this->expectOutputString("404\n");
 
@@ -638,7 +710,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testParamsBasic()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testParamsBasic(): void
     {
         $this->expectOutputString('blue');
 
@@ -654,7 +729,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testParamsIntegerSuccess()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testParamsIntegerSuccess(): void
     {
         $this->expectOutputString("string(3) \"987\"");
 
@@ -672,7 +750,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testParamsIntegerFail()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testParamsIntegerFail(): void
     {
         $this->expectOutputString('404 Code');
 
@@ -696,7 +777,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testParamsAlphaNum()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testParamsAlphaNum(): void
     {
         $this->klein_app->respond(
             path: '/[a:audible]',
@@ -726,7 +810,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testParamsHex()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testParamsHex(): void
     {
         $this->klein_app->respond(
             path: '/[h:hexcolor]',
@@ -768,7 +855,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testParamsSlug()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testParamsSlug(): void
     {
         $this->klein_app->respond(
             path: '/[s:slug_name]',
@@ -822,7 +912,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testPathParamsAreUrlDecoded()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPathParamsAreUrlDecoded(): void
     {
         $this->klein_app->respond(
             path: '/[:test]',
@@ -846,7 +939,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testPathParamsAreUrlDecodedToRFC3986Spec()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPathParamsAreUrlDecodedToRFC3986Spec(): void
     {
         $this->klein_app->respond(
             path: '/[:test]',
@@ -870,7 +966,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function test404TriggersOnce()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function test404TriggersOnce(): void
     {
         $this->expectOutputString('d404 Code');
 
@@ -893,7 +992,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function test404RouteDefinitionOrderDoesntEffectWhen404HandlersCalled()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function test404RouteDefinitionOrderDoesntEffectWhen404HandlersCalled(): void
     {
         $this->expectOutputString('onetwo404 Code');
 
@@ -924,7 +1026,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         error_reporting($old_error_val);
     }
 
-    public function testMethodCatchAll()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testMethodCatchAll(): void
     {
         $this->klein_app->respond(
             'POST',
@@ -964,7 +1069,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertStringContainsString('3', $outputString);
     }
 
-    public function testLazyTrailingMatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testLazyTrailingMatch(): void
     {
         $this->expectOutputString('this-is-a-title-123');
 
@@ -981,7 +1089,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testFormatMatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testFormatMatch(): void
     {
         $this->expectOutputString('xml');
 
@@ -997,7 +1108,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDotSeparator()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testDotSeparator(): void
     {
         $this->expectOutputString('matchA:slug=ABCD_E--matchB:slug=ABCD_E--');
 
@@ -1038,7 +1152,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testControllerActionStyleRouteMatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testControllerActionStyleRouteMatch(): void
     {
         $this->expectOutputString('donkey-kick');
 
@@ -1055,7 +1172,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testRespondArgumentOrder()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testRespondArgumentOrder(): void
     {
         $this->klein_app->respond(
             callback: function () {
@@ -1109,7 +1229,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertStringContainsString('f', $outputString);
     }
 
-    public function testTrailingMatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testTrailingMatch(): void
     {
         $this->klein_app->respond(
             path: '/?[*:trailing]/dog/?',
@@ -1157,7 +1280,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testTrailingPossessiveMatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testTrailingPossessiveMatch(): void
     {
         $this->klein_app->respond(
             path: '/sub-dir/[**:trailing]',
@@ -1196,7 +1322,7 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNSDispatch()
+    public function testNSDispatch(): void
     {
         $this->klein_app->with(
             '/u',
@@ -1253,7 +1379,7 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNSDispatchStaticRoute()
+    public function testNSDispatchStaticRoute(): void
     {
         $this->klein_app->with(
             '/u',
@@ -1276,12 +1402,15 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testNSDispatchExternal()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testNSDispatchExternal(): void
     {
         $ext_namespaces = $this->loadExternalRoutes();
 
         $this->klein_app->respond(
-            path: 404,
+            path: '404',
             callback: function ($request, $response) {
                 echo "404";
             }
@@ -1304,12 +1433,15 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         }
     }
 
-    public function testNSDispatchExternalRerequired()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testNSDispatchExternalRerequired(): void
     {
         $ext_namespaces = $this->loadExternalRoutes();
 
         $this->klein_app->respond(
-            path: 404,
+            path: '404',
             callback: function ($request, $response) {
                 echo "404";
             }
@@ -1332,7 +1464,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         }
     }
 
-    public function test405DefaultRequest()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function test405DefaultRequest(): void
     {
         $this->klein_app->respond(
             ['GET', 'POST'],
@@ -1350,7 +1485,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertEquals('GET, POST', $this->klein_app->response()->headers()->get('Allow'));
     }
 
-    public function testNo405OnNonMatchRoutes()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testNo405OnNonMatchRoutes(): void
     {
         $this->klein_app->respond(
             ['GET', 'POST'],
@@ -1367,7 +1506,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertEquals(404, $this->klein_app->response()->code());
     }
 
-    public function test405Routes()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function test405Routes(): void
     {
         $result_array = [];
 
@@ -1422,7 +1565,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(405, $this->klein_app->response()->code());
     }
 
-    public function test405ErrorHandler()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function test405ErrorHandler(): void
     {
         $result_array = [];
 
@@ -1463,7 +1610,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(405, $this->klein_app->response()->code());
     }
 
-    public function testOptionsDefaultRequest()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOptionsDefaultRequest(): void
     {
         $this->klein_app->respond(
             callback: function ($request, $response) {
@@ -1486,7 +1636,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertEquals('GET, POST', $this->klein_app->response()->headers()->get('Allow'));
     }
 
-    public function testOptionsRoutes()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOptionsRoutes(): void
     {
         $access_control_headers = [
             [
@@ -1537,7 +1690,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         }
     }
 
-    public function testHeadDefaultRequest()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHeadDefaultRequest(): void
     {
         $expected_headers = [
             [
@@ -1588,7 +1744,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         }
     }
 
-    public function testHeadMethodMatch()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHeadMethodMatch(): void
     {
         $test_strings = [
             'oh, hello',
@@ -1614,7 +1773,7 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->klein_app->respond(
             'POST',
             '/',
-            function ($request, $response) use ($test_strings, &$test_result) {
+            function ($request, $response) use (&$test_result) {
                 $test_result .= 'nope';
             }
         );
@@ -1629,7 +1788,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testGetPathFor()
+    /**
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
+    public function testGetPathFor(): void
     {
         $this->klein_app->respond(
             path: '/dogs',
@@ -1762,7 +1925,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchHalt()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testDispatchHalt(): void
     {
         $this->expectOutputString('2,4,7,8,');
 
@@ -1824,7 +1990,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->klein_app->dispatch();
     }
 
-    public function testDispatchSkipCauses404()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testDispatchSkipCauses404(): void
     {
         $this->expectOutputString('404');
 
@@ -1858,7 +2027,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDispatchAbort()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchAbort(): void
     {
         $this->expectOutputString('1,');
 
@@ -1884,7 +2057,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testDispatchAbortWithCode()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchAbortWithCode(): void
     {
         $this->expectOutputString('1,');
 
@@ -1910,7 +2087,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testDispatchAbortCallsHttpError()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchAbortCallsHttpError(): void
     {
         $test_code = 666;
         $this->expectOutputString('1,aborted,' . $test_code);
@@ -1944,7 +2125,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame($test_code, $this->klein_app->response()->code());
     }
 
-    public function testDispatchExceptionRethrowsUnknownCode()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testDispatchExceptionRethrowsUnknownCode(): void
     {
         $this->expectException(UnhandledException::class);
         $this->expectOutputString('');
@@ -1963,7 +2148,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testThrowHttpExceptionHandledProperly()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testThrowHttpExceptionHandledProperly(): void
     {
         $this->expectOutputString('');
 
@@ -1979,7 +2168,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(400, $this->klein_app->response()->code());
     }
 
-    public function testHttpExceptionStopsRouteMatching()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHttpExceptionStopsRouteMatching(): void
     {
         $this->expectOutputString('one');
 
@@ -2001,7 +2193,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testOptionsAlias()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testOptionsAlias(): void
     {
         $this->expectOutputString('1,2,');
 
@@ -2025,7 +2220,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testHeadAlias()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHeadAlias(): void
     {
         // HEAD requests shouldn't return data
         $this->expectOutputString('');
@@ -2056,7 +2254,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertFalse($this->klein_app->response()->headers()->exists('Test-3'));
     }
 
-    public function testGetAlias()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testGetAlias(): void
     {
         $this->expectOutputString('1,2,');
 
@@ -2080,7 +2281,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testPostAlias()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPostAlias(): void
     {
         $this->expectOutputString('1,2,');
 
@@ -2104,7 +2308,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testPutAlias()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testPutAlias(): void
     {
         $this->expectOutputString('1,2,');
 
@@ -2128,7 +2335,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         );
     }
 
-    public function testDeleteAlias()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testDeleteAlias(): void
     {
         $this->expectOutputString('1,2,');
 
@@ -2159,9 +2369,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
      * As the original Klein project was designed as a PHP version of Sinatra,
      * many of the following tests are ports of the Sinatra ruby equivalents:
      * https://github.com/sinatra/sinatra/blob/cd82a57154d57c18acfadbfefbefc6ea6a5035af/test/routing_test.rb
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
      */
 
-    public function testMatchesEncodedSlashes()
+    public function testMatchesEncodedSlashes(): void
     {
         $this->klein_app->respond(
             path: '/[:a]',
@@ -2181,7 +2393,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame('foo/bar', $this->klein_app->response()->body());
     }
 
-    public function testMatchesDotAsNamedParam()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesDotAsNamedParam(): void
     {
         $this->klein_app->respond(
             path: '/[:foo]/[:bar]',
@@ -2201,7 +2417,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame('user@example.com', $this->klein_app->response()->body());
     }
 
-    public function testMatchesDotOutsideOfNamedParam()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesDotOutsideOfNamedParam(): void
     {
         $file = null;
         $ext = null;
@@ -2229,7 +2449,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame('png', $ext);
     }
 
-    public function testMatchesLiteralDotsInPaths()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesLiteralDotsInPaths(): void
     {
         $this->klein_app->respond(
             path: '/file.ext',
@@ -2250,7 +2474,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testMatchesLiteralDotsInPathBeforeNamedParam()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesLiteralDotsInPathBeforeNamedParam(): void
     {
         $this->klein_app->respond(
             path: '/file.[:ext]',
@@ -2271,7 +2499,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testMultipleUnsafeCharactersArentOverQuoted()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMultipleUnsafeCharactersArentOverQuoted(): void
     {
         $this->klein_app->respond(
             path: '/[a:site].[:format]?/[:id].[:format2]?',
@@ -2285,7 +2517,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(200, $this->klein_app->response()->code());
     }
 
-    public function testMatchesLiteralPlusSignsInPaths()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesLiteralPlusSignsInPaths(): void
     {
         $this->klein_app->respond(
             path: '/te+st',
@@ -2306,7 +2542,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(404, $this->klein_app->response()->code());
     }
 
-    public function testMatchesParenthesesInPaths()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesParenthesesInPaths(): void
     {
         $this->klein_app->respond(
             path: '/test(bar)',
@@ -2320,7 +2560,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(200, $this->klein_app->response()->code());
     }
 
-    public function testMatchesAdvancedRegularExpressions()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testMatchesAdvancedRegularExpressions(): void
     {
         $this->klein_app->respond(
             path: '@^/foo.../bar$',
@@ -2334,10 +2578,12 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(200, $this->klein_app->response()->code());
     }
 
-    public function testApcDependencyFailsGracefully()
+    /**
+     * @throws InvalidArgumentException
+     * @throws LockedResponseException
+     */
+    public function testApcDependencyFailsGracefully(): void
     {
-        // Custom apc function
-        implement_custom_apc_cache_functions();
 
         $this->klein_app->respond(
             path: '/test',
@@ -2351,7 +2597,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertSame(200, $this->klein_app->response()->code());
     }
 
-    public function testRoutePathCompilationFailure()
+    /**
+     * @throws Error
+     */
+    public function testRoutePathCompilationFailure(): void
     {
         try {
             $this->klein_app->respond(
@@ -2362,12 +2611,15 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
             );
             $this->klein_app->dispatch(MockRequestFactory::create('/users/1/friends/1/'));
         } catch (Exception $e) {
-            $this->assertTrue($e instanceof RoutePathCompilationException);
-            $this->assertTrue($e->getRoute() instanceof Route);
+            $this->assertInstanceOf(RoutePathCompilationException::class, $e);
+            $this->assertInstanceOf(Route::class, $e->getRoute());
         }
     }
 
-    public function testRoutePathCompilationFailureWithoutWarnings()
+    /**
+     * @throws Error
+     */
+    public function testRoutePathCompilationFailureWithoutWarnings(): void
     {
         $old_error_val = error_reporting();
         error_reporting(E_ALL ^ E_NOTICE ^ E_WARNING);
@@ -2377,7 +2629,11 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         error_reporting($old_error_val);
     }
 
-    public function testRoutePathCompilationCustom()
+    /**
+     * @throws Error
+     * @throws InvalidArgumentException
+     */
+    public function testRoutePathCompilationCustom(): void
     {
         $this->expectOutputString('0f2f, d865');
 
@@ -2401,7 +2657,10 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->assertNull($exception);
     }
 
-    public function testHeadMethodsCaseInsensitive()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testHeadMethodsCaseInsensitive(): void
     {
         $test_strings = [
             'oh, hello',
@@ -2413,21 +2672,21 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
         $this->klein_app->respond(
             ['get', 'HEAD'],
             null,
-            function ($request, $response) use ($test_strings, &$test_result) {
+            function ($request, $response) use ($test_strings, &$test_result): void {
                 $test_result .= $test_strings[1];
             }
         );
         $this->klein_app->respond(
             'get',
             '/',
-            function ($request, $response) use ($test_strings, &$test_result) {
+            function ($request, $response) use ($test_strings, &$test_result): void {
                 $test_result .= $test_strings[0];
             }
         );
         $this->klein_app->respond(
             'post',
             '/',
-            function ($request, $response) use ($test_strings, &$test_result) {
+            function ($request, $response) use (&$test_result): void {
                 $test_result .= 'nope';
             }
         );

@@ -23,6 +23,7 @@ use Klein\ResponseCookie;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use RuntimeException;
+use InvalidArgumentException;
 
 /**
  * ResponseTest
@@ -30,14 +31,16 @@ use RuntimeException;
 class ResponseTest extends AbstractKleinTestCase
 {
 
-    public function testProtocolVersionGetSet()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testProtocolVersionGetSet(): void
     {
         $version_reg_ex = '/^[0-9]\.[0-9]$/';
 
         // Empty constructor
         $response = new Response();
 
-        $this->assertNotNull($response->protocolVersion());
         $this->assertIsString($response->protocolVersion());
         $this->assertMatchesRegularExpression($version_reg_ex, $response->protocolVersion());
 
@@ -48,7 +51,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertSame('2.0', $response->protocolVersion());
     }
 
-    public function testBodyGetSet()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testBodyGetSet(): void
     {
         // Empty constructor
         $response = new Response();
@@ -67,12 +73,14 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertSame('testing', $response->body());
     }
 
-    public function testCodeGetSet()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testCodeGetSet(): void
     {
         // Empty constructor
         $response = new Response();
 
-        $this->assertNotNull($response->code());
         $this->assertIsInt($response->code());
 
         // Code set in constructor
@@ -87,31 +95,40 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertSame(204, $response->code());
     }
 
-    public function testStatusGetter()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testStatusGetter(): void
     {
         $response = new Response();
 
-        $this->assertIsObject($response->status());
-        $this->assertTrue($response->status() instanceof HttpStatus);
+        $this->assertInstanceOf(HttpStatus::class, $response->status());
     }
 
-    public function testHeadersGetter()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testHeadersGetter(): void
     {
         $response = new Response();
 
-        $this->assertIsObject($response->headers());
-        $this->assertTrue($response->headers() instanceof HeaderDataCollection);
+        $this->assertInstanceOf(HeaderDataCollection::class, $response->headers());
     }
 
-    public function testCookiesGetter()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testCookiesGetter(): void
     {
         $response = new Response();
 
-        $this->assertIsObject($response->cookies());
-        $this->assertTrue($response->cookies() instanceof ResponseCookieDataCollection);
+        $this->assertInstanceOf(ResponseCookieDataCollection::class, $response->cookies());
     }
 
-    public function testPrepend()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testPrepend(): void
     {
         $response = new Response('ein');
         $response->prepend('Kl');
@@ -119,7 +136,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertSame('Klein', $response->body());
     }
 
-    public function testAppend()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testAppend(): void
     {
         $response = new Response('Kl');
         $response->append('ein');
@@ -127,7 +147,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertSame('Klein', $response->body());
     }
 
-    public function testLockToggleAndGetters()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testLockToggleAndGetters(): void
     {
         $response = new Response();
 
@@ -142,7 +165,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertFalse($response->isLocked());
     }
 
-    public function testLockedNotModifiable()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testLockedNotModifiable(): void
     {
         $response = new Response();
         $response->lock();
@@ -192,8 +218,9 @@ class ResponseTest extends AbstractKleinTestCase
      *
      * Attempt to run in a separate process so we can
      * at least call our internal methods
+     * @throws LockedResponseException
      */
-    public function testSendHeaders()
+    public function testSendHeaders(): void
     {
         $response = new Response('woot!');
         $response->headers()->set('test', 'sure');
@@ -204,8 +231,11 @@ class ResponseTest extends AbstractKleinTestCase
         $this->expectOutputString('');
     }
 
+    /**
+     * @throws LockedResponseException
+     */
     #[RunInSeparateProcess]
-    public function testSendHeadersInIsolateProcess()
+    public function testSendHeadersInIsolateProcess(): void
     {
         $this->testSendHeaders();
     }
@@ -213,8 +243,9 @@ class ResponseTest extends AbstractKleinTestCase
     /**
      * Testing cookies is exactly like testing headers
      * ... So, yea.
+     * @throws LockedResponseException
      */
-    public function testSendCookies()
+    public function testSendCookies(): void
     {
         $response = new Response();
         $response->cookies()->set('test', 'woot!');
@@ -225,13 +256,19 @@ class ResponseTest extends AbstractKleinTestCase
         $this->expectOutputString('');
     }
 
+    /**
+     * @throws LockedResponseException
+     */
     #[RunInSeparateProcess]
-    public function testSendCookiesInIsolateProcess()
+    public function testSendCookiesInIsolateProcess(): void
     {
         $this->testSendCookies();
     }
 
-    public function testSendBody()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testSendBody(): void
     {
         $response = new Response('woot!');
         $response->sendBody();
@@ -239,7 +276,11 @@ class ResponseTest extends AbstractKleinTestCase
         $this->expectOutputString('woot!');
     }
 
-    public function testSend()
+    /**
+     * @throws LockedResponseException
+     * @throws ResponseAlreadySentException
+     */
+    public function testSend(): void
     {
         $response = new Response('woot!');
         $response->send();
@@ -248,7 +289,11 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertTrue($response->isLocked());
     }
 
-    public function testSendWhenAlreadySent()
+    /**
+     * @throws LockedResponseException
+     * @throws ResponseAlreadySentException
+     */
+    public function testSendWhenAlreadySent(): void
     {
         $this->expectException(ResponseAlreadySentException::class);
         $response = new Response();
@@ -264,12 +309,14 @@ class ResponseTest extends AbstractKleinTestCase
      * `fastcgi_finish_request()` function gets called.
      * Because of this, this MUST be run in a separate process
      *
+     * @throws LockedResponseException
+     * @throws ResponseAlreadySentException
      */
     #[RunInSeparateProcess]
-    public function testSendCallsFastCGIFinishRequest()
+    public function testSendCallsFastCGIFinishRequest(): void
     {
         // Custom fastcgi function
-        implement_custom_fastcgi_function();
+        override_create_fastcgi_function();
 
         $this->expectOutputString('fastcgi_finish_request');
 
@@ -277,7 +324,10 @@ class ResponseTest extends AbstractKleinTestCase
         $response->send();
     }
 
-    public function testChunk()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testChunk(): void
     {
         $content = [
             'initial content',
@@ -301,10 +351,12 @@ class ResponseTest extends AbstractKleinTestCase
         );
     }
 
-    public function testHeader()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testHeader(): void
     {
         $headers = [
-            'test' => 'woot!',
             'test' => 'sure',
             'okay' => 'yup',
         ];
@@ -327,8 +379,11 @@ class ResponseTest extends AbstractKleinTestCase
         }
     }
 
+    /**
+     * @throws LockedResponseException
+     */
     #[Group("testCookie")]
-    public function testCookie()
+    public function testCookie(): void
     {
         $test_cookie_data = [
             'name' => 'name',
@@ -370,18 +425,20 @@ class ResponseTest extends AbstractKleinTestCase
 
         $the_cookie = $response->cookies()->get($test_cookie_data['name']);
 
-        $this->assertNotNull($the_cookie);
-        $this->assertTrue($the_cookie instanceof ResponseCookie);
+        $this->assertInstanceOf(ResponseCookie::class, $the_cookie);
         $this->assertSame($test_cookie_data['name'], $the_cookie->getName());
         $this->assertSame($test_cookie_data['value'], $the_cookie->getValue());
         $this->assertSame($test_cookie_data['path'], $the_cookie->getPath());
         $this->assertSame($test_cookie_data['domain'], $the_cookie->getDomain());
         $this->assertSame($test_cookie_data['secure'], $the_cookie->getSecure());
         $this->assertSame($test_cookie_data['httponly'], $the_cookie->getHttpOnly());
-        $this->assertNotNull($the_cookie->getExpire());
+        $this->assertGreaterThan(0, $the_cookie->getExpire());
     }
 
-    public function testNoCache()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testNoCache(): void
     {
         $response = new Response();
 
@@ -393,7 +450,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertContains('no-cache', $response->headers()->all());
     }
 
-    public function testRedirect()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testRedirect(): void
     {
         $url = 'http://google.com/';
         $code = 302;
@@ -406,7 +466,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertTrue($response->isLocked());
     }
 
-    public function testDump()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testDump(): void
     {
         $response = new Response();
 
@@ -414,10 +477,15 @@ class ResponseTest extends AbstractKleinTestCase
 
         $response->dump('test');
 
-        $this->assertStringContainsString('test', $response->body());
+        $body = $response->body();
+        $this->assertIsString($body);
+        $this->assertStringContainsString('test', $body);
     }
 
-    public function testDumpArray()
+    /**
+     * @throws LockedResponseException
+     */
+    public function testDumpArray(): void
     {
         $response = new Response();
 
@@ -429,7 +497,10 @@ class ResponseTest extends AbstractKleinTestCase
         $this->assertNotEquals('<pre></pre>', $response->body());
     }
 
-    public function testFileSend()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testFileSend(): void
     {
         $file_name = 'testing';
         $file_mime = 'text/plain';
@@ -444,7 +515,7 @@ class ResponseTest extends AbstractKleinTestCase
 
         // Expect our output to match our file
         $this->expectOutputString(
-            file_get_contents(__FILE__)
+            (string) file_get_contents(__FILE__)
         );
 
         // Assert headers were passed
@@ -458,11 +529,14 @@ class ResponseTest extends AbstractKleinTestCase
         );
         $this->assertStringContainsString(
             $file_name,
-            $this->klein_app->response()->headers()->get('Content-Disposition')
+            (string) $this->klein_app->response()->headers()->get('Content-Disposition')
         );
     }
 
-    public function testFileSendLooseArgs()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testFileSendLooseArgs(): void
     {
         $this->klein_app->respond(
             callback: function ($request, $response, $service) {
@@ -474,7 +548,7 @@ class ResponseTest extends AbstractKleinTestCase
 
         // Expect our output to match our file
         $this->expectOutputString(
-            file_get_contents(__FILE__)
+            (string) file_get_contents(__FILE__)
         );
 
         // Assert headers were passed
@@ -490,12 +564,16 @@ class ResponseTest extends AbstractKleinTestCase
         );
     }
 
-    public function testFileSendWhenAlreadySent()
+    /**
+     * @throws LockedResponseException
+     * @throws RuntimeException
+     */
+    public function testFileSendWhenAlreadySent(): void
     {
         $this->expectException(ResponseAlreadySentException::class);
         // Expect our output to match our file
         $this->expectOutputString(
-            file_get_contents(__FILE__)
+            (string) file_get_contents(__FILE__)
         );
 
         $response = new Response();
@@ -506,7 +584,11 @@ class ResponseTest extends AbstractKleinTestCase
         $response->file(__FILE__);
     }
 
-    public function testFileSendWithNonExistentFile()
+    /**
+     * @throws LockedResponseException
+     * @throws RuntimeException
+     */
+    public function testFileSendWithNonExistentFile(): void
     {
         $this->expectException(RuntimeException::class);
         // Ignore the file warning
@@ -524,23 +606,28 @@ class ResponseTest extends AbstractKleinTestCase
      * `fastcgi_finish_request()` function gets called.
      * Because of this, this MUST be run in a separate process
      *
+     * @throws LockedResponseException
+     * @throws RuntimeException
      */
     #[RunInSeparateProcess]
-    public function testFileSendCallsFastCGIFinishRequest()
+    public function testFileSendCallsFastCGIFinishRequest(): void
     {
         // Custom fastcgi function
-        implement_custom_fastcgi_function();
+        override_create_fastcgi_function();
 
         // Expect our output to match our file
         $this->expectOutputString(
-            file_get_contents(__FILE__) . 'fastcgi_finish_request'
+            (string) file_get_contents(__FILE__) . 'fastcgi_finish_request'
         );
 
         $response = new Response();
         $response->file(__FILE__);
     }
 
-    public function testJSON()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testJSON(): void
     {
         // Create a test object to be JSON encoded/decoded
         $test_object = (object)[
@@ -563,7 +650,7 @@ class ResponseTest extends AbstractKleinTestCase
 
         // Expect our output to match our json encoded test object
         $this->expectOutputString(
-            json_encode($test_object)
+            (string) json_encode($test_object)
         );
 
         // Assert headers were passed
@@ -581,7 +668,10 @@ class ResponseTest extends AbstractKleinTestCase
         );
     }
 
-    public function testJSONWithPrefix()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testJSONWithPrefix(): void
     {
         // Create a test object to be JSON encoded/decoded
         $test_object = [

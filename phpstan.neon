@@ -1,5 +1,26 @@
 parameters:
-	level: 7
-	paths:
-		- src
-		- tests
+    level: 8
+    paths:
+        - src
+        - tests
+    scanFiles:
+        - tests/functions-bootstrap.php
+    excludePaths:
+        - tests/functions-bootstrap.php
+    # Flag @throws \Exception on public/protected methods when only
+    # a narrower exception (e.g. \InvalidArgumentException) is thrown
+    checkTooWideThrowTypesInProtectedAndPublicMethods: true
+    exceptions:
+        check:
+            # Report when code throws an exception that has no
+            # matching @throws tag in the method's PHPDoc
+            missingCheckedExceptionInThrows: true
+            # Report when @throws declares a broader type than
+            # what is actually thrown (applies to all methods)
+            tooWideThrowType: true
+        uncheckedExceptionClasses:
+            - PHPUnit\Framework\Exception
+            - PHPUnit\Framework\ExpectationFailedException
+            - PHPUnit\Framework\GeneratorNotSupportedException
+            - PHPUnit\Framework\InvalidArgumentException
+    treatPhpDocTypesAsCertain: false

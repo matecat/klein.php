@@ -1,5 +1,6 @@
 <?php
 
+/** @phpstan-ignore variable.undefined */
 $this->respond(
     path: '/?',
     callback: function ($request, $response, $app) {
@@ -7,6 +8,7 @@ $this->respond(
     }
 );
 
+/** @phpstan-ignore variable.undefined */
 $this->respond(
     path: '/testing/?',
     callback: function ($request, $response, $app) {

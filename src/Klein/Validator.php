@@ -19,6 +19,25 @@ use Klein\Exceptions\ValidationException;
 
 /**
  * Validator
+ *
+ * @method static isNull()
+ * @method static notNull()
+ * @method static isLen(int $min, ?int $max = null)
+ * @method static isInt()
+ * @method static isFloat()
+ * @method static isEmail()
+ * @method static isUrl()
+ * @method static isIp()
+ * @method static isRemoteIp()
+ * @method static isAlnum()
+ * @method static isAlpha()
+ * @method static isContains(string $needle)
+ * @method static isRegex(string $pattern)
+ * @method static notRegex(string $pattern)
+ * @method static isChars(string $chars)
+ * @method static notUrl()
+ * @method static notIp()
+ * @method static notRemoteIp()
  */
 class Validator
 {
@@ -87,7 +106,7 @@ class Validator
             return $str === null || $str === '';
         };
         static::$methods['len'] = function (?string $str, int $min, ?int $max = null) {
-            $len = strlen($str);
+            $len = strlen($str ?? '');
             return null === $max ? $len === $min : $len >= $min && $len <= $max;
         };
         static::$methods['int'] = function (?string $str) {
@@ -115,13 +134,13 @@ class Validator
             return ctype_alpha($str);
         };
         static::$methods['contains'] = function (?string $str, string $needle) {
-            return str_contains($str, $needle);
+            return str_contains($str ?? '', $needle);
         };
         static::$methods['regex'] = function (?string $str, string $pattern) {
-            return preg_match($pattern, $str);
+            return preg_match($pattern, $str ?? '');
         };
         static::$methods['chars'] = function (?string $str, string $chars) {
-            return preg_match("/^[$chars]++$/i", $str);
+            return preg_match("/^[$chars]++$/i", $str ?? '');
         };
 
         static::$default_added = true;

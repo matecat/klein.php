@@ -14,7 +14,7 @@ namespace Matecat\Tests\Klein\Mocks;
 class TestClass
 {
 
-    public static function get($request, $response, $app)
+    public static function get(mixed $request, mixed $response, mixed $app): void
     {
         echo 'ok';
     }

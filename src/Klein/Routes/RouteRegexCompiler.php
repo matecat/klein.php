@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Klein\Routes;
 
 use Klein\Exceptions\RegularExpressionCompilationException;
+use RuntimeException;
 
 class RouteRegexCompiler
 {
@@ -58,6 +59,7 @@ class RouteRegexCompiler
      * @param string $path
      * @param bool $isDynamic Whether the route is dynamic (contains parameters)
      * @return string The compiled regular expression representing the route.
+     * @throws RuntimeException If the route regex cannot be compiled
      */
     public static function compileRouteRegexp(string $path, bool $isDynamic = true): string
     {
@@ -127,7 +129,7 @@ class RouteRegexCompiler
                     '))' .
                     ($optional ? '?' : '');
             },
-            $route
+            $route ?? throw new RuntimeException('Unexpected null value from preg_replace_callback')
         );
 
         return "`^$route$`";
@@ -163,7 +165,7 @@ class RouteRegexCompiler
             restore_error_handler();
 
             throw new RegularExpressionCompilationException(
-                $error_string,
+                $error_string ?? 'Unknown error',
                 preg_last_error()
             );
         }
@@ -253,7 +255,7 @@ class RouteRegexCompiler
      *                            no substitutions occur.
      *
      * @return string The generated path string for the named route.
-     *
+     * @throws RuntimeException If the path cannot be rebuilt
      */
     public static function getPathFor(Route $route, ?array $params = null, bool $flatten_regex = true): string
     {
@@ -284,6 +286,6 @@ class RouteRegexCompiler
             $path = $reversed_path;
         }
 
-        return $path;
+        return $path ?? throw new RuntimeException('Unexpected null value from in route path rebuilding.');
     }
 }

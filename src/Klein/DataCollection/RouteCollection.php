@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Klein\DataCollection;
 
+use InvalidArgumentException;
 use Klein\Routes\Route;
 
 /**
@@ -38,6 +39,7 @@ class RouteCollection extends DataCollection
      *
      * @override DataCollection::__construct()
      * @param array<string, Route> $routes The routes of this collection
+     * @throws InvalidArgumentException
      */
     public function __construct(array $routes = [])
     {
@@ -64,6 +66,7 @@ class RouteCollection extends DataCollection
      * @param mixed $value The value of the route to set
      *
      * @return static
+     * @throws InvalidArgumentException
      * @see DataCollection::set()
      */
     public function set(string $key, mixed $value): static
@@ -83,6 +86,7 @@ class RouteCollection extends DataCollection
      * @param Route $route
      *
      * @return static
+     * @throws InvalidArgumentException
      */
     public function addRoute(Route $route): static
     {
@@ -110,6 +114,7 @@ class RouteCollection extends DataCollection
      * @param callable|Route $route
      *
      * @return static
+     * @throws InvalidArgumentException
      */
     public function add(callable|Route $route): static
     {
@@ -130,6 +135,7 @@ class RouteCollection extends DataCollection
      * takes little memory as it's simply moving references around
      *
      * @return static
+     * @throws InvalidArgumentException
      */
     public function prepareNamed(): static
     {

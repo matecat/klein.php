@@ -14,6 +14,7 @@ namespace Matecat\Tests\Klein;
 use Klein\Request;
 use Matecat\Tests\Klein;
 use Matecat\Tests\Klein\Mocks\MockRequestFactory;
+use InvalidArgumentException;
 
 /**
  * RequestTest
@@ -21,7 +22,7 @@ use Matecat\Tests\Klein\Mocks\MockRequestFactory;
 class RequestTest extends Klein\AbstractKleinTestCase
 {
 
-    public function testConstructorAndGetters()
+    public function testConstructorAndGetters(): void
     {
         // Test data
         $params_get = ['a_get_key_name' => 'value'];
@@ -82,7 +83,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($body, $request->body());
     }
 
-    public function testGlobalsCreation()
+    public function testGlobalsCreation(): void
     {
         // Create a unique key
         $key = uniqid();
@@ -105,13 +106,13 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($_FILES[$key], $request->files()->get($key));
     }
 
-    public function testUniversalParams()
+    public function testUniversalParams(): void
     {
         // Test data
-        $params_get = ['page' => 2, 'per_page' => 10, 'num' => 1, 5 => 'ok', 'empty' => null, 'blank' => ''];
-        $params_post = ['first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => 2, 3 => 'hmm', 4 => 'thing'];
-        $cookies = ['user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => 3, 4 => 'dog'];
-        $named = ['id' => '1f8ae', 'num' => 4];
+        $params_get = ['page' => '2', 'per_page' => '10', 'num' => '1', 'extra_a' => 'ok', 'empty' => '', 'blank' => ''];
+        $params_post = ['first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => '2', 'extra_b' => 'hmm', 'extra_c' => 'thing'];
+        $cookies = ['user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => '3', 'extra_d' => 'dog'];
+        $named = ['id' => '1f8ae', 'num' => '4'];
 
         // Create the request
         $request = new Request(
@@ -131,16 +132,16 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame(null, $request->param('thisdoesntexist'));
     }
 
-    public function testUniversalParamsWithFilter()
+    public function testUniversalParamsWithFilter(): void
     {
         // Test data
-        $params_get = ['page' => 2, 'per_page' => 10, 'num' => 1, 5 => 'ok', 'empty' => null, 'blank' => ''];
-        $params_post = ['first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => 2, 3 => 'hmm', 4 => 'thing'];
-        $cookies = ['user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => 3, 4 => 'dog'];
+        $params_get = ['page' => '2', 'per_page' => '10', 'num' => '1', 'extra_a' => 'ok', 'empty' => '', 'blank' => ''];
+        $params_post = ['first_name' => 'Trevor', 'last_name' => 'Suarez', 'num' => '2', 'extra_b' => 'hmm', 'extra_c' => 'thing'];
+        $cookies = ['user' => 'Rican7', 'PHPSESSID' => 'randomstring', 'num' => '3', 'extra_d' => 'dog'];
 
         // Create our filter and expected results
         $filter = ['page', 'user', 'num', 'this-key-never-showed-up-anywhere'];
-        $expected = ['page' => 2, 'user' => 'Rican7', 'num' => 3, 'this-key-never-showed-up-anywhere' => null];
+        $expected = ['page' => '2', 'user' => 'Rican7', 'num' => '3', 'this-key-never-showed-up-anywhere' => null];
 
         // Create the request
         $request = new Request(
@@ -152,10 +153,10 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($expected, $request->params($filter));
     }
 
-    public function testMagic()
+    public function testMagic(): void
     {
         // Test data
-        $params = ['page' => 2, 'per_page' => 10, 'num' => 1];
+        $params = ['page' => '2', 'per_page' => '10', 'num' => '1'];
 
         // Create the request
         $request = new Request($params);
@@ -167,14 +168,14 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($params['per_page'], $request->per_page);
 
         // Test Setter
-        $this->assertSame($request->test = '#yup', $request->param('test'));
+        $this->assertSame($request->test = '#yup', $request->param('test')); // @phpstan-ignore property.notFound
 
         // Test Unsetter
         unset($request->test);
         $this->assertNull($request->param('test'));
     }
 
-    public function testSecure()
+    public function testSecure(): void
     {
         $request = new Request();
         $request->server()->set('HTTPS', true);
@@ -182,7 +183,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertTrue($request->isSecure());
     }
 
-    public function testIp()
+    public function testIp(): void
     {
         // Test data
         $ip = '127.0.0.1';
@@ -193,7 +194,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($ip, $request->ip());
     }
 
-    public function testUserAgent()
+    public function testUserAgent(): void
     {
         // Test data
         $user_agent = 'phpunittt';
@@ -204,7 +205,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($user_agent, $request->userAgent());
     }
 
-    public function testUri()
+    public function testUri(): void
     {
         // Test data
         $uri = 'localhostofthingsandstuff';
@@ -216,7 +217,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($uri . $query, $request->uri());
     }
 
-    public function testPathname()
+    public function testPathname(): void
     {
         // Test data
         $uri = 'localhostofthingsandstuff';
@@ -228,7 +229,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($uri, $request->pathname());
     }
 
-    public function testBody()
+    public function testBody(): void
     {
         // Test data
         $body = '_why is an interesting guy<br> - Trevor';
@@ -244,7 +245,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertSame($body, $request->body());
     }
 
-    public function testMethod()
+    public function testMethod(): void
     {
         // Test data
         $method = 'PATCH';
@@ -257,7 +258,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertTrue($request->httpMethod(strtolower($method)));
     }
 
-    public function testMethodOverride()
+    public function testMethodOverride(): void
     {
         // Test data
         $method = 'POST';
@@ -280,7 +281,10 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertTrue($request->httpMethod(strtolower($weird_override_method)));
     }
 
-    public function testQueryModify()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testQueryModify(): void
     {
         $test_uri = '/test?query';
         $query_string = 'search=string&page=2&per_page=3';
@@ -301,7 +305,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
                 $test_two = $request->query('page', 7);
 
                 // Modify a current var
-                $test_three = $request->query(['per_page' => 10]);
+                $test_three = $request->query(['per_page' => '10']);
             }
         );
 
@@ -325,7 +329,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         );
     }
 
-    public function testId()
+    public function testId(): void
     {
         // Create two requests
         $request_one = new Request();
@@ -345,7 +349,7 @@ class RequestTest extends Klein\AbstractKleinTestCase
         $this->assertNotSame($request_one->id(), $request_two->id());
     }
 
-    public function testMockFactory()
+    public function testMockFactory(): void
     {
         // Test data
         $uri = '/test/uri';
