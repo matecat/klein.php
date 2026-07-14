@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 3.3.1
+
+### Fixes
+
+- Restored the original klein.php route dispatch order: matched routes now execute in **registration order**, so a catch-all route (`respond()` with no method/path, or `'*'`) registered before concrete routes runs first again. The radix index surfaced concrete (tree) routes before catch-all routes, which inverted the classic middleware / before-hook contract (a first-registered handler no longer ran first). Fixed by sorting the matched routes by their insertion sequence (`routeRegistrationOrder`) in `Klein::filterMatchingRoutes()`; radix pruning is preserved, so the sort is `O(k log k)` over the matched routes only.
+- Added regression tests covering a catch-all route registered both **before** and **after** a concrete route, and reverted two HEAD-method tests whose expected output had been altered to mask the ordering change.
+
 ## 3.3.0
 
 ### Security

@@ -174,6 +174,17 @@ class Klein
     private RadixRouteIndex $radixRouteIndex;
 
     /**
+     * Registration order (insertion sequence) of each route, keyed by
+     * spl_object_hash(). Matched routes are dispatched in this order so that a
+     * catch-all respond() registered before concrete routes still runs first —
+     * the original klein.php behaviour. The radix index alone surfaces concrete
+     * (tree) routes before catch-alls, which would otherwise invert the order.
+     *
+     * @var array<string, int>
+     */
+    private array $routeRegistrationOrder = [];
+
+    /**
      * Methods
      */
 
@@ -301,6 +312,7 @@ class Klein
         $this->routes->add($route);
 
         $this->radixRouteIndex->addRoute($route);
+        $this->routeRegistrationOrder[spl_object_hash($route)] = count($this->routeRegistrationOrder);
 
         return $route;
     }
@@ -814,9 +826,22 @@ class Klein
             }
         );
 
-        // Merge the two matched sets. Using the array union operator preserves keys from
-        // $routesByTree when there are overlaps, effectively prioritizing tree candidates.
-        return $routesByTree + $catchAllRoutes;
+        // Merge the two matched sets (the union operator dedupes routes present
+        // in both, preserving the spl_object_hash keys), then restore
+        // registration order: the radix index surfaces tree (concrete) routes
+        // before catch-all routes, but klein.php dispatches matched routes in
+        // the order they were registered — so a catch-all registered first runs
+        // first. Sort by the recorded insertion sequence; O(k log k) over the
+        // matched routes only, so radix pruning is preserved.
+        $matched = $routesByTree + $catchAllRoutes;
+
+        uasort(
+            $matched,
+            fn(Route $a, Route $b): int => ($this->routeRegistrationOrder[spl_object_hash($a)] ?? PHP_INT_MAX)
+                <=> ($this->routeRegistrationOrder[spl_object_hash($b)] ?? PHP_INT_MAX)
+        );
+
+        return $matched;
     }
 
     /**

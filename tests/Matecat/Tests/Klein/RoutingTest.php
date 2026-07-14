@@ -522,6 +522,64 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
     }
 
     /**
+     * A catch-all registered BEFORE concrete routes must run first, matching
+     * the original klein.php registration-order dispatch. Regression guard: the
+     * radix index surfaces concrete (tree) routes before catch-alls, which
+     * would invert the order and output 'BA' instead of 'AB'.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function testCatchallRegisteredFirstRunsBeforeConcreteRoute(): void
+    {
+        $this->expectOutputString('AB');
+
+        $this->klein_app->respond(
+            callback: function () {
+                echo 'A';
+            }
+        );
+        $this->klein_app->respond(
+            method: 'GET',
+            path: '/two',
+            callback: function () {
+                echo 'B';
+            }
+        );
+
+        $this->klein_app->dispatch(
+            MockRequestFactory::create('/two')
+        );
+    }
+
+    /**
+     * The converse: a catch-all registered AFTER a concrete route runs last,
+     * confirming dispatch honours registration order in both directions.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function testCatchallRegisteredLastRunsAfterConcreteRoute(): void
+    {
+        $this->expectOutputString('BA');
+
+        $this->klein_app->respond(
+            method: 'GET',
+            path: '/two',
+            callback: function () {
+                echo 'B';
+            }
+        );
+        $this->klein_app->respond(
+            callback: function () {
+                echo 'A';
+            }
+        );
+
+        $this->klein_app->dispatch(
+            MockRequestFactory::create('/two')
+        );
+    }
+
+    /**
      * @throws InvalidArgumentException
      */
     public function testCatchallImplicitTriggers404(): void
@@ -1760,14 +1818,14 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
             ['GET', 'HEAD'],
             null,
             function ($request, $response) use ($test_strings, &$test_result) {
-                $test_result .= $test_strings[1];
+                $test_result .= $test_strings[0];
             }
         );
         $this->klein_app->respond(
             'GET',
             '/',
             function ($request, $response) use ($test_strings, &$test_result) {
-                $test_result .= $test_strings[0];
+                $test_result .= $test_strings[1];
             }
         );
         $this->klein_app->respond(
@@ -2673,14 +2731,14 @@ class RoutingTest extends \Matecat\Tests\Klein\AbstractKleinTestCase
             ['get', 'HEAD'],
             null,
             function ($request, $response) use ($test_strings, &$test_result): void {
-                $test_result .= $test_strings[1];
+                $test_result .= $test_strings[0];
             }
         );
         $this->klein_app->respond(
             'get',
             '/',
             function ($request, $response) use ($test_strings, &$test_result): void {
-                $test_result .= $test_strings[0];
+                $test_result .= $test_strings[1];
             }
         );
         $this->klein_app->respond(
